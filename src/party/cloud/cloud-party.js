@@ -4,7 +4,7 @@ const debug = require('debug')('dataparty.cloud.party')
 const Qb = require('./qb.js')
 const Query = require('./query.js')
 const IParty = require('../iparty')
-const Rest = require('../../comms/rest')
+const RestComms = require('../../comms/rest-comms')
 
 /**
  * @class
@@ -29,7 +29,7 @@ class CloudParty extends IParty {
     
     //if(uri[uri.length-1] != '/'){ uri = uri+'/' }
 
-    this.rest = new Rest({config: this.config, party: this})
+    this.rest = new RestComms({config: this.config, party: this})
   }
 
   /**

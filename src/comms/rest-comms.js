@@ -3,19 +3,17 @@ const Wreck = require('wreck')
 const EventEmitter = require('last-eventemitter')
 const debug = require('debug')('dataparty.comms.rest')
 
-const WebsocketComms = require('../comms/websocket-comms')
+const WebsocketComms = require('./websocket-comms')
 const dataparty_crypto = require('@dataparty/crypto')
 const DataParty = require('../dataparty/data-party')
 
 const AuthError = require('./auth-error')
 
-class Rest extends EventEmitter {
+class RestComms extends EventEmitter {
   constructor({ remoteIdentity, config, party }) {
     super()
     this.uri = undefined
     this.wsUri = undefined
-    // this.uri = uri
-    // this.wsUri = wsUri || 'wss://' + Url.parse(uri).hostname + ':4000'
     this.cfgPrefix = 'rest'
     this.config = config
     this.sessionId = undefined
@@ -112,13 +110,13 @@ class Rest extends EventEmitter {
 
     let reply
     try {
-      const str = await Rest.HttpPost(this.uri + path, content)
+      const str = await RestComms.HttpPost(this.uri + path, content)
       reply = JSON.parse(str)
 
       // debug('raw reply ->', reply)
     } catch (error) {
       debug('rest', path, ' call fail ->', error.message)
-      throw new Error('RestFail')
+      throw new Error('RestCommsError')
     }
 
     const msg = await this.party.decrypt(
@@ -180,7 +178,7 @@ class Rest extends EventEmitter {
       if (!this.uri) {
         await this.loadCloud()
       }
-      const serverIdentity = await Rest.HttpGet(this.uri + 'api-v2-identity')
+      const serverIdentity = await RestComms.HttpGet(this.uri + 'api-v2-identity')
       debug('server identity - ', serverIdentity)
 
       this.remoteIdentity = dataparty_crypto.Identity.fromString(serverIdentity)
@@ -359,12 +357,12 @@ class Rest extends EventEmitter {
   }
 
   static async HttpGet(url) {
-    return Rest.HttpRequest('GET', url)
+    return RestComms.HttpRequest('GET', url)
   }
 
   static async HttpPost(url, body) {
-    return Rest.HttpRequest('POST', url, body)
+    return RestComms.HttpRequest('POST', url, body)
   }
 }
 
-module.exports = Rest
+module.exports = RestComms
