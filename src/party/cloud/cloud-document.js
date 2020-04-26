@@ -5,7 +5,7 @@ const debug = require('debug')('dataparty.cloud.document')
 const IDocument = require('../idocument')
 
 /**
- * Represents a cached document with cloud change notifications
+ * Represents a cloud document with cloud change notifications, multi-tenant ownership and ganular access controls
  * @class
  * @interface
  * @alias module:dataparty.DataParty.CloudDocument
@@ -17,8 +17,8 @@ const IDocument = require('../idocument')
  * @param {boolean}   options.followcache
  */
 class CloudDocument extends IDocument {
-  constructor({party, type, id, data, followcache}){
-    super()
+  constructor(options){
+    super(options)
   }
 
 
@@ -88,8 +88,6 @@ class CloudDocument extends IDocument {
       type: reach(this.data, 'owner.type')
     }
   }
-
-  
 }
 
 module.exports = CloudDocument

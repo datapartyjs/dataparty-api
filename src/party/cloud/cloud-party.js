@@ -32,6 +32,10 @@ class CloudParty extends IParty {
     this.rest = new RestComms({config: this.config, party: this})
   }
 
+  get comms(){
+    return this.rest
+  }
+
   /**
    * @method
    */

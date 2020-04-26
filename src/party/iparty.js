@@ -56,6 +56,10 @@ class IParty {
     throw new Error('Not Implemented')
   }
 
+  get comms(){
+    return undefined
+  }
+
   /**
    * @method
    */

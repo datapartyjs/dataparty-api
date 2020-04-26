@@ -19,12 +19,15 @@ class IDocument extends EventEmitter {
   constructor({party, type, id, data, followcache}){
     super()
     this.party = party
+    
     this.watchSub = undefined
+    this.watchedFields = {}
+    this.watchedFilters = {}
+
     this.autopull = true     //! If we detect a cloud change should we copy into the local cache?
     this.flushcache = true   //! If we detect a cloud change should we flush the local cache?
     this.followcache = followcache !== undefined ? followcache: true  //! Watch document for local changes
-    this.watchedFields = {}
-    this.watchedFilters = {}
+    
 
     debug('document', type, id, data)
 
@@ -118,7 +121,7 @@ class IDocument extends EventEmitter {
    * @returns {object}
    */
   async setData(input){
-    let valid = await this.party.model.validate(this.type, input)
+    let valid = await this.party.factory.validate(this.type, input)
     this._data = valid
   }
 
@@ -133,7 +136,7 @@ class IDocument extends EventEmitter {
     delete value.__v
 
     await this.setData(value)
-    await this.party.update(value),
+    await this.party.update(value)
     await this.pull()
   }
 
@@ -155,8 +158,8 @@ class IDocument extends EventEmitter {
     return this.party.remove(this.data)
   }
 
-    /**
-   * Download document changes from remote party
+  /**
+   * Download document changes from party
    * @method
    * @param {boolean} flushcache  Update local cache as well
    */
@@ -190,6 +193,7 @@ class IDocument extends EventEmitter {
         return this
       })
   }
+
 
   /**
    * Watches document for remote changes. 
