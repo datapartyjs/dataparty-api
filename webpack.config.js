@@ -7,14 +7,14 @@ var nodeExternals = require('webpack-node-externals')
 var browser_config = {
   mode: 'production',
   entry: {
-    '@roshub/api': './src/index.js'
+    '@dataparty/api': './src/index.js'
   },
   devtool: 'cheap-module-source-map',
   output: {
     library: ['RosHub'],
     libraryTarget: 'var',
     path: path.join(__dirname, 'dist'),
-    filename: 'roshub-browser.js'
+    filename: 'dataparty-browser.js'
   },
   node: {
     fs: 'empty',
@@ -30,20 +30,20 @@ var browser_config = {
 var node_config = {
   target: 'node',
   externals: [nodeExternals({
-    whitelist: ["@roshub_backend/model", "@roshub_backend/roshub-crypto", "@roshub_backend/model/dist/roshub-model.json"
+    whitelist: ["@dataparty/bouncer-model", "@dataparty/crypto",
   ],
     modulesFromFile: true
   })],
   mode: 'development',
   entry: {
-    '@roshub/api': './src/node-roshub.js'
+    '@dataparty/api': './src/node-dataparty.js'
   },
   devtool: 'cheap-module-source-map',
   output: {
     library: "",
     libraryTarget: 'commonjs',
     path: path.join(__dirname, 'dist'),
-    filename: 'roshub-node.js'
+    filename: 'dataparty-node.js'
   },
   resolve: {
     modules: [

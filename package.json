@@ -2,7 +2,7 @@
   "name": "@dataparty/api",
   "private": false,
   "version": "1.0.4",
-  "main": "src/node-roshub.js",
+  "main": "src/index.js",
   "browser": "src/index.js",
   "files": [
     "dist",
@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@dataparty/crypto": "1.0.1",
-    "@roshub/service-model": "1.0.0",
+    "@dataparty/bouncer-model": "1.0.0",
     "ajv": "6.9.1",
     "colors": "1.3.1",
     "debug": "^3.1.0",
@@ -54,7 +54,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/roshub/roshub-api.git"
+    "url": "https://github.com/dataparty/dataparty-api.git"
   },
   "author": "RosHub Inc. <code@roshub.io>",
   "license": "Apache-2.0"
