@@ -68,19 +68,26 @@ module.exports = class LokiQuery {
   }
 
   // return a promise resolving to result of query
-  exec (hydrate = true) {
+  async exec (hydrate = true) {
 
     if(!(typeof this.spec.type === 'string' && this.spec.type.length > 0)){
       console.error(this.spec)
       throw new Error ('Bad query')
     }
 
+    const resultSet = this.applyQuerySpec()
+
     if(hydrate){
+      await this.db.factory.hydrate(resultSet)
       return this.qb.find(this.spec)
         .then(this.db.factory.hydrate.bind(this.model))
     }
     
-    return this.qb.find(this.spec)
+    return this.applyQuerySpec()
+  }
+
+  async applyQuerySpec(){
+    //
   }
 
   // *** match chain headers ***
@@ -89,12 +96,8 @@ module.exports = class LokiQuery {
 
   // restrict query to msgs of given type
   type (type) {
-    //! todo,
-
-    if(this.model.)
-    let collection = this.db.touchCollection(type)
-
-    this.chain = collection.chain()
+    delete this.spec.types // mutually exclusive
+    this.spec.type = type
     return this // enable chaining
   }
 

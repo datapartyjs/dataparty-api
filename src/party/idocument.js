@@ -5,7 +5,7 @@ const debug = require('debug')('dataparty.idocument')
 const EventEmitter = require('last-eventemitter')
 
 /**
- * Represents a cached document with cloud change notifications
+ * Represents a document with caching and local+remote change notifications
  * @class
  * @interface
  * @alias module:dataparty.DataParty.Document

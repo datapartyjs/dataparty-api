@@ -16,6 +16,8 @@ class LocalParty extends IParty {
   constructor ({db, ...options}) {
     super(options)
 
+    
+
     this.qb = new Qb({
       call: this.call.bind(this),
       cache: this.cache
