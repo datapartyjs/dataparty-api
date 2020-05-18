@@ -67,7 +67,7 @@ module.exports = class Query {
   }
 
   // return a promise resolving to result of query
-  exec (hydrate = true) {
+  async exec (hydrate = true) {
 
     if(!(typeof this.spec.type === 'string' && this.spec.type.length > 0)){
       console.error(this.spec)
@@ -75,11 +75,12 @@ module.exports = class Query {
     }
 
     if(hydrate){
-      return this.qb.find(this.spec)
-        .then(this.model.hydrate.bind(this.model))
+      const results = await this.qb.find(this.spec)
+      console.log('hydrating', results)
+      return this.model.hydrate(results)
     }
     
-    return this.qb.find(this.spec)
+    return await this.qb.find(this.spec)
   }
 
   // *** match chain headers ***

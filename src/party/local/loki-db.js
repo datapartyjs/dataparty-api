@@ -6,6 +6,7 @@ const LFSA = require('lokijs/src/loki-fs-structured-adapter')
 const ObjectId = require('bson-objectid')
 const EventEmitter = require('last-eventemitter')
 
+const LokiQuery = require('./loki-query')
 const debug = require('debug')('dataparty.local.loki-db')
 
 
@@ -79,7 +80,7 @@ module.exports = class LokiDb extends EventEmitter {
 
   async handleCall(ask){
     debug('handleCall')
-    debug('\task', JSON.stringify(ask,null,2))
+    //debug('\task', JSON.stringify(ask,null,2))
 
     let complete = true
     let results = []
@@ -93,10 +94,26 @@ module.exports = class LokiDb extends EventEmitter {
         error: null
       }
 
-      debug('\t\tcrufl ->', crufl)
+      debug('\tcrufl->', crufl.op, crufl.type)
 
-      if(crufl.op == 'create'){
-        result.msgs = await this.applyCreate(crufl)
+      //debug('\t\tcrufl ->', crufl)
+
+      switch(crufl.op){
+        case 'create':
+          result.msgs = await this.applyCreate(crufl)
+          break
+        case 'remove':
+          result.msgs = await this.applyRemove(crufl)
+          break
+        case 'find':
+          result.msgs = await this.applyFind(crufl, false)
+          break
+        case 'lookup':
+          result.msgs = await this.applyFind(crufl, true)
+          break
+        
+        default:
+          break
       }
 
       results.push(result)
@@ -108,24 +125,94 @@ module.exports = class LokiDb extends EventEmitter {
       complete
     }
 
-    debug('replying', JSON.stringify(freshness,null,2))
+    //debug('replying', JSON.stringify(freshness,null,2))
 
-    return //{freshness: [freshness] }
+    return {freshness: results }
   }
 
-  async applyQuerySpec(){
-    // Todo
-  }
+  async applyFind(crufl, includeData = false){
+    debug('find', JSON.stringify(crufl,null,2))
+    let query = new LokiQuery(crufl.spec)
 
-  async applyCreate(createCrufl){
+    let lokiQuery = query.getQueryDoc()
+
+    debug('loki-find', JSON.stringify(lokiQuery,null,2))
+
+    let collection = this.loki.getCollection(crufl.type)
+
+    let resultSet = collection.find(lokiQuery)
+
+    //debug(collection)
+    //debug('resultSet', resultSet)
+
     let msgs = []
 
-    let collection = this.loki.getCollection(createCrufl.type)
+    for(const result of resultSet){
 
-    for(let createMsg of createCrufl.msgs){
-      let msg = {...createMsg}
-      msg.$meta.id = ObjectId()
-      collection.insert(Object.assign({},msg))
+      if(includeData){
+
+        let msg = Object.assign({},result)
+        msg.$meta.revision = msg.meta.revision
+        msg.$meta.created = msg.meta.created
+        msg.$meta.version = msg.meta.version
+        delete msg.meta
+        delete msg.$loki
+
+        msgs.push(msg)
+
+      } else{
+
+        msgs.push({
+          $meta:{
+            id: result.$meta.id,
+            type: result.$meta.type
+          }
+        })
+
+      }
+    }
+
+    debug(msgs)
+    return msgs
+  }
+
+  async applyCreate(crufl){
+    let msgs = []
+
+    let collection = this.loki.getCollection(crufl.type)
+
+
+    for(let createMsg of crufl.msgs){
+      let raw = {...createMsg}
+      raw.$meta.id = (new ObjectId()).toHexString()
+      let doc = collection.insert(Object.assign({},raw))
+      
+
+      let msg = Object.assign({},doc)
+      msg.$meta.revision = msg.meta.revision
+      msg.$meta.created = msg.meta.created
+      msg.$meta.version = msg.meta.version
+      delete msg.meta
+      delete msg.$loki
+
+      msgs.push(msg)
+    }
+
+    return msgs
+  }
+
+  async applyRemove(crufl){
+    let msgs = []
+
+    let collection = this.loki.getCollection(crufl.type)
+
+    for(let rmMsg of crufl.msgs){
+      let msg = { $meta: {
+        id: rmMsg.$meta.id,
+        type: rmMsg.$meta.type
+      }}
+      
+      collection.findAndRemove(msg)
       msgs.push(msg)
     }
 

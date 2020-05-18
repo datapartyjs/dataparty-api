@@ -71,7 +71,7 @@ module.exports = class CloudQb {
   }
 
   // async call to resolve query spec thru backend server & local cache
-  find (spec) {
+  async find (spec) {
 
     const type = spec.type
     if (!(typeof type === 'string' && type.length > 0)) {
