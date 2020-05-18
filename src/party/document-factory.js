@@ -6,15 +6,15 @@ const IDocument = require('./idocument')
  * @class
  */
 class DocumentFactory {
-  constructor({schemas, factories, party, documentClass}){
-    this.factories = factories
+  constructor({model, factories, party, documentClass}){
+    this.factories = factories || {}
     this.party = party || null
     this.ajv = new Ajv()
-    this.jsonSchemeArr = schemas
+    this.model = model
     this.documentClass = documentClass || IDocument
     this.validators = {}
 
-    for(let schema of this.jsonSchemeArr){
+    for(let schema of this.model.JSONSchema){
       const v = this.ajv.compile(schema)
       this.validators[schema.title] = v
       debug(schema.title)
@@ -66,6 +66,13 @@ class DocumentFactory {
   getTypes(){
     let types = ['document']
     return types.concat(Object.keys(this.factories))
+  }
+
+  /**
+   * @method
+   */
+  getValidators(){
+    return Object.keys(this.validators)
   }
 
 
