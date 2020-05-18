@@ -66,16 +66,20 @@ module.exports = class LokiDb extends EventEmitter {
   }
 
   createCollection(name){
-    debug('\createCollection', name)
+    debug('createCollection', name)
     const indexSettings = Hoek.reach(this.factory, 'model.IndexSettings.'+name)
 
     const existing = this.loki.getCollection(name)
     if(existing !== null){ return }
 
-    this.loki.addCollection(name, {
+    const options = {
       unique: ['$meta.id'].concat(indexSettings.unique),
       indices: ['$meta.id'].concat(indexSettings.indices)
-    })
+    }
+
+    debug('createCollection', name, options)
+
+    this.loki.addCollection(name, options)
   }
 
   async handleCall(ask){
@@ -208,6 +212,7 @@ module.exports = class LokiDb extends EventEmitter {
 
     for(let rmMsg of crufl.msgs){
       let msg = { $meta: {
+        removed: true,
         id: rmMsg.$meta.id,
         type: rmMsg.$meta.type
       }}

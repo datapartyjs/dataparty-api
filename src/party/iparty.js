@@ -38,10 +38,10 @@ class IParty {
   /**
    * @method
    */
-  createDocument(type, ...options){
+  createDocument(type, data, id){
     let Type = this.factory.getFactory(type)
 
-    return Type.create(this, {...options, type})
+    return Type.create(this, {data, type, id})
   }
 
   create (type, ...msgs) {

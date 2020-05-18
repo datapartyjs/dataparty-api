@@ -141,15 +141,18 @@ class IDocument extends EventEmitter {
   }
 
 
-  static async create(party, data){
+  static async create(party, {type, id, data}){
 
-    debug('creating document ', data.type, data.id)
+    debug('creating document ', type, id)
 
-    const rawDocument = await party.create(data.type, data)
-    return party.find()
-      .type(rawDocument.type)
-      .id(rawDocument.id)
-      .exec()
+    const rawDocument = (await party.create(type, data))[0]
+    
+    const docs = (await party.find()
+      .type(rawDocument.$meta.type)
+      .id(rawDocument.$meta.id)
+      .exec())
+
+    return docs[0]
   }
 
   async remove(){

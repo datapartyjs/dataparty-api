@@ -8,7 +8,7 @@ async function main(){
   //console.log(Dataparty)
 
   const temp = tmp.dirSync()
-  const dbPath = temp.name + '/local-party-loki.db'
+  const dbPath = /*temp.name +*/ '/tmp/local-party-loki.db'
 
   debug('temp location', temp.name)
 
@@ -23,18 +23,18 @@ async function main(){
 
   await local.start()
 
-  await local.create('user', {name: 'tester'})
-
-
-  let query = local.find()
+  let user = (await local.find()
     .type('user')
     .where('name').equals('tester')
+    .exec())[0]
 
-  debug('query', query.spec)
+  
+  if(!user){
+    user = await local.createDocument('user', {name: 'tester'})
+  }
+    
 
-  let doc = await query.exec()
-
-  debug(doc)
+  debug(user.data)
 
   //console.log(db)
 }
