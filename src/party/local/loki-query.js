@@ -78,16 +78,14 @@ module.exports = class LokiQuery {
     const resultSet = this.applyQuerySpec()
 
     if(hydrate){
-      await this.db.factory.hydrate(resultSet)
-      return this.qb.find(this.spec)
-        .then(this.db.factory.hydrate.bind(this.model))
+      return await this.db.factory.hydrate(resultSet)
     }
     
-    return this.applyQuerySpec()
+    return resultSet
   }
 
   async applyQuerySpec(){
-    //
+    // Todo
   }
 
   // *** match chain headers ***

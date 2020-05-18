@@ -3,6 +3,7 @@
 const debug = require('debug')('dataparty.dataparty')
 
 const IParty = require('../iparty')
+const LokiDb = require('./loki-db')
 
 
 
@@ -13,17 +14,18 @@ const IParty = require('../iparty')
  */
 class LocalParty extends IParty {
 
-  constructor ({db, ...options}) {
+  constructor ({path, dbAdapter, ...options}) {
     super(options)
 
-    
-
-    this.qb = new Qb({
-      call: this.call.bind(this),
-      cache: this.cache
+    this.db = new LokiDb({
+      path, factory: this.factory
     })
   }
 
+  async start(){
+    await super.start()
+    await this.db.start()
+  }
 
 
  /**

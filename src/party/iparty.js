@@ -10,24 +10,29 @@ const LokiCache = require('./loki-cache.js') // insert | populate cache
  * @interface
  */
 class IParty {
-  constructor({config, cache, schemas, factories, documentClass}){
+  constructor({config, cache, model, factories, documentClass}){
     this.config = config
     this.cache = cache || new LokiCache()
     
     /**
      * @member factory 
      * @type {DocumentFactory} */
-    this.factory = new DocumentFactory({party: this, schemas, factories, documentClass})
+    this.factory = new DocumentFactory({party: this, model, factories, documentClass})
   }
 
   /** @method */
   async start(){
     debug('start')
-    await this.config.start()
-
-    if(this.cache){
+    if(this.config){
       await this.config.start()
     }
+
+    if(this.cache){
+      await this.cache.start()
+    }
+
+    debug('\tDocument Validators', this.factory.getValidators())
+    debug('\tDocument Classes', this.factory.getTypes())
   }
 
   /**

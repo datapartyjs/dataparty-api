@@ -5,7 +5,6 @@ const debug = require('debug')('dataparty.comms.rest')
 
 const WebsocketComms = require('./websocket-comms')
 const dataparty_crypto = require('@dataparty/crypto')
-const DataParty = require('../dataparty/data-party')
 
 const AuthError = require('./auth-error')
 

@@ -1,6 +1,6 @@
 'use strict'
 
-const reach = require('../reach')
+const reach = require('../utils/reach')
 const debug = require('debug')('dataparty.idocument')
 const EventEmitter = require('last-eventemitter')
 

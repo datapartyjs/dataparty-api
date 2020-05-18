@@ -36,7 +36,7 @@ var node_config = {
   })],
   mode: 'development',
   entry: {
-    '@dataparty/api': './src/node-dataparty.js'
+    '@dataparty/api': './src/index.js'
   },
   devtool: 'cheap-module-source-map',
   output: {
@@ -56,4 +56,5 @@ var node_config = {
 
 module.exports = [
   browser_config, 
-  node_config]
+  node_config
+]
