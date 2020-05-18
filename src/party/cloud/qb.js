@@ -8,8 +8,8 @@ const reach = require('../../utils/reach')
 // handles backend communication to data-bouncer server
 // * caches msguments locally to save bandwidth
 //
-// // check defines a single backend op on a single data collection (type)
-// check = {
+// // crufl defines a single backend op on a single data collection (type)
+// crufl = {
 //   op: 'op', // crufl -> create | remove | update | find | lookup
 //   uuid: '..', // unique random (uuid v4 -> random) id for this check op
 //   type: '..', // message collection to check
@@ -30,12 +30,12 @@ const reach = require('../../utils/reach')
 //   msgs: [msg0 .. msgN], // lookup keeps msg headers
 // }
 //
-// // result of check has list of msgs
+// // result of crufl has list of msgs
 // // * lookup returns msgs with params, others just msg metadata
 // // * msgs removed from backend have version set to -1
 // result = {
 //   op: 'op', // find | lookup | update | create | remove
-//   uuid: '..', // uuid of check this is result for
+//   uuid: '..', // uuid of crufl this is result for
 //   type: '..', // collection result msgs belong to
 //   msgs: [msg0 .. msgN], // db misses indicated with null msg
 //   complete: boolean, // flag to indicate whether all msgs are included
@@ -45,7 +45,7 @@ const reach = require('../../utils/reach')
 // // * wrapped in dataparty-crypto message to secure backend comms
 // ask = {
 //   uuid: '..', // unique random id for this ask
-//   checks: [check0 .. checkN], // array of check requests
+//   crufls: [crufl0 .. cruflN], // array of crufl requests
 // }
 //
 // // reply is returned by data-bouncer endpoint with array of check results

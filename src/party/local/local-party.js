@@ -5,6 +5,8 @@ const debug = require('debug')('dataparty.dataparty')
 const IParty = require('../iparty')
 const LokiDb = require('./loki-db')
 
+const Qb = require('../cloud/qb')
+const Query = require('../cloud/query')
 
 
 /**
@@ -20,6 +22,11 @@ class LocalParty extends IParty {
     this.db = new LokiDb({
       path, factory: this.factory
     })
+
+    this.qb = new Qb({
+      call: this.db.handleCall.bind(this.db),
+      cache: this.cache
+    })
   }
 
   async start(){
@@ -32,7 +39,7 @@ class LocalParty extends IParty {
    * @method
    */
   find () {
-    return new Query(this.qb, this.model)
+    return new Query(this.qb, this.factory)
   }
 
   // takes modified json msgs & writes to backend, resolves to new stamps

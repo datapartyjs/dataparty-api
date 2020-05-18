@@ -39,7 +39,7 @@ class IParty {
    * @method
    */
   createDocument(type, ...options){
-    let Type = this.types[type]
+    let Type = this.factory.getFactory(type)
 
     return Type.create(this, {...options, type})
   }

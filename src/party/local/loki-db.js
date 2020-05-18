@@ -3,6 +3,7 @@
 const Hoek = require('@hapi/hoek')
 const Loki = require('lokijs')
 const LFSA = require('lokijs/src/loki-fs-structured-adapter')
+const ObjectId = require('bson-objectid')
 const EventEmitter = require('last-eventemitter')
 
 const debug = require('debug')('dataparty.local.loki-db')
@@ -71,9 +72,64 @@ module.exports = class LokiDb extends EventEmitter {
     if(existing !== null){ return }
 
     this.loki.addCollection(name, {
-      unique: indexSettings.unique,
-      indices: indexSettings.indices
+      unique: ['$meta.id'].concat(indexSettings.unique),
+      indices: ['$meta.id'].concat(indexSettings.indices)
     })
+  }
+
+  async handleCall(ask){
+    debug('handleCall')
+    debug('\task', JSON.stringify(ask,null,2))
+
+    let complete = true
+    let results = []
+
+    for(let crufl of ask.crufls){
+      let result = {
+        op: crufl.op,
+        uuid: crufl.uuid,
+        msgs: [],
+        complete: true,
+        error: null
+      }
+
+      debug('\t\tcrufl ->', crufl)
+
+      if(crufl.op == 'create'){
+        result.msgs = await this.applyCreate(crufl)
+      }
+
+      results.push(result)
+    }
+
+    let freshness = {
+      uuid: ask.uuid,
+      results,
+      complete
+    }
+
+    debug('replying', JSON.stringify(freshness,null,2))
+
+    return //{freshness: [freshness] }
+  }
+
+  async applyQuerySpec(){
+    // Todo
+  }
+
+  async applyCreate(createCrufl){
+    let msgs = []
+
+    let collection = this.loki.getCollection(createCrufl.type)
+
+    for(let createMsg of createCrufl.msgs){
+      let msg = {...createMsg}
+      msg.$meta.id = ObjectId()
+      collection.insert(Object.assign({},msg))
+      msgs.push(msg)
+    }
+
+    return msgs
   }
 
   /**

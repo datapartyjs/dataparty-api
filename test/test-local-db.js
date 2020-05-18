@@ -23,6 +23,16 @@ async function main(){
 
   await local.start()
 
+  await local.create('user', {name: 'tester'})
+
+  let query = local.find()
+    .type('user')
+    .where('name').equals('test')
+
+  debug('query', query.spec)
+
+  await query.exec()
+
   //console.log(db)
 }
 
