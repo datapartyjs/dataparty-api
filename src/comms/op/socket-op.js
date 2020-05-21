@@ -50,7 +50,14 @@ class SocketOp extends EventEmitter {
     handleOpEvent(event){
         debug('handleOpEvent()')
         debug(event)
+
         if(this._thenResolve != undefined){
+
+            if(event.op != 'status'){
+                debug('not a status message')
+                return
+            }
+
             debug(event.state.indexOf('Finished'))
             if(event.state.indexOf('Finished') != -1){
                 if(event.state == 'Finished_Success'){

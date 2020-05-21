@@ -1,43 +1,46 @@
-class RTCPeer {}
-class SerialPeer {}
+'use strict'
+
+const debug = require('debug')('dataparty.peer-party')
 
 
+const Qb = require('../qb')
+const IParty = require('../iparty')
+const RTCSocketComms = require('../../comms/rtc-socket-comms')
 
-class PeerParty {
-  constructor({peer, initiator, }){
+/**
+ * @class 
+ * @alias module:dataparty.LocalParty
+ * @interface
+ */
+class PeerParty extends IParty {
 
-  }
-}
+  constructor ({remoteIdentity, host, wrtc, trickle, ...options}) {
+    super(options)
 
+    this.comms = new RTCSocketComms({remoteIdentity, host, party: this, wrtc, trickle})
 
-class WebRTCRestComms {
-  constructor({peerIdentity, initiator, wrtc, trickle = false}){
-    this.peer = new SimplePeer({
-      wrtc,
-      trickle,
-      initiator
+    this.qb = new Qb({
+      call: this.handleCall.bind(this),
+      cache: this.cache
     })
-
-    this.host = initiator
-    this.oncall = null
-  }
-
-  async handleCall({path, data}){
-    return await this.oncall({path, data})
-  }
-
-  async call(path, data, expectClearTextReply = false){
-    //
   }
 
   async start(){
-
+    await super.start()
+    await this.comms.start()
   }
 
-  async stop(){
 
+  async handleCall(ask){
+    debug('handleCall')
+
+    if(!this.comms.host){
+      return await this.comms.call('api-v2-peer-bouncer', ask)
+    }
+    else{
+      return await this.db.handleCall(ask)
+    }
   }
-
-  
-
 }
+
+module.exports = LocalParty

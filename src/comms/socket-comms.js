@@ -10,12 +10,13 @@ const RosShim = require('./ros-shim')
 
 
 class SocketComms extends EventEmitter {
-    constructor({session, uri, identity, remoteIdentity}){
+    constructor({session, uri, party, remoteIdentity}){
         super()
         this.uri = uri
         this.session = session
-        this.identity = identity
         this.remoteIdentity = remoteIdentity
+
+        this.party = party //used for access to primary identity
 
         this.connected = false
         this.authed = undefined
@@ -45,12 +46,6 @@ class SocketComms extends EventEmitter {
     }
 
     close(){
-        
-
-        /*if(this._ros){
-            this._ros.close()
-        }*/
-
         debug('Client closing connection')
         this.socket.close()
     }
@@ -87,7 +82,7 @@ class SocketComms extends EventEmitter {
             if(replyObj.enc && replyObj.sig){
               let msg = new Message(replyObj)
       
-              return resolve(msg.decrypt(this.identity).then(content=>{
+              return resolve(msg.decrypt(this.party._identity).then(content=>{
                 const senderPub = Routines.extractPublicKeys(msg.enc)
                 debug(`senderPub - ${senderPub}`)
       
@@ -128,7 +123,7 @@ class SocketComms extends EventEmitter {
 
         const content = new Message({msg: input})
 
-        return content.encrypt(this.identity, this.remoteIdentity.key)
+        return content.encrypt(this.party._identity, this.remoteIdentity.key)
             .then(JSON.stringify)
             .then(this.socket.send.bind(this.socket))
 

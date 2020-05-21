@@ -1,6 +1,6 @@
 'use strict'
 
-const debug = require('debug')('dataparty.dataparty')
+const debug = require('debug')('dataparty.local-party')
 
 const IParty = require('../iparty')
 const LokiDb = require('./loki-db')

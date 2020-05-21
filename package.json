@@ -1,7 +1,7 @@
 {
   "name": "@dataparty/api",
   "private": false,
-  "version": "1.0.4",
+  "version": "1.0.5",
   "main": "src/index.js",
   "browser": "src/index.js",
   "files": [
@@ -41,7 +41,8 @@
     "url-parse": "^1.4.7",
     "uuid": "^3.2.1",
     "websocket": "^1.0.26",
-    "wreck": "14.0.2"
+    "wreck": "14.0.2",
+    "wrtc": "^0.4.4"
   },
   "devDependencies": {
     "@dataparty/bouncer-model": "1.4.0",

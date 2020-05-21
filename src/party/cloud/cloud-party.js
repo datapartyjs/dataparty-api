@@ -1,4 +1,4 @@
-const debug = require('debug')('dataparty.cloud.party')
+const debug = require('debug')('dataparty.cloud-party')
 
 const Qb = require('../qb')
 const Query = require('../query')
