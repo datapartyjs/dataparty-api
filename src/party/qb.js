@@ -3,7 +3,7 @@
 const debug = require('debug')('dataparty.cloud.qb')
 const uuidv4 = require('uuid/v4') // random uuid generator
 const Clerk = require('./clerk.js')
-const reach = require('../../utils/reach')
+const reach = require('../utils/reach')
 // qb (query backend / queen bee / quarterback -> the leader of the party)
 // handles backend communication to data-bouncer server
 // * caches msguments locally to save bandwidth
@@ -128,7 +128,7 @@ module.exports = class CloudQb {
   }
 
   // insert list of objects into given db collection
-  create (type, msgs) {
+  async create (type, msgs) {
 
     // shallow copy given msgs & insert metadata props
     const partyMsgs = msgs.map(msg => Clerk.partyize(type, msg))
@@ -138,7 +138,7 @@ module.exports = class CloudQb {
   }
 
   // make async call to update | create | remove list of msgs
-  modify (msgs, op) {
+  async modify (msgs, op) {
     return new Promise((resolve, reject) => {
 
       // validate msgs share a type
@@ -183,7 +183,7 @@ module.exports = class CloudQb {
   // * called by find to populate msgs returned by search
   // * called by itself until timeout is reached to allow downloading partial
   //   msg listings & intercall cache invalidation
-  lookup (msgs, parentClaim) {
+  async lookup (msgs, parentClaim) {
     return new Promise((resolve, reject) => {
 
       debug('lookup', msgs)

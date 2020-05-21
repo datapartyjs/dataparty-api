@@ -223,36 +223,4 @@ module.exports = class LokiDb extends EventEmitter {
 
     return msgs
   }
-
-  /**
-   * @method
-   */
-  find () {
-    return new Query(this.qb, this.model)
-  }
-
-  // takes modified json msgs & writes to backend, resolves to new stamps
-  // requires type & id
-  /**
-   * @method
-   */
-  update (...msgs) {
-    return this.qb.modify(msgs, 'update')
-  }
-
-
-  /**
-   * @method
-   */
-  create (type, ...msgs) {
-    return this.qb.create(type, msgs)
-  }
-
-
-  /**
-   * @method
-   */
-  remove (...msgs) {
-    return this.qb.modify(msgs, 'remove')
-  }
 }

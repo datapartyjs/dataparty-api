@@ -5,8 +5,8 @@ const debug = require('debug')('dataparty.dataparty')
 const IParty = require('../iparty')
 const LokiDb = require('./loki-db')
 
-const Qb = require('../cloud/qb')
-const Query = require('../cloud/query')
+const Qb = require('../qb')
+const Query = require('../query')
 
 
 /**
@@ -24,7 +24,7 @@ class LocalParty extends IParty {
     })
 
     this.qb = new Qb({
-      call: this.db.handleCall.bind(this.db),
+      call: this.handleCall.bind(this),
       cache: this.cache
     })
   }
@@ -35,36 +35,8 @@ class LocalParty extends IParty {
   }
 
 
- /**
-   * @method
-   */
-  find () {
-    return new Query(this.qb, this.factory)
-  }
-
-  // takes modified json msgs & writes to backend, resolves to new stamps
-  // requires type & id
-  /**
-   * @method
-   */
-  update (...msgs) {
-    return this.qb.modify(msgs, 'update')
-  }
-
-
- /**
-   * @method
-   */
-  create (type, ...msgs) {
-    return this.qb.create(type, msgs)
-  }
-
-
-/**
-   * @method
-   */
-  remove (...msgs) {
-    return this.qb.modify(msgs, 'remove')
+  async handleCall(ask){
+    return await this.db.handleCall(ask)
   }
 }
 

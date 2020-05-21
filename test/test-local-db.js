@@ -1,23 +1,16 @@
-const tmp = require('tmp')
 const debug = require('debug')('test.local-db')
 const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
 const Dataparty = require('../src')
 
-
 async function main(){
-  //console.log(Dataparty)
+  const dbPath = '/tmp/local-party-loki.db'
 
-  const temp = tmp.dirSync()
-  const dbPath = /*temp.name +*/ '/tmp/local-party-loki.db'
-
-  debug('temp location', temp.name)
-
-  debug(BouncerModel.IndexSettings)
-
+  debug('db location', dbPath)
 
   let local = new Dataparty.LocalParty({
     path: dbPath,
-    model: BouncerModel
+    model: BouncerModel,
+    config: new Dataparty.Config.MemoryConfig()
   })
 
 
@@ -34,9 +27,8 @@ async function main(){
   }
     
 
-  debug(user.data)
-
-  //console.log(db)
+  console.log(user.data)
+  process.exit()
 }
 
 
