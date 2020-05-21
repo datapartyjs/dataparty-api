@@ -6,7 +6,6 @@ const IParty = require('../iparty')
 const LokiDb = require('./loki-db')
 
 const Qb = require('../qb')
-const Query = require('../query')
 
 
 /**

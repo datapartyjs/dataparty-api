@@ -102,7 +102,7 @@ class SocketComms extends EventEmitter {
     }
 
     onmessage(message){
-        debug('onmessage')
+        debug('onmessage', message)
         let comm = this
         this.decrypt(message, this.remoteIdentity).then(msg=>{
             debug('decrypted msg = ', msg)
