@@ -1,7 +1,7 @@
 {
   "name": "@dataparty/api",
   "private": false,
-  "version": "1.0.4",
+  "version": "1.0.6",
   "main": "src/index.js",
   "browser": "src/index.js",
   "files": [
@@ -13,7 +13,7 @@
     "build": "webpack",
     "prepare": "yarn build",
     "watch": "webpack --watch",
-    "watch-test": "nodemon test/test-local-db.js",
+    "watch-test": "nodemon test/test-peer-party.js",
     "build-docs": "npx jsdoc -c jsdoc.json"
   },
   "dependencies": {
@@ -36,12 +36,14 @@
     "prompt": "^1.0.0",
     "roslib": "^0.20.0",
     "sanitize-filename": "^1.6.3",
+    "simple-peer": "^9.7.2",
     "store-js": "^2.0.4",
     "touch": "^3.1.0",
     "url-parse": "^1.4.7",
     "uuid": "^3.2.1",
     "websocket": "^1.0.26",
-    "wreck": "14.0.2"
+    "wreck": "14.0.2",
+    "wrtc": "^0.4.4"
   },
   "devDependencies": {
     "@dataparty/bouncer-model": "1.4.0",
