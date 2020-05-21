@@ -44,7 +44,10 @@ async function main(){
   })
 
   debug('waiting for auth')
-  await peer2.comms.authorized()
+  await Promise.all([
+    peer1.comms.authorized(),
+    peer2.comms.authorized()
+  ])
   
   debug('authed')
 
