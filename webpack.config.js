@@ -18,7 +18,7 @@ var browser_config = {
     minimize: true
   },
   output: {
-    library: ['RosHub'],
+    library: ['DataParty'],
     libraryTarget: 'var',
     path: path.join(__dirname, 'dist'),
     filename: 'dataparty-browser.js'
