@@ -184,13 +184,13 @@ module.exports = class CloudQb {
   // * called by itself until timeout is reached to allow downloading partial
   //   msg listings & intercall cache invalidation
   async lookup (msgs, parentClaim) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
 
       debug('lookup', msgs)
 
       // if no messages given resolve to empty list
       if (msgs.length < 1) {
-        resolve([])
+        return resolve([])
       }
 
       // validate msgs share a type
@@ -231,35 +231,41 @@ module.exports = class CloudQb {
         }
       }
 
-      // check for msgs in cache
-      this.cache.populate(typedMsgs)
-        .then((populated) => {
+      if(!this.cache){
+        claim.msgs = typedMsgs
+        check.msgs = typedMsgs
+        this.pushCheck(check, claim)
+      } else {
 
-          // debug('cache results: ' + JSON.stringify(populated, null, 2))
+        // check for msgs in cache
+        const populated = await this.cache.populate(typedMsgs)
 
-          // if there were no misses resolve with hits
-          if (populated.misses.length === 0) {
+        // debug('cache results: ' + JSON.stringify(populated, null, 2))
 
-            // if selection was specified resolve selection
-            if (claim.spec && claim.spec.select) {
-              claim.resolve(
-                Clerk.selectAll(claim.spec.select, populated.hits))
-            } else {
-              claim.resolve(populated.hits)
-            }
+        // if there were no misses resolve with hits
+        if (populated.misses.length === 0) {
 
-          // if claim is stale (from inherited stamp) call reject handler
-          } else if (Date.now() - claim.fresh > this.claimTimeout) {
-            claim.reject(
-              new Error(`server timeout on lookup op: id ${claim.uuid}`))
-
-          // otherwise keep original msg headers & initiate ask for misses
+          // if selection was specified resolve selection
+          if (claim.spec && claim.spec.select) {
+            claim.resolve(
+              Clerk.selectAll(claim.spec.select, populated.hits))
           } else {
-            claim.msgs = typedMsgs
-            check.msgs = populated.misses
-            this.pushCheck(check, claim)
+            claim.resolve(populated.hits)
           }
-        })
+
+        // if claim is stale (from inherited stamp) call reject handler
+        } else if (Date.now() - claim.fresh > this.claimTimeout) {
+          claim.reject(
+            new Error(`server timeout on lookup op: id ${claim.uuid}`))
+
+        // otherwise keep original msg headers & initiate ask for misses
+        } else {
+          claim.msgs = typedMsgs
+          check.msgs = populated.misses
+          this.pushCheck(check, claim)
+        }
+
+      }
     })
   }
 
@@ -325,7 +331,7 @@ module.exports = class CloudQb {
 
       // process results for check claims
       for (const crufl of reply.freshness) {
-        this.processClaim(crufl)
+        await this.processClaim(crufl)
         delete this.claimTable[crufl.uuid]
         delete unclaimed[crufl.uuid]
       }
@@ -378,6 +384,7 @@ module.exports = class CloudQb {
 
     debug('processing claim for result ->', JSON.stringify(result))
 
+
     // find matching claim or else
     const claim = this.claimTable[result.uuid]
     if (claim === undefined) {
@@ -392,6 +399,7 @@ module.exports = class CloudQb {
 
     // if result error is set reject with error
     if (result.error) {
+      debug('rejecting', result.error)
       return claim.reject(new Error(result.error))
     }
 
@@ -410,7 +418,7 @@ module.exports = class CloudQb {
     // * if results are incomplete or cache was invalidated lookup will
     //   repeat until claim timeout is reached or all msgs marked as invalid
     case 'lookup':
-      await this.cache.insert(result.msgs)
+      if(this.cache){ await this.cache.insert(result.msgs) }
       errors = anyErrors(result.msgs, claim)
       if(errors != false){
         return claim.reject(errors)
@@ -424,7 +432,7 @@ module.exports = class CloudQb {
     case 'update':
     case 'create':
     case 'remove':
-      this.cache.insert(result.msgs)
+      if(this.cache){ this.cache.insert(result.msgs) }
 
       errors = anyErrors(result.msgs, claim)
       if(errors != false){
