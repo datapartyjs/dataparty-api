@@ -3,7 +3,7 @@
   "private": false,
   "version": "1.0.7",
   "main": "src/index.js",
-  "browser": "src/index.js",
+  "browser": "src/index-browser.js",
   "files": [
     "dist",
     "src/*"

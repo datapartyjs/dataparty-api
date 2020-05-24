@@ -7,13 +7,12 @@ const ServerParty = require('./server/server-party')
 const IDocument = require('./idocument')
 const DocumentFactory = require('./document-factory')
 const CloudDocument = require('./cloud/cloud-document')
-const LocalDocument = require('./local/local-document')
 
 const LokiDb = require('./local/loki-db')
 
 module.exports = {
   IDocument, IParty, DocumentFactory,
-  CloudDocument, LocalDocument,
+  CloudDocument,
   CloudParty, LocalParty, PeerParty, ServerParty,
   LokiDb
 }
