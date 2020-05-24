@@ -8,8 +8,15 @@ async function main(){
 
   debug('db location', dbPath)
 
+  let hostLocal = new Dataparty.LocalParty({
+    path: dbPath,
+    model: BouncerModel,
+    config: new Dataparty.Config.MemoryConfig()
+  })
+
   let peer1 = new Dataparty.PeerParty({
     host: true,
+    hostParty: hostLocal,
     wrtc: WRTC,
     path: dbPath,
     model: BouncerModel,
