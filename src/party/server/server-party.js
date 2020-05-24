@@ -32,6 +32,10 @@ class ServerParty extends IParty {
     await this.db.connect()
 
     if(this.serverModels){ this.db.addModels(this.serverModels) }
+    else{
+      debug('loading models from bouncer model')
+      this.db.addBouncerModels(this.factory.model)
+    }
   }
 
 
