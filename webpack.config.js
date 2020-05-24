@@ -2,14 +2,21 @@
 
 const path = require('path')
 const webpack = require('webpack')
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+
+const CompressionPlugin = require('compression-webpack-plugin')
+
 var nodeExternals = require('webpack-node-externals')
 
 var browser_config = {
   mode: 'production',
   entry: {
-    '@dataparty/api': './src/index.js'
+    '@dataparty/api': './src/index-browser.js'
   },
   devtool: 'cheap-module-source-map',
+  optimization: {
+    minimize: true
+  },
   output: {
     library: ['RosHub'],
     libraryTarget: 'var',
@@ -19,14 +26,22 @@ var browser_config = {
   node: {
     fs: 'empty',
     net: 'empty',
-    dns: 'empty'
+    dns: 'empty',
+    yargs: 'empty',
+    readline: 'empty',
+    child_process:'empty',
+    '@dataparty/bouncer-db': 'empty'
   },
   plugins: [
+    new CompressionPlugin(),
     new webpack.DefinePlugin({
       'process.env.ENV': JSON.stringify('browser')
-    })
+    })/*,
+    new BundleAnalyzerPlugin()*/
   ]
 }
+
+
 var node_config = {
   target: 'node',
   externals: [nodeExternals({
