@@ -1,7 +1,7 @@
 'use strict'
 
 const BouncerDb = require('@dataparty/bouncer-db')
-const debug = require('debug')('dataparty.server-party')
+const debug = require('debug')('dataparty.mongo-party')
 
 const IParty = require('../iparty')
 const Qb = require('../qb')
@@ -9,10 +9,10 @@ const Qb = require('../qb')
 
 /**
  * @class 
- * @alias module:dataparty.LocalParty
+ * @alias module:dataparty.MongoParty
  * @interface
  */
-class ServerParty extends IParty {
+class MongoParty extends IParty {
 
   constructor ({uri, mongoOptions, serverModels, ...options}) {
     super(options)
@@ -46,4 +46,4 @@ class ServerParty extends IParty {
   }
 }
 
-module.exports = ServerParty
+module.exports = MongoParty
