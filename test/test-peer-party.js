@@ -18,7 +18,6 @@ async function main(){
     host: true,
     hostParty: hostLocal,
     wrtc: WRTC,
-    path: dbPath,
     model: BouncerModel,
     config: new Dataparty.Config.MemoryConfig()
   })

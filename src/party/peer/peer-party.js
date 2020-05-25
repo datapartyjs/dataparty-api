@@ -15,7 +15,7 @@ const RTCSocketComms = require('../../comms/rtc-socket-comms')
  */
 class PeerParty extends IParty {
 
-  constructor ({remoteIdentity, path, host, hostParty, wrtc, trickle, ...options}) {
+  constructor ({remoteIdentity, host, hostParty, wrtc, trickle=true, ...options}) {
     super(options)
 
     this.comms = new RTCSocketComms({remoteIdentity, host, party: this, wrtc, trickle})
