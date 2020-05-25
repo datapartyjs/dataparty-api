@@ -29,7 +29,7 @@ module.exports = class Decrypt extends IMiddleware {
       return
     }
 
-    if (!Hoek.reach(context, 'endpoint.middleware.pre.crypto', false)){
+    if (!Hoek.reach(context, 'endpoint.MiddlewareConfig.pre.decrypt', false)){
       return Promise.resolve(context)
     }
   

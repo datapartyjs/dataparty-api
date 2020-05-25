@@ -2,11 +2,6 @@ const debug = require('debug')('dataparty.service.IMiddleware')
 
 
 module.exports = class IMiddleware {
-  constructor({
-    serviceParty
-  }){
-    this.serviceParty = serviceParty
-  }
 
   static get Name(){
     throw new Error('not implemented')
@@ -24,11 +19,7 @@ module.exports = class IMiddleware {
     throw new Error('not implemented')
   }
 
-  async start(){ 
-    //! In case you need to do some setup
-  }
-
-  async run(context){
+  static async run(context){
     throw new Error('not implemented')
   }
 }

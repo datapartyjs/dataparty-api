@@ -3,10 +3,6 @@ const debug = require('debug')('dataparty.service.IEndpoint')
 
 module.exports = class IEndpoint {
 
-  constructor(serviceParty){
-    this.serviceParty = serviceParty
-  }
-
   static get Name(){
     throw new Error('not implemented')
   }
@@ -19,11 +15,7 @@ module.exports = class IEndpoint {
     throw new Error('not implemented')
   }
 
-  async start(){ 
-    //! In case you need to do some setup
-  }
-
-  async run(context){
+  static async run(context){
     throw new Error('not implemented')
   }
 }

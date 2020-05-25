@@ -50,6 +50,10 @@ module.exports = class IService {
       middleware: {
         pre: {},
         post: {}
+      },
+      middleware_order: {
+        pre: [],
+        post: []
       }
     }
    }
@@ -120,6 +124,8 @@ module.exports = class IService {
       this.compileList('endpoints'),
       this.compileSchemas()
     ])
+
+    this.compiled.middleware_order = this.middleware_order
 
     const buildOutput = outputPath+'/'+ this.compiled.package.name.replace('/', '-') +'.dataparty-service.json'
     fs.writeFileSync(buildOutput, JSON.stringify(this.compiled))
