@@ -124,6 +124,12 @@ module.exports = class IService {
     const buildOutput = outputPath+'/'+ this.compiled.package.name.replace('/', '-') +'.dataparty-service.json'
     fs.writeFileSync(buildOutput, JSON.stringify(this.compiled))
 
+    const schemaOutput = outputPath+'/'+ this.compiled.package.name.replace('/', '-') +'.dataparty-schema.json'
+    fs.writeFileSync(schemaOutput, JSON.stringify({
+      package: this.compiled.package,
+      ...this.compiled.schemas
+    }))
+
     return this.compiled
 
   }
