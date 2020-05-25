@@ -1,3 +1,7 @@
+const fs = require('fs')
+const Path = require('path')
+const Pify = require('pify')
+const NCC = require('@zeit/ncc')
 const debug = require('debug')('dataparty.service.IService')
 
 module.exports = class IService {
@@ -29,14 +33,67 @@ module.exports = class IService {
         post: {}
       }
     }
+
+    this.compiled = {
+      endpoints: {},
+      middleware: {
+        pre: {},
+        post: {}
+      }
+    }
    }
 
 
-  static get Types(){}
-  static get Documents(){}
+  async compile(outputPath){
 
-  async compile(){
+    if(!outputPath){
+      throw new Error('no output path')
+    }
 
+    /*const Webpack = require('webpack')
+    const nodeExternals = require('webpack-node-externals')*/
+
+    // Build pre middleware
+    for(const preName of this.middleware_order.pre){
+      debug('\rpre', preName)
+
+      const buildPath = Path.join(outputPath, 'middleware-pre-'+preName)
+      const build = await this.compileFileTo(this.sources.middleware.pre[preName], buildPath)
+
+      this.compiled.middleware.pre[preName] = build
+
+    }
+
+    return this.compiled
+
+  }
+
+  async compileFileTo(input, output){
+    const { code, map, assets } = await NCC(input, {
+      // provide a custom cache path or disable caching
+      cache: false,
+      // externals to leave as requires of the build
+      //externals: ["externalpackage"],
+      // directory outside of which never to emit assets
+      //filterAssetBase: process.cwd(), // default
+      minify: false, // default
+      sourceMap: false, // default
+      //sourceMapBasePrefix: '../', // default treats sources as output-relative
+      // when outputting a sourcemap, automatically include
+      // source-map-support in the output file (increases output by 32kB).
+      sourceMapRegister: true, // default
+      watch: false, // default
+      v8cache: false, // default
+      quiet: false, // default
+      debugLog: false // default
+    })
+
+    debug('compileFileTo', input, '->', output)
+    debug('\t','code length', Math.round(code.length/1024), 'KB')
+
+    fs.writeFileSync(output+'.js', code)
+
+    return {code, map, assets}
   }
 
   /**
@@ -47,7 +104,7 @@ module.exports = class IService {
     const schema = require(schema_path)
     const name = schema.Type
 
-    this.sources.schema[name] = schema_path
+    this.sources.schemas[name] = schema_path
     this.constructors.schemas[name] = schema
   }
 
@@ -67,9 +124,17 @@ module.exports = class IService {
     this.constructors.endpoints[name] = endpoint
   }
 
-  addMiddleware(type='pre', middleware_path){
+  addMiddleware(middleware_path){
+
+    debug('addMiddleware',middleware_path)
+
     const middleware = require(middleware_path)
+
+
     const name = middleware.Name 
+    const type = middleware.Type
+
+    debug('addMiddleware',type,name)
 
     this.middleware_order[type].push(name)
 

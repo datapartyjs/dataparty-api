@@ -12,6 +12,10 @@ module.exports = class IMiddleware {
     throw new Error('not implemented')
   }
 
+  static get Type(){
+    throw new Error('not implemented - pre or post')
+  }
+
   static get Description(){
     throw new Error('not implemented')
   }
@@ -24,7 +28,7 @@ module.exports = class IMiddleware {
     //! In case you need to do some setup
   }
 
-  async run(){
+  async run(context){
     throw new Error('not implemented')
   }
 }

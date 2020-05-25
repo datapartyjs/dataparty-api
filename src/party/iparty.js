@@ -134,6 +134,11 @@ class IParty {
     return this._identity.toJSON(false)
   }
 
+  get privateIdentity(){
+    if (!this.hasIdentity()){ return undefined }
+    return this._identity
+  }
+
   /** @type {IdObj} */
   get actor(){
     if (this.actors && this.actors[0]){

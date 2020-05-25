@@ -13,12 +13,13 @@
     "build": "webpack",
     "prepare": "yarn build",
     "watch": "webpack --watch",
-    "watch-test": "nodemon test/test-server-party-generic-model.js",
+    "watch-test": "DEBUG=* nodemon --ignore service test/test-service-compile.js",
     "build-docs": "npx jsdoc -c jsdoc.json"
   },
   "dependencies": {
     "@dataparty/bouncer-db": "1.0.1",
     "@dataparty/crypto": "1.0.1",
+    "@zeit/ncc": "^0.22.3",
     "ajv": "6.9.1",
     "bson-objectid": "^1.3.0",
     "colors": "1.3.1",
