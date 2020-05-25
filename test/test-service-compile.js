@@ -18,7 +18,7 @@ async function main(){
 
   service.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
 
-  const build = await service.compile(Path.join(__dirname,'../service'))
+  const build = await service.compile(Path.join(__dirname,'../dataparty'))
 
   console.log(build)
   

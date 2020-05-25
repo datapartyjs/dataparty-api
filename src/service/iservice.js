@@ -53,13 +53,13 @@ module.exports = class IService {
 
 
     await Promise.all([
-      this.compileMiddleware('pre', outputPath),
-      this.compileMiddleware('post', outputPath),
-      this.compileList('documents', outputPath),
-      this.compileList('endpoints', outputPath)
+      this.compileMiddleware('pre'),
+      this.compileMiddleware('post'),
+      this.compileList('documents'),
+      this.compileList('endpoints')
     ])
 
-    const buildOutput = outputPath+'/'+ this.compiled.package.name.replace('/', '-') +'.party'
+    const buildOutput = outputPath+'/'+ this.compiled.package.name.replace('/', '-') +'.dataparty-service.json'
     fs.writeFileSync(buildOutput, JSON.stringify(this.compiled))
 
     return this.compiled
@@ -73,7 +73,7 @@ module.exports = class IService {
     for(const name in this.sources[field]){
       debug('\r', field, name)
 
-      const buildPath = Path.join(outputPath, field+'-'+name)
+      const buildPath = !outputPath ? '' : Path.join(outputPath, field+'-'+name)
       const build = await this.compileFileTo(this.sources[field][name], buildPath)
 
       this.compiled[field][name] = build
@@ -86,7 +86,7 @@ module.exports = class IService {
     for(const name of this.middleware_order[type]){
       debug('\r', type, name)
 
-      const buildPath = Path.join(outputPath, 'middleware-'+type+'-'+name)
+      const buildPath = !outputPath ? '' : Path.join(outputPath, 'middleware-'+type+'-'+name)
       const build = await this.compileFileTo(this.sources.middleware[type][name], buildPath)
 
       this.compiled.middleware[type][name] = build
@@ -117,7 +117,9 @@ module.exports = class IService {
     debug('compileFileTo', input, '->', output)
     debug('\t','code length', Math.round(code.length/1024), 'KB')
 
-    fs.writeFileSync(output+'.js', code)
+    if(output){
+      fs.writeFileSync(output+'.js', code)
+    }
 
     return {code, map, assets}
   }
