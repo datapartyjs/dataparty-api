@@ -1,6 +1,5 @@
 const fs = require('fs')
 const Path = require('path')
-const Pify = require('pify')
 const NCC = require('@zeit/ncc')
 const debug = require('debug')('dataparty.service.IService')
 
@@ -35,6 +34,8 @@ module.exports = class IService {
     }
 
     this.compiled = {
+      package: { name, version },
+      documents: {},
       endpoints: {},
       middleware: {
         pre: {},
@@ -50,18 +51,34 @@ module.exports = class IService {
       throw new Error('no output path')
     }
 
+
     await Promise.all([
       this.compileMiddleware('pre', outputPath),
-      this.compileMiddleware('post', outputPath)
+      this.compileMiddleware('post', outputPath),
+      this.compileList('documents', outputPath),
+      this.compileList('endpoints', outputPath)
     ])
 
-    /*const Webpack = require('webpack')
-    const nodeExternals = require('webpack-node-externals')*/
-
-    
+    const buildOutput = outputPath+'/'+ this.compiled.package.name.replace('/', '-') +'.party'
+    fs.writeFileSync(buildOutput, JSON.stringify(this.compiled))
 
     return this.compiled
 
+  }
+
+  async compileList(field, outputPath){
+    // Build file list
+    debug('compileList',field)
+    debug(this.sources)
+    for(const name in this.sources[field]){
+      debug('\r', field, name)
+
+      const buildPath = Path.join(outputPath, field+'-'+name)
+      const build = await this.compileFileTo(this.sources[field][name], buildPath)
+
+      this.compiled[field][name] = build
+
+    }
   }
 
   async compileMiddleware(type,outputPath){
