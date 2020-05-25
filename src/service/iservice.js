@@ -50,22 +50,31 @@ module.exports = class IService {
       throw new Error('no output path')
     }
 
+    await Promise.all([
+      this.compileMiddleware('pre', outputPath),
+      this.compileMiddleware('post', outputPath)
+    ])
+
     /*const Webpack = require('webpack')
     const nodeExternals = require('webpack-node-externals')*/
 
-    // Build pre middleware
-    for(const preName of this.middleware_order.pre){
-      debug('\rpre', preName)
-
-      const buildPath = Path.join(outputPath, 'middleware-pre-'+preName)
-      const build = await this.compileFileTo(this.sources.middleware.pre[preName], buildPath)
-
-      this.compiled.middleware.pre[preName] = build
-
-    }
+    
 
     return this.compiled
 
+  }
+
+  async compileMiddleware(type,outputPath){
+    // Build pre middleware
+    for(const name of this.middleware_order[type]){
+      debug('\r', type, name)
+
+      const buildPath = Path.join(outputPath, 'middleware-'+type+'-'+name)
+      const build = await this.compileFileTo(this.sources.middleware[type][name], buildPath)
+
+      this.compiled.middleware[type][name] = build
+
+    }
   }
 
   async compileFileTo(input, output){
