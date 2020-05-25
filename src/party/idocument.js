@@ -60,6 +60,9 @@ class IDocument extends EventEmitter {
    */
   get version(){ return reach(this._data, '$meta.version') }
 
+  static get DocumentSchema(){
+    return 'document'
+  }
 
   /**
    * @typedef {Object} IdObj
