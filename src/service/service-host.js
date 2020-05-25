@@ -2,6 +2,7 @@ const net = require('net')
 const http = require('http')
 const https = require('https')
 
+const Pify = require('pify')
 const debug = require('debug')('roshub.server')
 const Hoek = require('hoek')
 const morgan = require('morgan')
@@ -12,17 +13,12 @@ const bodyParser = require('body-parser')
 const {URL} = require('url');
 
 
-const Cloud = require('./cloud')
-const ClientApi = require('./api')
-const OAuth = require('./oauth')
-
 class ServiceHost {
   constructor({
-    party, listenUri = 'http://0.0.0.0:4001',
+    listenUri = 'http://0.0.0.0:4001',
     cors = null,
     trust_proxy = false
   }){
-    this.party = party  //! Host party
     this.apiApp = express()
     this.router = express.Router()
 
@@ -49,6 +45,8 @@ class ServiceHost {
 
   async start(){
 
+    debug('starting server')
+
     if(this.apiServer==null){
       debug('adding default endpoints')
       //Setup router
@@ -57,33 +55,59 @@ class ServiceHost {
       if(debug.enabled){ expressListRoutes('API:', this.router ) }
     }
 
-    if(this.apiServerUri.protocol == 'file:'){
-      //! Handle unix socket
+    let listenPort = this.apiServerUri.port
+    let listenHost = this.apiServerUri.host
+    
+    if(this.apiServerUri.protocol == 'http:'){
+
+      //! Handle http
       this.apiServer = http.createServer(this.apiApp)
-      this.apiServer.listen( this.apiServerUri.pathname )
 
-    } else {
-      //! Handle http / https
-      if(this.apiServerUri.protocol == 'http:'){
-        this.apiServer = http.createServer(this.apiApp)
-      } else if(this.apiServerUri.protocol == 'https:'){
-        this.apiServer = https.createServer(this.apiApp)
-      } 
-  
-      this.apiServer.listen( this.apiServerUri.port, this.apiServerUri.host )
+    } else if(this.apiServerUri.protocol == 'https:'){
+
+      //! Handle https
+      this.apiServer = https.createServer(this.apiApp)
+
+    } else if(this.apiServerUri.protocol == 'file:'){
+
+      //! Handle unix socket
+      listenHost = null
+      listenPort = this.apiServerUri.pathname
+      this.apiServer = http.createServer(this.apiApp)
+
     }
-    
 
-    
+    await (Pify(this.apiServer.listen)(listenPort, listenHost))
 
+    clearTimeout(this.errorHandlerTimer)
+    this.errorHandlerTimer = null
+
+    this.apiServer.on('error', this.handleServerError.bind(this))
+
+    debug('server listening')
+    debug('address', this.apiServer.address())
   }
 
   async stop(){
+    debug('stopping server')
+
+    if(!this.apiServer || !this.apiServer.listening){
+      return
+    }
+
+    clearTimeout(this.errorHandlerTimer)
+    this.errorHandlerTimer = null
+
+    await (Pify(this.apiServer.close)())
+
+    debug('stopped server')
   }
 
-  handleServerErrorRetry(error){
-    debug('Error - ', JSON.stringify(error))
+  handleServerError(error){
+    debug('CRITICAL ERROR - ', JSON.stringify(error))
     this.errorHandlerTimer = setTimeout( ()=>{
+
+      debug('restarting server')
 
       if(this.apiServer){
         this.stop().then(this.start.bind(this))
