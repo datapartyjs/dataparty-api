@@ -1,11 +1,16 @@
 const fs = require('fs')
 const Path = require('path')
 const NCC = require('@zeit/ncc')
+const Hoek = require('@hapi/hoek')
+const {JSONPath} = require('jsonpath-plus')
+const gitRepoInfo = require('git-repo-info')
+const BouncerDb = require('@dataparty/bouncer-db')
+const json2ts = require('json-schema-to-typescript')
 const debug = require('debug')('dataparty.service.IService')
 
 module.exports = class IService {
   constructor({
-    name, version
+    name, version, githash='', branch=''
   }){
 
     this.constructors = {
@@ -34,7 +39,12 @@ module.exports = class IService {
     }
 
     this.compiled = {
-      package: { name, version },
+      package: { name, version, githash, branch },
+      schemas: {
+        IndexSettings: {},
+        JSONSchema: [],
+        Permissions: {}
+      },
       documents: {},
       endpoints: {},
       middleware: {
@@ -45,18 +55,70 @@ module.exports = class IService {
    }
 
 
+  /**
+   * 
+   * @param {dataparty.service.ISchema} schema_path 
+   */
+  addSchema(schema_path){
+    const schema = require(schema_path)
+    const name = schema.Type
+
+    this.sources.schemas[name] = schema_path
+    this.constructors.schemas[name] = schema
+  }
+
+  addDocument(document_path){
+    const document = require(document_path)
+    const name = document.DocumentSchema
+
+    this.sources.documents[name] = document_path
+    this.constructors.documents[name] = document
+  }
+
+  addEndpoint(endpoint_path){
+    const endpoint = require(endpoint_path)
+    const name = endpoint.Name
+
+    this.sources.endpoints[name] = endpoint_path
+    this.constructors.endpoints[name] = endpoint
+  }
+
+  addMiddleware(middleware_path){
+
+    debug('addMiddleware',middleware_path)
+
+    const middleware = require(middleware_path)
+
+
+    const name = middleware.Name 
+    const type = middleware.Type
+
+    debug('addMiddleware',type,name)
+
+    this.middleware_order[type].push(name)
+
+    this.sources.middleware[type][name] = middleware_path
+    this.constructors.middleware[type][name] = middleware
+  }
+
+
   async compile(outputPath){
 
     if(!outputPath){
       throw new Error('no output path')
     }
 
+    const info = gitRepoInfo(Path.dirname(outputPath))
+
+    this.compiled.package.githash = info.sha
+    this.compiled.package.branch = info.branch
 
     await Promise.all([
       this.compileMiddleware('pre'),
       this.compileMiddleware('post'),
       this.compileList('documents'),
-      this.compileList('endpoints')
+      this.compileList('endpoints'),
+      this.compileSchemas()
     ])
 
     const buildOutput = outputPath+'/'+ this.compiled.package.name.replace('/', '-') +'.dataparty-service.json'
@@ -124,57 +186,69 @@ module.exports = class IService {
     return {code, map, assets}
   }
 
-  /**
-   * 
-   * @param {dataparty.service.ISchema} schema_path 
-   */
-  addSchema(schema_path){
-    const schema = require(schema_path)
-    const name = schema.Type
 
-    this.sources.schemas[name] = schema_path
-    this.constructors.schemas[name] = schema
-  }
+  async compileSchemas(buildTypeScript=false){
+    for(let key in this.constructors.schemas){
+      const model = this.constructors.schemas[key]
+      let schema = mongoose.Schema(model.Schema)
+      schema = model.setupSchema(schema)
+      let jsonSchema = schema.jsonSchema()
+  
+      jsonSchema.title = model.Type
+  
+      this.compiled.schemas.Permissions[model.Type] = await model.permissions()
+      this.compiled.schemas.JSONSchema.push(jsonSchema)
+  
+      debug('\t','type',model.Type)
+  
+      let indexed = JSONPath({
+        path: '$..options.index',
+        json: schema.paths,
+        resultType: 'pointer'
+      }).map(p=>{return p.split('/')[1]})
+  
+      debug('\t\tindexed', indexed)
+  
+      let unique = JSONPath({
+        path: '$..options.unique',
+        json: schema.paths,
+        resultType: 'pointer'
+      }).map(p=>{
+        debug(typeof p)
+        if(typeof p == 'string'){
+          return p.split('/')[1]
+        }
+        
+        return p
+      })
+  
+      debug('\t\tunique', unique)
+  
+      debug('\t\tindexes', schema._indexes)
+  
+      let compoundIndices = {
+        indices: Hoek.reach(schema, '_indexes.0.0'),
+        unique: Hoek.reach(schema, '_indexes.0.1.unique')
+      }
+  
+      this.compiled.schemas.IndexSettings[model.Type] = {
+        indices: indexed,
+        unique,
+        compoundIndices
+      }
+  
+      if(buildTypeScript){
+        
+        const tsWrite = json2ts.compile(jsonSchema).then( ts=>{
+          tsOutput[model.Type] = ts
+        })
+        
+        tsWrites.push(tsWrites)
+        
+      }
+  
+    }
 
-  addDocument(document_path){
-    const document = require(document_path)
-    const name = document.DocumentSchema
-
-    this.sources.documents[name] = document_path
-    this.constructors.documents[name] = document
-  }
-
-  addEndpoint(endpoint_path){
-    const endpoint = require(endpoint_path)
-    const name = endpoint.Name
-
-    this.sources.endpoints[name] = endpoint_path
-    this.constructors.endpoints[name] = endpoint
-  }
-
-  addMiddleware(middleware_path){
-
-    debug('addMiddleware',middleware_path)
-
-    const middleware = require(middleware_path)
-
-
-    const name = middleware.Name 
-    const type = middleware.Type
-
-    debug('addMiddleware',type,name)
-
-    this.middleware_order[type].push(name)
-
-    this.sources.middleware[type][name] = middleware_path
-    this.constructors.middleware[type][name] = middleware
-  }
-
-  async start(){
-    //
-  }
-
-  async run(context){
-
+    if(buildTypeScript){ await Promise.all(tsWrites) }
   }
 }
