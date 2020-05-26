@@ -106,7 +106,7 @@ module.exports = class IService {
   }
 
 
-  async compile(outputPath){
+  async compile(outputPath, writeFile=true){
 
     if(!outputPath){
       throw new Error('no output path')
@@ -127,14 +127,16 @@ module.exports = class IService {
 
     this.compiled.middleware_order = this.middleware_order
 
-    const buildOutput = outputPath+'/'+ this.compiled.package.name.replace('/', '-') +'.dataparty-service.json'
-    fs.writeFileSync(buildOutput, JSON.stringify(this.compiled))
+    if(writeFile){
+      const buildOutput = outputPath+'/'+ this.compiled.package.name.replace('/', '-') +'.dataparty-service.json'
+      fs.writeFileSync(buildOutput, JSON.stringify(this.compiled))
 
-    const schemaOutput = outputPath+'/'+ this.compiled.package.name.replace('/', '-') +'.dataparty-schema.json'
-    fs.writeFileSync(schemaOutput, JSON.stringify({
-      package: this.compiled.package,
-      ...this.compiled.schemas
-    }))
+      const schemaOutput = outputPath+'/'+ this.compiled.package.name.replace('/', '-') +'.dataparty-schema.json'
+      fs.writeFileSync(schemaOutput, JSON.stringify({
+        package: this.compiled.package,
+        ...this.compiled.schemas
+      }))
+    }
 
     return this.compiled
 
@@ -173,7 +175,7 @@ module.exports = class IService {
       // provide a custom cache path or disable caching
       cache: false,
       // externals to leave as requires of the build
-      //externals: ["externalpackage"],
+      externals: ['debug', '@dataparty/crypto', '@hapi/joi', '@hapi/hoek'],
       // directory outside of which never to emit assets
       //filterAssetBase: process.cwd(), // default
       minify: false, // default

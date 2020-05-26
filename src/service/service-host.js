@@ -1,27 +1,25 @@
+const CORS = require('cors')
+const Pify = require('pify')
+const {URL} = require('url')
 const net = require('net')
 const http = require('http')
 const https = require('https')
-
-const Pify = require('pify')
-const debug = require('debug')('roshub.server')
-const Hoek = require('hoek')
 const morgan = require('morgan')
 const express = require('express')
-const CORS = require('cors')
-const expressListRoutes = require('express-list-routes')
 const bodyParser = require('body-parser')
-const {URL} = require('url');
+const expressListRoutes = require('express-list-routes')
+const debug = require('debug')('dataparty.service-host')
+
 
 
 class ServiceHost {
   constructor({
-    listenUri = 'http://0.0.0.0:4001',
-    cors = null,
-    trust_proxy = false
-  }){
+    cors = {},
+    trust_proxy = false,
+    listenUri = 'http://0.0.0.0:4001'
+  }={}){
     this.apiApp = express()
     this.router = express.Router()
-
 
     if(cors){
       this.apiApp.use(CORS())
@@ -42,6 +40,10 @@ class ServiceHost {
     this.apiServerUri = new URL(listenUri)
   }
 
+  async onRequest(req, res){
+    debug('request')
+    res.end('nope')
+  }
 
   async start(){
 
@@ -50,13 +52,13 @@ class ServiceHost {
     if(this.apiServer==null){
       debug('adding default endpoints')
       //Setup router
-      //this.apiApp.use(this.router);
+      this.apiApp.use(this.onRequest.bind(this))
 
       if(debug.enabled){ expressListRoutes('API:', this.router ) }
     }
 
     let listenPort = this.apiServerUri.port
-    let listenHost = this.apiServerUri.host
+    let listenHost = this.apiServerUri.hostname
     
     if(this.apiServerUri.protocol == 'http:'){
 
@@ -77,7 +79,11 @@ class ServiceHost {
 
     }
 
-    await (Pify(this.apiServer.listen)(listenPort, listenHost))
+    debug('server listening', this.apiServerUri.toString())
+
+    await new Promise((resolve,reject)=>{
+      this.apiServer.listen(listenPort, listenHost, resolve)
+    })
 
     clearTimeout(this.errorHandlerTimer)
     this.errorHandlerTimer = null

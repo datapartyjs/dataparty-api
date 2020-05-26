@@ -6,7 +6,6 @@ const debug = require('debug')('roshub.middleware.pre.decrypt')
 const IMiddleware = require('../../imiddleware')
 
 module.exports = class Decrypt extends IMiddleware {
-  constructor(opts){ super(opts) }
 
   static get Name(){
     return 'decrypt'

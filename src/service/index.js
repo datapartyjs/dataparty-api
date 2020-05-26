@@ -6,6 +6,7 @@ module.exports = {
   IService: require('./iservice'),
   IEndpoint: require('./iendpoint'),
   IMiddleware: require('./imiddleware'),
+  ServiceHost: require('./service-host'),
   middleware: {
     pre: {
       decrypt: require('./middleware/pre/decrypt')
