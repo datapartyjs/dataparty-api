@@ -7,7 +7,7 @@ async function main(){
   const uri = 'mongodb://localhost:27017/server-party-test'
   debug('db location', uri)
 
-  let party = new Dataparty.ServerParty({
+  let party = new Dataparty.MongoParty({
     uri,
     model: BouncerClientModels,
     config: new Dataparty.Config.MemoryConfig()

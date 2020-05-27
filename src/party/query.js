@@ -1,5 +1,6 @@
 'use strict'
 
+const debug=require('debug')('dataparty.query')
 const cloneDeep = require('lodash/cloneDeep')
 const Clerk = require('./clerk.js')
 
@@ -76,7 +77,7 @@ module.exports = class Query {
 
     if(hydrate){
       const results = await this.qb.find(this.spec)
-      console.log('hydrating', results)
+      debug('hydrating', results)
       return this.model.hydrate(results)
     }
     

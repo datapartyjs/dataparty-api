@@ -15,7 +15,7 @@ const RTCSocketComms = require('../../comms/rtc-socket-comms')
  */
 class PeerParty extends IParty {
 
-  constructor ({remoteIdentity, path, host, wrtc, trickle, ...options}) {
+  constructor ({remoteIdentity, host, hostParty, wrtc, trickle=true, ...options}) {
     super(options)
 
     this.comms = new RTCSocketComms({remoteIdentity, host, party: this, wrtc, trickle})
@@ -25,12 +25,10 @@ class PeerParty extends IParty {
       cache: this.cache
     })
 
-    this.db = null
+    this.hostParty = null
 
     if(this.comms.host){
-      this.db = new LokiDb({
-        path, factory: this.factory
-      })
+      this.hostParty = hostParty
     }
   }
 
@@ -38,7 +36,7 @@ class PeerParty extends IParty {
     await super.start()
     if(this.comms.host){ 
       debug('start - host')
-      await this.db.start()
+      await this.hostParty.start()
     }
     else {
       debug('start - client')
@@ -52,7 +50,7 @@ class PeerParty extends IParty {
 
     if(this.comms.host){
       debug('handleCall - host')
-      return await this.db.handleCall(ask)
+      return await this.hostParty.handleCall(ask)
     } else {
       debug('handleCall - client')
       return await this.comms.call('api-v2-peer-bouncer', ask)
