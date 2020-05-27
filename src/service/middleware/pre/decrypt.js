@@ -23,21 +23,18 @@ module.exports = class Decrypt extends IMiddleware {
     return Joi.boolean()
   }
 
-  async run(config, context){
-    if(!config){
-      return
-    }
+  static async run(ctx, static_ctx){
 
-    if (!Hoek.reach(context, 'endpoint.MiddlewareConfig.pre.decrypt', false)){
-      return Promise.resolve(context)
+    if (!Hoek.reach(ctx, 'endpoint.MiddlewareConfig.pre.decrypt', false)){
+      return
     }
   
 
-    const msg = new Message(context.input)
+    const msg = new Message(ctx.input)
     const jsonContent = await msg.decrpyt(this.serviceParty.privateIdentity)
     const publicKeys = Routines.extractPublicKeys(msg.enc)
 
-    context.setInputSession(jsonContent.session)
+    ctx.setInputSession(jsonContent.session)
 
     return {
       input: Hoek.reach(content, 'data'),

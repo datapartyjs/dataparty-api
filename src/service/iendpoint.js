@@ -15,6 +15,10 @@ module.exports = class IEndpoint {
     throw new Error('not implemented')
   }
 
+  static async start(party){
+    
+  }
+
   static async run(context){
     throw new Error('not implemented')
   }
