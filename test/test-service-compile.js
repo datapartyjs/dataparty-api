@@ -2,7 +2,11 @@ const Path = require('path')
 const debug = require('debug')('test.service-compile')
 const Dataparty = require('../src')
 
-const {VM, NodeVM, VMScript} = require('vm2')
+//const {VM, NodeVM, VMScript} = require('vm2')
+
+process.on('uncaughtException', (err) => {
+  console.error('Asynchronous error caught.', err);
+})
 
 class ExampleService extends Dataparty.IService {
     constructor(opts){
@@ -13,60 +17,10 @@ class ExampleService extends Dataparty.IService {
 
 }
 
-class CodeAccessor {
-  constructor(code){
-    debug('code-accessor', code)
-    this.script = new VMScript(code)
-    debug('compiled')  
-  }
-
-  run(context, sandbox){
-    debug('run')
-
-
-    let vm = new NodeVM({
-      sandbox,
-      require: {
-        external: {
-          modules: ['debug', '@dataparty/crypto', '@hapi/joi', '@hapi/hoek']
-        },
-        //builtin: ['*']
-      }
-    })
-
-    debug('has run')
-    let fn = vm.run(this.script)
-    const retVal = fn(context)
-    debug('retVal', retVal)
-    debug('context', context)
-    return retVal
-  }
-
-}
-
-class MiddlewareInfoAccessor extends CodeAccessor {
-  constructor(code){
-    super(`
-      
-      let lib = ${code}
-     
-      module.exports = ()=>{
-
-      return {
-        Name: lib.Name,
-        Type: lib.Type,
-        Description: lib.Description,
-        ConfigSchema: lib.ConfigSchema
-      }
-    }
-    `)
-  }
-
-}
 
 async function main(){
 
-  console.log(Object.keys(Dataparty))
+  debug(Object.keys(Dataparty))
 
   const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
 
@@ -74,11 +28,27 @@ async function main(){
 
   //debug(build.middleware.pre.decrypt)
 
-  let accessor = new MiddlewareInfoAccessor(build.middleware.pre.decrypt.code)
+  let decryptInfo = new Dataparty.MiddlewareInfoSandbox(build.middleware.pre.decrypt.code)
 
-  console.log(accessor.run('derp'))
+  try{
+    await decryptInfo.run()
+  }
+  catch(err){
+    debug('supressing error')
+    debug('\tname\t',err.name)
+    debug('\tcode\t',err.code)
 
-  console.log(build)
+    debug('\tmsg\t',err.message)
+
+    debug('\tstack\t',err.stack)
+
+    debug('\tlocations\t',err.locations)
+  }
+
+  debug('# Middleware #')
+  debug('\t Name=', decryptInfo.info.Name)
+  debug('\t Type="', decryptInfo.info.Type, '"')
+  debug('\t Desc="', decryptInfo.info.Description, '"')
   
   process.exit()
 }
