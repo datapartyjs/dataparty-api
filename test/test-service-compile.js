@@ -2,8 +2,6 @@ const Path = require('path')
 const debug = require('debug')('test.service-compile')
 const Dataparty = require('../src')
 
-//const {VM, NodeVM, VMScript} = require('vm2')
-
 process.on('uncaughtException', (err) => {
   console.error('Asynchronous error caught.', err);
 })
@@ -25,8 +23,6 @@ async function main(){
   const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
 
   const build = await service.compile(Path.join(__dirname,'../dataparty'), false)
-
-  //debug(build.middleware.pre.decrypt)
 
   let decryptInfo = new Dataparty.MiddlewareInfoSandbox(build.middleware.pre.decrypt.code)
 

@@ -2,14 +2,14 @@ const Path = require('path')
 const debug = require('debug')('test.server-db')
 const Dataparty = require('../src')
 
-/*class ExampleService extends Dataparty.IService {
-    constructor(opts){
-      super(opts)
+class ExampleService extends Dataparty.IService {
+  constructor(opts){
+    super(opts)
 
-      this.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
-    }
+    this.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
+  }
 
-}*/
+}
 
 async function main(){
 
