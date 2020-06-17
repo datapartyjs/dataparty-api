@@ -37,7 +37,7 @@ module.exports = async (ctx, static_ctx)=>{
 
   async run(ctx, static_ctx){
 
-    debug('running', ctx)
+    debug('running')
 
     this.result = await super.run(ctx, static_ctx)
 

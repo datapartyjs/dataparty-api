@@ -58,31 +58,6 @@ class ServiceRunner {
     this.router.add(name, this.endpointHandler(endpoint))
   }
 
-  endpointHandler(endpoint){
-    return async (event)=>{
-
-      debug('event',event)
-
-      //const result = await endpoint.run(context)
-
-      debug(Object.keys(event))
-
-      const context = new EndpointContext({
-        req: event.request, res: event.response,
-        endpoint,
-        party: this.party,
-      })
-
-      debug('running')
-  
-      const result = await endpoint.run(context)
-
-      debug('result', result)
-
-      context.res.send(result)
-
-    }
-  }
 
   async loadEndpointMiddleware(endpoint, type='pre'){
     const preOrder = Hoek.reach(this.service, 'compiled.middleware_order.'+type)
@@ -132,18 +107,40 @@ class ServiceRunner {
   async onRequest(req, res){
     debug('onRequest')
 
-    debug('req', Object.keys(req), req.body)
+    debug('req', req.method, req.url, req.body)
 
-    debug('endpoints', Object.keys(this.endpoint))
 
 
     let route = await this.router.route(req, res)
 
-    debug(route)
 
     if(!route){
       res.status(404).end()
       return
+    }
+  }
+
+
+  endpointHandler(endpoint){
+    return async (event)=>{
+
+      debug('event',event.method, event.pathname)
+
+
+      const context = new EndpointContext({
+        req: event.request, res: event.response,
+        endpoint,
+        party: this.party,
+      })
+
+      debug('running')
+  
+      const result = await endpoint.run(context)
+
+      debug('result', result)
+
+      context.res.send(result)
+
     }
   }
 }
