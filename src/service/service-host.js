@@ -16,9 +16,11 @@ class ServiceHost {
   constructor({
     cors = {},
     trust_proxy = false,
-    listenUri = 'http://0.0.0.0:4001'
+    listenUri = 'http://0.0.0.0:4001',
+    runner
   }={}){
     this.apiApp = express()
+    this.runner = runner
     this.router = express.Router()
 
     if(cors){
@@ -40,11 +42,6 @@ class ServiceHost {
     this.apiServerUri = new URL(listenUri)
   }
 
-  async onRequest(req, res){
-    debug('request')
-    res.end('nope')
-  }
-
   async start(){
 
     debug('starting server')
@@ -52,7 +49,7 @@ class ServiceHost {
     if(this.apiServer==null){
       debug('adding default endpoints')
       //Setup router
-      this.apiApp.use(this.onRequest.bind(this))
+      this.apiApp.use(this.runner.onRequest.bind(this.runner))
 
       if(debug.enabled){ expressListRoutes('API:', this.router ) }
     }

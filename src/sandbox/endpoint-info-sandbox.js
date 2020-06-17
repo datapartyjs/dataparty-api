@@ -1,7 +1,7 @@
-const debug = require('debug')('dataparty.MiddlewareInfoSandbox')
+const debug = require('debug')('dataparty.EndpointInfoSandbox')
 const Sandbox = require('./sandbox')
 
-class MiddlewareInfoSandbox extends Sandbox {
+class EndpointInfoSandbox extends Sandbox {
   constructor(code){
     super(`  
 
@@ -20,9 +20,8 @@ module.exports = async ()=>{
 
     return {
       Name: Lib.Name,
-      Type: Lib.Type,
       Description: Lib.Description,
-      ConfigSchema: Lib.ConfigSchema
+      MiddlewareConfig: Lib.MiddlewareConfig
     }
   }
   catch(err){
@@ -42,7 +41,8 @@ module.exports = async ()=>{
 
   async run(){
 
-    debug('running', this.code)
+    debug('running')
+
     this.info = await super.run()
 
     return this.info
@@ -50,4 +50,4 @@ module.exports = async ()=>{
 
 }
 
-module.exports = MiddlewareInfoSandbox
+module.exports = EndpointInfoSandbox

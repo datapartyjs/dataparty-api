@@ -2,18 +2,17 @@ const Path = require('path')
 const debug = require('debug')('test.service-compile')
 const Dataparty = require('../src')
 
-//const {VM, NodeVM, VMScript} = require('vm2')
-
 process.on('uncaughtException', (err) => {
   console.error('Asynchronous error caught.', err);
 })
 
 class ExampleService extends Dataparty.IService {
-    constructor(opts){
-      super(opts)
+  constructor(opts){
+    super(opts)
 
-      this.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
-    }
+    this.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
+    this.addEndpoint(Dataparty.endpoint_paths.identity)
+  }
 
 }
 
@@ -24,9 +23,7 @@ async function main(){
 
   const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
 
-  const build = await service.compile(Path.join(__dirname,'../dataparty'), false)
-
-  //debug(build.middleware.pre.decrypt)
+  const build = await service.compile(Path.join(__dirname,'../dataparty'), true)
 
   let decryptInfo = new Dataparty.MiddlewareInfoSandbox(build.middleware.pre.decrypt.code)
 

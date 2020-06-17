@@ -80,6 +80,7 @@ module.exports = class IService {
   }
 
   addEndpoint(endpoint_path){
+    debug('andEndpoint', endpoint_path)
     const endpoint = require(endpoint_path)
     const name = endpoint.Name
 
