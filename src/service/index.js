@@ -7,6 +7,10 @@ module.exports = {
   IEndpoint: require('./iendpoint'),
   IMiddleware: require('./imiddleware'),
   ServiceHost: require('./service-host'),
+  ServiceRunner: require('./service-runner'),
+  EndpointRunner: require('./endpoint-runner'),
+  EndpointContext: require('./endpoint-context'),
+  MiddlewareRunner: require('./middleware-runner'),
   middleware: {
     pre: {
       decrypt: require('./middleware/pre/decrypt')
@@ -16,5 +20,11 @@ module.exports = {
     pre: {
       decrypt: Path.join(__dirname, './middleware/pre/decrypt.js')
     }
+  },
+  endpoint: {
+    identity: require('./endpoints/service-identity')
+  },
+  endpoint_paths: {
+    identity: Path.join(__dirname, './endpoints/service-identity.js')
   }
 }

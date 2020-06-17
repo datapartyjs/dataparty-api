@@ -7,11 +7,12 @@ process.on('uncaughtException', (err) => {
 })
 
 class ExampleService extends Dataparty.IService {
-    constructor(opts){
-      super(opts)
+  constructor(opts){
+    super(opts)
 
-      this.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
-    }
+    this.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
+    this.addEndpoint(Dataparty.endpoint_paths.identity)
+  }
 
 }
 
@@ -22,7 +23,7 @@ async function main(){
 
   const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
 
-  const build = await service.compile(Path.join(__dirname,'../dataparty'), false)
+  const build = await service.compile(Path.join(__dirname,'../dataparty'), true)
 
   let decryptInfo = new Dataparty.MiddlewareInfoSandbox(build.middleware.pre.decrypt.code)
 

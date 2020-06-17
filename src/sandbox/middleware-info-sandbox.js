@@ -1,4 +1,4 @@
-//const debug = require('debug')('dataparty.MiddlewareInfoSandbox')
+const debug = require('debug')('dataparty.MiddlewareInfoSandbox')
 const Sandbox = require('./sandbox')
 
 class MiddlewareInfoSandbox extends Sandbox {
@@ -42,7 +42,7 @@ module.exports = async ()=>{
 
   async run(){
 
-
+    debug('running', this.code)
     this.info = await super.run()
 
     return this.info

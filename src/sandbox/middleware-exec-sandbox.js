@@ -1,4 +1,4 @@
-//const debug = require('debug')('dataparty.MiddlewareExecSandbox')
+const debug = require('debug')('dataparty.MiddlewareExecSandbox')
 const Sandbox = require('./sandbox')
 
 class MiddlewareExecSandbox extends Sandbox {
@@ -35,8 +35,9 @@ module.exports = async (ctx, static_ctx)=>{
     this.result = null
   }
 
-  async run({ctx, static_ctx, party}){
+  async run(ctx, static_ctx){
 
+    debug('running', ctx)
 
     this.result = await super.run(ctx, static_ctx)
 

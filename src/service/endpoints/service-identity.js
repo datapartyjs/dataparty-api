@@ -1,47 +1,36 @@
 const Joi = require('@hapi/joi')
 const Hoek = require('@hapi/hoek')
 const {Message, Routines} = require('@dataparty/crypto')
-const debug = require('debug')('roshub.middleware.pre.decrypt')
+const debug = require('debug')('roshub.endpoint.identity')
 
-const IMiddleware = require('../../imiddleware')
+const IEndpoint = require('../iendpoint')
 
-module.exports = class Decrypt extends IMiddleware {
+module.exports = class ServiceIdentity extends IEndpoint {
 
   static get Name(){
-    return 'decrypt'
+    return 'identity'
   }
 
-  static get Type(){
-    return 'pre'
-  }
 
   static get Description(){
-    return 'Decrypt inbound data'
+    return 'Get host identity'
   }
 
-  static get ConfigSchema(){
-    return Joi.boolean()
+  static get MiddlewareConfig(){
+    return {
+      pre: {
+        decrpyt: false
+      }
+    }
   }
 
   static async run(ctx, static_ctx){
 
-    if (!Hoek.reach(ctx, 'endpoint.MiddlewareConfig.pre.decrypt', false)){
-      return
-    }
   
-
-    const msg = new Message(ctx.input)
-    const jsonContent = await msg.decrpyt(this.serviceParty.privateIdentity)
-    const publicKeys = Routines.extractPublicKeys(msg.enc)
-
-    ctx.setInputSession(jsonContent.session)
+    const identity = ctx.party.identity
 
     return {
-      input: Hoek.reach(content, 'data'),
-      sender: {
-        type: 'ecdsa',
-        public: publicKeys
-      }
+      ...identity
     }
   }
 }

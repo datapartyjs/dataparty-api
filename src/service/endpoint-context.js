@@ -8,16 +8,16 @@ class EndpointContext {
 
     this.req = req
     this.res = res
-    this.actor = actor
+    this.actor = null
     this.stats = {
       start: Date.now(),
       bytes_in: !req ? null : JSON.stringify(req.body).length
     }
-    this.oauth_cloud = oauth_cloud
-    this.session = session
-    this.identity = identity
-    this.input = input
-    this.input_session_id = input_session_id
+    this.oauth_cloud = null
+    this.session = null
+    this.identity = null
+    this.input = null
+    this.input_session_id = null
     this._debug = Debug('dataparty.context.undefined')
     this._debugContent = []
   }
@@ -40,7 +40,9 @@ class EndpointContext {
   setActor(actor){ this.actor = actor }
   setInputSession(input_session_id){ this.input_session_id = input_session_id }
 
-  applyMiddleware
+  /*async applyMiddleware(){
+    
+  }*/
 
   debug(msg, ...args){
     let line = ((new Error().stack).split('at ')[2]).trim()

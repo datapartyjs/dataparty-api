@@ -1,56 +1,12 @@
+const Joi = require('@hapi/joi')
 const Hoek = require('@hapi/hoek')
 const {VM, VMScript} = require('vm2')
 const debug = require('debug')('dataparty.server-runner')
+const MiddlewareRunner = require('./middleware-runner')
+const EndpointContext = require('./endpoint-context')
+const EndpointRunner = require('./endpoint-runner')
 
-class Runner {
-  constructor({info, exec, start}){
-    this.sandboxes = {
-      info, exec, start
-    }
-  }
-
-  get info(){
-    return Hoek.reach(this.sandboxes, 'info.info')
-  }
-
-  async getInfo(){
-    if(!this.sandboxes.info.info){
-      await this.sandboxes.info.run()
-    }
-
-    return this.sandboxes.info.info
-  }
-
-  async start(serviceContext){
-    return await this.sandboxes.start.run(serviceContext)
-  }
-
-  async run(context){
-    return await this.sandboxes.exec.run(context)
-  }
-}
-
-class MiddlewareRunner extends Runner {
-  constructor(code){
-    super({
-      info: new MiddlewareInfoSandbox(code),
-      exec: new MiddlewareExecSandbox(code),
-      start: new MiddlewareExecSandbox(code,'start')
-    })
-  }
-}
-
-class EndpointRunner extends Runner {
-  constructor(code){
-    super({
-      info: new EndpointInfoSandbox(code),
-      exec: new MiddlewareExecSandbox(code),
-      start: new MiddlewareExecSandbox(code,'start')
-    })
-  }
-}
-
-
+const Router = require('origin-router').Router
 
 class ServiceRunner {
   constructor({service, party}){
@@ -59,14 +15,17 @@ class ServiceRunner {
 
     this.middleware = { pre: {}, post: {} }
     this.endpoint = {}
+
+    this.router = new Router()
   }
 
   async start(){
-    debug('starting')
+    debug('starting endpoints')
 
     const eps = Hoek.reach(this.service, 'compiled.endpoints')
     const endpointsLoading = []
     for(let name in eps){
+      debug('\t',name)
       endpointsLoading.push( this.loadEndpoint(name) )
     }
 
@@ -80,19 +39,49 @@ class ServiceRunner {
     }
 
     debug('loadEndpoint', name)
-    let endpoint = new EndpointRunner(this.service.compiled.endpoints[name])
+    let endpoint = new EndpointRunner(this.service.compiled.endpoints[name].code)
 
+    debug('getting info')
     await endpoint.getInfo()
+
+    debug('got info')
+
     await this.checkEndpointConfig(endpoint)
 
-    await loadEndpointMiddleware(endpoint)
-    await loadEndpointMiddleware(endpoint, 'post')
+    await this.loadEndpointMiddleware(endpoint, 'pre')
+    await this.loadEndpointMiddleware(endpoint, 'post')
 
     await endpoint.start(this.party)
 
     this.endpoint[name] = endpoint
 
+    this.router.add(name, this.endpointHandler(endpoint))
+  }
 
+  endpointHandler(endpoint){
+    return async (event)=>{
+
+      debug('event',event)
+
+      //const result = await endpoint.run(context)
+
+      debug(Object.keys(event))
+
+      const context = new EndpointContext({
+        req: event.request, res: event.response,
+        endpoint,
+        party: this.party,
+      })
+
+      debug('running')
+  
+      const result = await endpoint.run(context)
+
+      debug('result', result)
+
+      context.res.send(result)
+
+    }
   }
 
   async loadEndpointMiddleware(endpoint, type='pre'){
@@ -114,7 +103,7 @@ class ServiceRunner {
 
     debug('loadMiddleware', type, name)
 
-    let middleware = new MiddlewareRunner(this.service.compiled.middlware[type][name])
+    let middleware = new MiddlewareRunner(this.service.compiled.middlware[type][name].code)
 
     await middleware.getInfo()
     await middleware.start(this.party)
@@ -143,10 +132,20 @@ class ServiceRunner {
   async onRequest(req, res){
     debug('onRequest')
 
-    const context = new EndpointContext({
-      req, res,
-      party: this.party,
-    })
+    debug('req', Object.keys(req), req.body)
+
+    debug('endpoints', Object.keys(this.endpoint))
+
+
+    let route = await this.router.route(req, res)
+
+    debug(route)
+
+    if(!route){
+      res.status(404).end()
+      return
+    }
   }
 }
 
+module.exports = ServiceRunner

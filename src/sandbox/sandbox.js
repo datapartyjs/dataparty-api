@@ -5,7 +5,7 @@ const SandboxError = require('./sandbox-error')
 
 class Sandbox {
   constructor(code){
-    debug('compiling code')
+    debug('compiling code', typeof code)
     this.code = code
     this.script = new VMScript(code)
     debug('compiled')  

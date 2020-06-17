@@ -11,12 +11,16 @@ module.exports = class Decrypt extends IMiddleware {
     return 'decrypt'
   }
 
+  static get Type(){
+    return 'pre'
+  }
+
   static get Description(){
     return 'Decrypt inbound data'
   }
 
-  static get MiddlewareConfig(){
-    throw new Error('not implemented')
+  static get ConfigSchema(){
+    return Joi.boolean()
   }
 
   static async start(party){
