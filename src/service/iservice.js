@@ -130,7 +130,7 @@ module.exports = class IService {
 
     if(writeFile){
       const buildOutput = outputPath+'/'+ this.compiled.package.name.replace('/', '-') +'.dataparty-service.json'
-      fs.writeFileSync(buildOutput, JSON.stringify(this.compiled))
+      fs.writeFileSync(buildOutput, JSON.stringify(this.compiled, null,2))
 
       const schemaOutput = outputPath+'/'+ this.compiled.package.name.replace('/', '-') +'.dataparty-schema.json'
       fs.writeFileSync(schemaOutput, JSON.stringify({
@@ -179,12 +179,12 @@ module.exports = class IService {
       externals: ['debug', '@dataparty/crypto', '@hapi/joi', '@hapi/hoek'],
       // directory outside of which never to emit assets
       //filterAssetBase: process.cwd(), // default
-      minify: false, // default
-      sourceMap: false, // default
+      minify: true, // default
+      sourceMap: true, // default
       //sourceMapBasePrefix: '../', // default treats sources as output-relative
       // when outputting a sourcemap, automatically include
       // source-map-support in the output file (increases output by 32kB).
-      sourceMapRegister: true, // default
+      sourceMapRegister: false, // default
       watch: false, // default
       v8cache: false, // default
       quiet: false, // default

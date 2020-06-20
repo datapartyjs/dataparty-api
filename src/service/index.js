@@ -13,18 +13,22 @@ module.exports = {
   MiddlewareRunner: require('./middleware-runner'),
   middleware: {
     pre: {
-      decrypt: require('./middleware/pre/decrypt')
+      decrypt: require('./middleware/pre/decrypt'),
+      validate: require('./middleware/pre/validate')
     }
   },
   middleware_paths: {
     pre: {
-      decrypt: Path.join(__dirname, './middleware/pre/decrypt.js')
+      decrypt: Path.join(__dirname, './middleware/pre/decrypt.js'),
+      validate: Path.join(__dirname, './middleware/pre/validate.js')
     }
   },
   endpoint: {
+    echo: require('./endpoints/echo'),
     identity: require('./endpoints/service-identity')
   },
   endpoint_paths: {
+    echo: Path.join(__dirname, './endpoints/echo.js'),
     identity: Path.join(__dirname, './endpoints/service-identity.js')
   }
 }

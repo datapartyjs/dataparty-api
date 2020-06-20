@@ -10,15 +10,16 @@ class ExampleService extends Dataparty.IService {
     super(opts)
 
     this.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
+    this.addMiddleware(Dataparty.middleware_paths.pre.validate)
 
-    this.addEndpoint(Dataparty.endpoint_paths.identity)
+    this.addEndpoint(Dataparty.endpoint_paths.echo)
+    //this.addEndpoint(Dataparty.endpoint_paths.identity)
+    
   }
 
 }
 
 async function main(){
-
-  console.log(Object.keys(Dataparty))
 
   const uri = 'mongodb://localhost:27017/server-party-test'
   debug('db location', uri)

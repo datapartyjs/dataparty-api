@@ -1,7 +1,7 @@
 const Joi = require('@hapi/joi')
 const Hoek = require('@hapi/hoek')
 const {Message, Routines} = require('@dataparty/crypto')
-const debug = require('debug')('roshub.endpoint.identity')
+const debug = require('debug')('dataparty.endpoint.identity')
 
 const IEndpoint = require('../iendpoint')
 
@@ -19,7 +19,8 @@ module.exports = class ServiceIdentity extends IEndpoint {
   static get MiddlewareConfig(){
     return {
       pre: {
-        decrpyt: false
+        decrpyt: false,
+        validate: Joi.object().keys({}).description('no input allowed'),
       }
     }
   }

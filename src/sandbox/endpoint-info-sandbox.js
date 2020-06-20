@@ -2,7 +2,7 @@ const debug = require('debug')('dataparty.EndpointInfoSandbox')
 const Sandbox = require('./sandbox')
 
 class EndpointInfoSandbox extends Sandbox {
-  constructor(code){
+  constructor(code, map){
     super(`  
 
 module.exports = async ()=>{
@@ -34,9 +34,10 @@ module.exports = async ()=>{
   }
 
 }
-    `)
+    `, map)
 
     this.info = null
+    this.payloadLines = code.split('\n').length-1
   }
 
   async run(){

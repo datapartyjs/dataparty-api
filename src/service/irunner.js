@@ -25,9 +25,9 @@ class IRunner {
     return await this.sandboxes.start.run(serviceContext)
   }
 
-  async run(context){
+  async run(context, static_ctx){
     debug('run')
-    return await this.sandboxes.exec.run(context)
+    return await this.sandboxes.exec.run(context, static_ctx)
   }
 
   self(){
