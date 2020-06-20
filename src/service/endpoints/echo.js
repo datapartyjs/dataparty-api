@@ -35,7 +35,8 @@ module.exports = class EchoEndpoint extends IEndpoint {
     debug('echo')
     ctx.debug('ctx.input', ctx.input)
 
-  console.log('throwing');throw new Error('derp')
+  console.log('throwing');
+  throw new Error('derp')
 
     return ctx.input
   }

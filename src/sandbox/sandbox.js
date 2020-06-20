@@ -10,11 +10,20 @@ class Sandbox {
     this.code = code
     this.map = map
 
+    this.mappings = null
     this.payloadLines = 0
     this.offsetToken = offsetToken
     this.offset = code.split(this.offsetToken)[0].split('\n').length-1
     this.script = new VMScript(code)
     debug('compiled')  
+  }
+
+  async loadSourceMap(){
+    if(!this.mappings && this.map){
+      debug('loading source map')
+      this.mappings = await new SourceMapConsumer(this.map)
+      this.mappings.computeColumnSpans()
+    }
   }
 
   async run(context, sandbox){
@@ -42,59 +51,56 @@ class Sandbox {
       debug('payloadLength', this.payloadLines)
       //debug('error',err)
       //debug('map', JSON.parse(this.map))
-      const sbError = new SandboxError(err,this)
+      const sbError = new SandboxError(err)
+
+      await sbError.resolveLocations(this)
 
       debug(sbError.locations)
 
-      let mappings = await new SourceMapConsumer(this.map)
-      mappings.computeColumnSpans()
-
-      //debug(mapping)
-
-      for(let idx in sbError.locations){
-        const loc = sbError.locations[idx]
-        debug('\t','loc',loc)
-
-        const adjustedLoc = {
-          line: parseInt(loc.line - this.offset),
-          column: loc.column - (this.offsetToken.length+1)
-        }
-
-        if(adjustedLoc.line < 1 || adjustedLoc.line > this.payloadLines){
-          continue
-        }
-
-        debug('\t','adjusted', adjustedLoc)
-
-        const mapping = mappings.originalPositionFor(adjustedLoc)
-        const spans = mappings.allGeneratedPositionsFor(mapping)
-
-        let lastColumn = 0
-
-        spans.map(span=>{
-          if(span.lastColumn > lastColumn){
-            lastColumn = span.lastColumn
-          }
-        })
-
-        const code = this.code.split('\n')[this.offset]
-          .substr(this.offsetToken.length)
-          .substring(adjustedLoc.column, lastColumn)
-
-
-        debug('\t','mapping', mapping)
-        debug('\t','spans', spans)
-
-        sbError.locations[idx] = {
-          line: mapping.line,
-          columne: mapping.column,
-          source: mapping.source,
-          code: code
-        }
-      }
 
       debug(sbError.locations)
       throw sbError
+    }
+  }
+
+  async getSourceMapLocation(loc){
+
+    if(!this.map){ return loc }
+
+    await this.loadSourceMap()
+
+    const adjustedLoc = {
+      line: parseInt(loc.line - this.offset),
+      column: loc.column - (this.offsetToken.length+1)
+    }
+
+    if(adjustedLoc.line < 1 || adjustedLoc.line > this.payloadLines){
+      return loc
+    }
+
+    debug('\t','adjusted', adjustedLoc)
+
+    const mapping = this.mappings.originalPositionFor(adjustedLoc)
+    const spans = this.mappings.allGeneratedPositionsFor(mapping)
+
+    let lastColumn = 0
+
+    spans.map(span=>{
+      if(span.lastColumn > lastColumn){
+        lastColumn = span.lastColumn
+      }
+    })
+
+    const code = this.code.split('\n')[this.offset]
+      .substr(this.offsetToken.length)
+      .substring(adjustedLoc.column, lastColumn)
+
+
+    return {
+      line: mapping.line,
+      column: mapping.column,
+      source: mapping.source,
+      code: code
     }
   }
 }
