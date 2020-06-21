@@ -106,8 +106,8 @@ class ServiceRunner {
     //! check basic structure {pre: Object, post: Object}
     
     return await Joi.object().keys({
-      pre: Joi.object(),
-      post: Joi.object()
+      pre: Joi.object().keys(null),
+      post: Joi.object().keys(null)
     })
     .validateAsync(endpoint.info.MiddlewareConfig)
   }
@@ -146,7 +146,8 @@ class ServiceRunner {
         endpoint,
         party: this.party,
         input: event.request.body, 
-        debug: Debug
+        debug: Debug,
+        sendFullErrors: this.sendFullErrors
       })
 
       debug('running', endpoint.info.Name)
@@ -175,8 +176,8 @@ class ServiceRunner {
           error: {
             code: err.code,
             message: err.message,
-            stack: (!this.sendFullErrors ? null : err.stack),
-            ... (!this.sendFullErrors ? null : err)
+            stack: (!context.sendFullErrors ? undefined : err.stack),
+            ... (!context.sendFullErrors ? null : err)
           }
         })
       }

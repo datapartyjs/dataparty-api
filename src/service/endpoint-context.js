@@ -1,7 +1,7 @@
 const Debug = require('debug')
 
 class EndpointContext {
-  constructor({party, endpoint, req, res, input, debug=Debug}){
+  constructor({party, endpoint, req, res, input, debug=Debug, sendFullErrors=false}){
     this.party = party
     this.endpoint = endpoint
     this.MiddlewareConfig = endpoint.info.MiddlewareConfig
@@ -22,6 +22,8 @@ class EndpointContext {
 
     this.output = null
     this.outputError = null
+
+    this.sendFullErrors = sendFullErrors
     
     this._debug = debug('dataparty.context.undefined')
     this._debugContent = []
@@ -64,6 +66,10 @@ class EndpointContext {
   setIdentity(identity){ this.identity = identity }
   setActor(actor){ this.actor = actor }
   setInputSession(input_session_id){ this.input_session_id = input_session_id }
+
+  setSendFullErrors(value){
+    this.sendFullErrors = value
+  }
 
   /*async applyMiddleware(){
     
