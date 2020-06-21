@@ -11,9 +11,10 @@ const EndpointRunner = require('./endpoint-runner')
 const Router = require('origin-router').Router
 
 class ServiceRunner {
-  constructor({service, party}){
+  constructor({service, party, sendFullErrors=false}){
     this.party = party
     this.service = service
+    this.sendFullErrors = sendFullErrors
 
     this.middleware = { pre: {}, post: {} }
     this.endpoint = {}
@@ -152,17 +153,33 @@ class ServiceRunner {
 
       const middlewareCfg = Hoek.reach(endpoint, 'info.MiddlewareConfig')
       
-      await this.runMiddleware(middlewareCfg, context, 'pre')
-  
-      const result = await endpoint.run(context)
+      try{
 
-      context.setOutput(result)
+        await this.runMiddleware(middlewareCfg, context, 'pre')
+    
+        const result = await endpoint.run(context)
 
-      await this.runMiddleware(middlewareCfg, context, 'post')
+        context.setOutput(result)
 
-      debug('result', result)
+        await this.runMiddleware(middlewareCfg, context, 'post')
 
-      context.res.send(result)
+        debug('result', result)
+
+        context.res.send(result)
+
+      }
+      catch(err){
+        debug('caught error', err)
+
+        context.res.status(500).send({
+          error: {
+            code: err.code,
+            message: err.message,
+            stack: (!this.sendFullErrors ? null : err.stack),
+            ... (!this.sendFullErrors ? null : err)
+          }
+        })
+      }
 
     }
   }
