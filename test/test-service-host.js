@@ -13,6 +13,7 @@ class ExampleService extends Dataparty.IService {
     this.addMiddleware(Dataparty.middleware_paths.pre.validate)
 
     this.addMiddleware(Dataparty.middleware_paths.post.validate)
+    this.addMiddleware(Dataparty.middleware_paths.post.encrypt)
 
     this.addEndpoint(Dataparty.endpoint_paths.echo)
     this.addEndpoint(Dataparty.endpoint_paths.identity)
@@ -38,7 +39,11 @@ async function main(){
 
   debug('built')
 
-  const runner = new Dataparty.ServiceRunner({party, service})
+  const runner = new Dataparty.ServiceRunner({
+    party, service,
+    sendFullErrors: true
+  })
+  
   const host = new Dataparty.ServiceHost({runner})
 
   await party.start()

@@ -17,7 +17,8 @@ module.exports = {
       validate: require('./middleware/pre/validate')
     },
     post: {
-      validate: require('./middleware/post/validate.js')
+      validate: require('./middleware/post/validate.js'),
+      encrypt: require('./middleware/post/encrypt')
     }
   },
   middleware_paths: {
@@ -26,7 +27,8 @@ module.exports = {
       validate: Path.join(__dirname, './middleware/pre/validate.js')
     },
     post: {
-      validate: Path.join(__dirname, './middleware/post/validate.js')
+      validate: Path.join(__dirname, './middleware/post/validate.js'),
+      encrypt: Path.join(__dirname, './middleware/post/encrypt.js')
     }
   },
   endpoint: {

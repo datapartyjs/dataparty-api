@@ -23,6 +23,8 @@ class EndpointContext {
     this.output = null
     this.outputError = null
 
+    this.senderKey = null
+
     this.sendFullErrors = sendFullErrors
     
     this._debug = debug('dataparty.context.undefined')
@@ -33,34 +35,39 @@ class EndpointContext {
   setRes(res){ this.res = res }
   setCloud(cloud){ this.cloud = cloud }
 
+  setSenderKey(key){
+    this.
+    this.senderKey = key
+  }
+
   setSession(session){
     this.session = session
-    this._debug = Debug('dataparty.context.' + session.id)
+    this.debug('session.id' + session.id)
   }
 
   setOauthCloud(oauth_cloud){
     this.oauth_cloud = oauth_cloud
-    this._debug = Debug('oauth cloud', oauth_cloud.id)
+    this.debug('oauth cloud', oauth_cloud.id)
   }
 
   setInput(input){
     this.input = input
-    this._debug = Debug('input set')
+    this.debug('input set')
   }
 
   setOutput(output){
     this.output = output
-    this._debug = Debug('output set')
+    this.debug('output set')
   }
 
   setInputError(error){
     this.inputError = error
-    this._debug = Debug('input error', error)
+    this.debug('input error', error)
   }
 
   setOutputError(error){
     this.outputError = error
-    this._debug = Debug('output error', error)
+    this.debug('output error', error)
   }
 
   setIdentity(identity){ this.identity = identity }
