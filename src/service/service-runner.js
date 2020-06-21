@@ -164,9 +164,10 @@ class ServiceRunner {
 
         await this.runMiddleware(middlewareCfg, context, 'post')
 
-        debug('result', result)
+        /*debug('ctx.log', context._debugContent)*/
+        debug('result', context.output)
 
-        context.res.send(result)
+        context.res.send(context.output)
 
       }
       catch(err){

@@ -1,6 +1,6 @@
 const Joi = require('@hapi/joi')
 const Hoek = require('@hapi/hoek')
-const {Message, Routines} = require('@dataparty/crypto')
+const {Message, Identity} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.middleware.post.encrypt')
 
 const IMiddleware = require('../../imiddleware')
@@ -27,25 +27,20 @@ module.exports = class Encrypt extends IMiddleware {
     
   }
 
-  static async run(context){
+  static async run(ctx){
 
-    if (!Hoek.reach(context, 'endpoint.MiddlewareConfig.post.encrypt', false)){
-      return
-    }
+    if (!Config){ return }
   
 
-    const msg = new Message(context.input)
-    const jsonContent = await msg.decrpyt(this.serviceParty.privateIdentity)
-    const publicKeys = Routines.extractPublicKeys(msg.enc)
+    const senderStr = JSON.stringify({key: ctx.senderKey})
 
-    context.setInputSession(jsonContent.session)
+    const reply = new Message({msg: ctx.output})
+    const sender = Identity.fromString(senderStr)
 
-    return {
-      input: Hoek.reach(content, 'data'),
-      sender: {
-        type: 'ecdsa',
-        public: publicKeys
-      }
-    }
+    const payload = await reply.encrypt(ctx.party.privateIdentity, sender.key)
+
+    ctx.debug('setting payload', payload)
+    ctx.setOutput(payload)
+
   }
 }

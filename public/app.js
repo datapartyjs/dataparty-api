@@ -66,7 +66,7 @@ async function main(){
     callTime2.start()
 
     const echoReply2 = await party.comms.call('secure-echo', {t:(new Date()).getTime()}, {
-      expectClearTextReply: true,
+      expectClearTextReply: false,
       sendClearTextRequest: false,
       useSessions: false
     })
@@ -75,10 +75,11 @@ async function main(){
     complete++
 
     const text = `call deltaMs=<i>${callTime2.deltaMs}</i>ms complete ${complete}` 
-    document.getElementById("console").innerHTML = text    
+    document.getElementById("secure-echo-speed").innerHTML = text    
 
-  }, 150)
+  }, 250)
 
+  
   setInterval(async ()=>{
     //console.log('send')
 
@@ -97,9 +98,9 @@ async function main(){
     complete++
 
     const text = `call deltaMs=<i>${callTime2.deltaMs}</i>ms complete ${complete}` 
-    document.getElementById("console").innerHTML = text    
+    document.getElementById("echo-speed").innerHTML = text    
 
-  }, 75)
+  }, 100)
   
 }
 

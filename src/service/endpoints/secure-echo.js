@@ -23,7 +23,7 @@ module.exports = class SecureEchoEndpoint extends IEndpoint {
         validate: Joi.object().keys(null).description('any input allowed'),
       },
       post: {
-        encrypt: false,
+        encrypt: true,
         validate: Joi.object().keys(null).description('any output allowed')
       }
     }
