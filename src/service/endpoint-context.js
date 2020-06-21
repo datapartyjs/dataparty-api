@@ -36,7 +36,6 @@ class EndpointContext {
   setCloud(cloud){ this.cloud = cloud }
 
   setSenderKey(key){
-    this.
     this.senderKey = key
   }
 

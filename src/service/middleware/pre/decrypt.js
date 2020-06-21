@@ -29,14 +29,22 @@ module.exports = class Decrypt extends IMiddleware {
 
   static async run(context){
 
-    if (!Hoek.reach(context, 'endpoint.MiddlewareConfig.pre.decrypt', false)){
-      return
-    }
+    if (!Config){ return }
+
+    context.debug('input', context.input)
   
 
     const msg = new Message(context.input)
-    const jsonContent = await msg.decrpyt(this.serviceParty.privateIdentity)
+    context.debug('privateIdentity', context.party.privateIdentity)
+
     const publicKeys = Routines.extractPublicKeys(msg.enc)
+
+    context.debug('sender', publicKeys)
+    context.debug(typeof context.party.privateIdentity.key.private.box)
+    context.debug(context.input.enc)
+
+    const jsonContent = await msg.decrypt(context.party.privateIdentity)
+    
 
     context.setSenderKey({
       type: 'ecdsa',

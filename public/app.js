@@ -65,6 +65,28 @@ async function main(){
 
     callTime2.start()
 
+    const echoReply2 = await party.comms.call('secure-echo', {t:(new Date()).getTime()}, {
+      expectClearTextReply: true,
+      sendClearTextRequest: false,
+      useSessions: false
+    })
+
+    callTime2.end()
+    complete++
+
+    const text = `call deltaMs=<i>${callTime2.deltaMs}</i>ms complete ${complete}` 
+    document.getElementById("console").innerHTML = text    
+
+  }, 150)
+
+  setInterval(async ()=>{
+    //console.log('send')
+
+
+    let callTime2 = new DeltaTime()
+
+    callTime2.start()
+
     const echoReply2 = await party.comms.call('echo', {t:(new Date()).getTime()}, {
       expectClearTextReply: true,
       sendClearTextRequest: true,
@@ -78,7 +100,6 @@ async function main(){
     document.getElementById("console").innerHTML = text    
 
   }, 75)
-
   
 }
 

@@ -200,8 +200,8 @@ class IParty {
 
     if (!cfgIdenStr){
       debug('generated new identity')
-      this._identity = new dataparty_crypto.Identity({id: 'primary'})
-      await this.config.write(path, this._identity.toJSON(true))
+      
+      await this.resetIdentity()
     } else {
       debug('loaded identity')
       this._identity = dataparty_crypto.Identity.fromString(JSON.stringify(cfgIdenStr))
@@ -211,6 +211,10 @@ class IParty {
   async resetIdentity(){
     const path = 'identity'
     await this.config.write(path, null)
+
+    this._identity = new dataparty_crypto.Identity({id: 'primary'})
+    await this.config.write(path, this._identity.toJSON(true))
+
     await this.loadIdentity()
   }
 
