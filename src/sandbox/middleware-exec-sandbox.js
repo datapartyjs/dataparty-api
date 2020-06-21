@@ -2,8 +2,8 @@ const debug = require('debug')('dataparty.MiddlewareExecSandbox')
 const Sandbox = require('./sandbox')
 
 class MiddlewareExecSandbox extends Sandbox {
-  constructor(code, func='run'){
-    super(`  
+  constructor(code, map, func='run'){
+    super(`
 
 module.exports = async (ctx, static_ctx)=>{
 
@@ -30,16 +30,17 @@ module.exports = async (ctx, static_ctx)=>{
   }
 
 }
-    `)
+    `, map)
 
     this.result = null
+    this.payloadLines = code.split('\n').length-1
   }
 
-  async run(ctx, static_ctx){
+  async run(ctx, config){
 
     debug('running')
 
-    this.result = await super.run(ctx, static_ctx)
+    this.result = await super.run(ctx, {Config: config})
 
     return this.result
   }

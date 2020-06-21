@@ -11,7 +11,10 @@ const expressListRoutes = require('express-list-routes')
 const debug = require('debug')('dataparty.service-host')
 
 
-
+/**
+ * @class
+ * @alias module:dataparty.ServiceHost
+ */
 class ServiceHost {
   constructor({
     cors = {},

@@ -1,7 +1,9 @@
+const Path = require('path')
 const Joi = require('@hapi/joi')
 const Hoek = require('@hapi/hoek')
 const {VM, VMScript} = require('vm2')
-const debug = require('debug')('dataparty.server-runner')
+const Debug = require('debug')
+const debug = Debug('dataparty.service-runner')
 const MiddlewareRunner = require('./middleware-runner')
 const EndpointContext = require('./endpoint-context')
 const EndpointRunner = require('./endpoint-runner')
@@ -9,9 +11,10 @@ const EndpointRunner = require('./endpoint-runner')
 const Router = require('origin-router').Router
 
 class ServiceRunner {
-  constructor({service, party}){
+  constructor({service, party, sendFullErrors=false}){
     this.party = party
     this.service = service
+    this.sendFullErrors = sendFullErrors
 
     this.middleware = { pre: {}, post: {} }
     this.endpoint = {}
@@ -30,7 +33,10 @@ class ServiceRunner {
     }
 
     await Promise.all(endpointsLoading)
-    debug('ready')
+    debug('endpoints ready:')
+    for(let name in this.endpoint){
+      debug('\t', Path.join('/', name))
+    }
   }
 
   async loadEndpoint(name){
@@ -39,7 +45,8 @@ class ServiceRunner {
     }
 
     debug('loadEndpoint', name)
-    let endpoint = new EndpointRunner(this.service.compiled.endpoints[name].code)
+    const build = Hoek.reach(this.service, `compiled.endpoints.${name}`)
+    let endpoint = new EndpointRunner(build.code, build.map)
 
     debug('getting info')
     await endpoint.getInfo()
@@ -60,15 +67,15 @@ class ServiceRunner {
 
 
   async loadEndpointMiddleware(endpoint, type='pre'){
-    const preOrder = Hoek.reach(this.service, 'compiled.middleware_order.'+type)
-    for(let name in preOrder){
-      const middlewareCfg = Hoek.reach(endpoint, 'info.MiddlewareConfig.'+type+'.'+name)
-      
-      if(!middlewareCfg){continue}
+    const middlewareList = Hoek.reach(endpoint, `info.MiddlewareConfig.${type}`)
+    for(let name in middlewareList){
+      const middleware = await this.loadMiddleware(name, type, endpoint)
 
-      const middleware = await loadMiddleware(name)
-      await checkMiddlewareConfig(middleware, middlewareCfg)
+      const middlewareCfg = Hoek.reach(endpoint, `info.MiddlewareConfig.${type}.${name}`)
+      await this.checkMiddlewareConfig(middleware, middlewareCfg)
     }
+
+
   }
 
   async loadMiddleware(name, type='pre'){ 
@@ -78,22 +85,29 @@ class ServiceRunner {
 
     debug('loadMiddleware', type, name)
 
-    let middleware = new MiddlewareRunner(this.service.compiled.middlware[type][name].code)
+    const build = Hoek.reach(this.service, `compiled.middleware.${type}.${name}`)
 
-    await middleware.getInfo()
-    await middleware.start(this.party)
+    if(!build || !build.code){
+      debug(`middleware ${type} [${name}] does not exist`)
+      throw new Error(`middleware ${type} [${name}] does not exist`)
+    }
 
-    this.middleware[type][name] = middleware
+    let runner = new MiddlewareRunner(build.code, build.map)
 
-    return middleware
+    await runner.getInfo()
+    await runner.start(this.party)
+
+    this.middleware[type][name] = runner
+
+    return runner
   }
 
   async checkEndpointConfig(endpoint){
     //! check basic structure {pre: Object, post: Object}
     
     return await Joi.object().keys({
-      pre: Joi.object(),
-      post: Joi.object()
+      pre: Joi.object().keys(null),
+      post: Joi.object().keys(null)
     })
     .validateAsync(endpoint.info.MiddlewareConfig)
   }
@@ -131,16 +145,64 @@ class ServiceRunner {
         req: event.request, res: event.response,
         endpoint,
         party: this.party,
+        input: event.request.body, 
+        debug: Debug,
+        sendFullErrors: this.sendFullErrors
       })
 
-      debug('running')
-  
-      const result = await endpoint.run(context)
+      debug('running', endpoint.info.Name)
 
-      debug('result', result)
+      const middlewareCfg = Hoek.reach(endpoint, 'info.MiddlewareConfig')
+      
+      try{
 
-      context.res.send(result)
+        await this.runMiddleware(middlewareCfg, context, 'pre')
+    
+        const result = await endpoint.run(context)
 
+        context.setOutput(result)
+
+        await this.runMiddleware(middlewareCfg, context, 'post')
+
+        /*debug('ctx.log', context._debugContent)*/
+        debug('result', context.output)
+
+        context.res.send(context.output)
+
+      }
+      catch(err){
+        debug('caught error', err)
+
+        context.res.status(500).send({
+          error: {
+            code: err.code,
+            message: err.message,
+            stack: (!context.sendFullErrors ? undefined : err.stack),
+            ... (!context.sendFullErrors ? null : err)
+          }
+        })
+      }
+
+    }
+  }
+
+  async runMiddleware(middlewareCfg, ctx, type='pre'){
+    debug(`run ${type} middleware`)
+
+    const cfg = Hoek.reach(middlewareCfg, type)
+    const order = Hoek.reach(this.service, 'compiled.middleware_order.'+type)
+
+    debug('\tmiddleware order', order)
+
+    for(let name of order){
+      const info = Hoek.reach(cfg, name)
+
+      if(!info){ continue }
+
+      debug('\t\trunning', name)
+      const middleware = Hoek.reach(this.middleware, `${type}.${name}`)
+
+      await middleware.run(ctx, info)
     }
   }
 }

@@ -2,8 +2,8 @@ const debug = require('debug')('dataparty.MiddlewareInfoSandbox')
 const Sandbox = require('./sandbox')
 
 class MiddlewareInfoSandbox extends Sandbox {
-  constructor(code){
-    super(`  
+  constructor(code, map){
+    super(`
 
 module.exports = async ()=>{
 
@@ -35,14 +35,15 @@ module.exports = async ()=>{
   }
 
 }
-    `)
+    `, map)
 
     this.info = null
+    this.payloadLines = code.split('\n').length-1
   }
 
   async run(){
 
-    debug('running', this.code)
+    debug('running')
     this.info = await super.run()
 
     return this.info

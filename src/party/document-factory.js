@@ -14,10 +14,12 @@ class DocumentFactory {
     this.documentClass = documentClass || IDocument
     this.validators = {}
 
-    for(let schema of this.model.JSONSchema){
-      const v = this.ajv.compile(schema)
-      this.validators[schema.title] = v
-      debug(schema.title)
+    if(this.model){
+      for(let schema of this.model.JSONSchema){
+        const v = this.ajv.compile(schema)
+        this.validators[schema.title] = v
+        debug(schema.title)
+      }
     }
   }
 

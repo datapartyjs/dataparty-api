@@ -10,15 +10,19 @@ class ExampleService extends Dataparty.IService {
     super(opts)
 
     this.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
+    this.addMiddleware(Dataparty.middleware_paths.pre.validate)
 
+    this.addMiddleware(Dataparty.middleware_paths.post.validate)
+    this.addMiddleware(Dataparty.middleware_paths.post.encrypt)
+
+    this.addEndpoint(Dataparty.endpoint_paths.echo)
+    this.addEndpoint(Dataparty.endpoint_paths.secureecho)
     this.addEndpoint(Dataparty.endpoint_paths.identity)
   }
 
 }
 
 async function main(){
-
-  console.log(Object.keys(Dataparty))
 
   const uri = 'mongodb://localhost:27017/server-party-test'
   debug('db location', uri)
@@ -36,7 +40,11 @@ async function main(){
 
   debug('built')
 
-  const runner = new Dataparty.ServiceRunner({party, service})
+  const runner = new Dataparty.ServiceRunner({
+    party, service,
+    sendFullErrors: true
+  })
+  
   const host = new Dataparty.ServiceHost({runner})
 
   await party.start()

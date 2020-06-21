@@ -1,7 +1,7 @@
 const Joi = require('@hapi/joi')
 const Hoek = require('@hapi/hoek')
 const {Message, Routines} = require('@dataparty/crypto')
-const debug = require('debug')('roshub.middleware.pre.decrypt')
+const debug = require('debug')('dataparty.middleware.pre.decrypt')
 
 const IMiddleware = require('../../imiddleware')
 
@@ -29,23 +29,29 @@ module.exports = class Decrypt extends IMiddleware {
 
   static async run(context){
 
-    if (!Hoek.reach(ctx, 'endpoint.MiddlewareConfig.pre.decrypt', false)){
-      return
-    }
+    if (!Config){ return }
+
+    context.debug('input', context.input)
   
 
-    const msg = new Message(ctx.input)
-    const jsonContent = await msg.decrpyt(this.serviceParty.privateIdentity)
+    const msg = new Message(context.input)
+    context.debug('privateIdentity', context.party.privateIdentity)
+
     const publicKeys = Routines.extractPublicKeys(msg.enc)
 
-    ctx.setInputSession(jsonContent.session)
+    context.debug('sender', publicKeys)
+    context.debug(typeof context.party.privateIdentity.key.private.box)
+    context.debug(context.input.enc)
 
-    return {
-      input: Hoek.reach(content, 'data'),
-      sender: {
-        type: 'ecdsa',
-        public: publicKeys
-      }
-    }
+    const jsonContent = await msg.decrypt(context.party.privateIdentity)
+    
+
+    context.setSenderKey({
+      type: 'ecdsa',
+      public: publicKeys
+    })
+
+    context.setInputSession(Hoek.reach(jsonContent, 'session'))
+    context.setInput(Hoek.reach(jsonContent, 'data'))
   }
 }

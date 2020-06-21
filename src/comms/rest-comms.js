@@ -14,6 +14,7 @@ class RestComms extends EventEmitter {
     this.uri = undefined
     this.wsUri = undefined
     this.cfgPrefix = 'rest'
+    this.uriPrefix = ''
     this.config = config
     this.sessionId = undefined
     this.remoteIdentity = remoteIdentity
@@ -92,7 +93,13 @@ class RestComms extends EventEmitter {
     this.config.write(path, { id: this.sessionId })
   }
 
-  async call(path, data, expectClearTextReply = false) {
+  async call(path, data, 
+    {
+      expectClearTextReply = false,
+      sendClearTextRequest = false,
+      useSessions = true
+    } = {}
+  ) {
     if (!this.uri) {
       await this.loadCloud()
     }
@@ -101,20 +108,33 @@ class RestComms extends EventEmitter {
     }
     await this.getServiceIdentity()
 
-    const obj = { session: this.sessionId, data: data }
+    //const obj = { session: this.sessionId, data: data }
 
-    debug('call', path, ' req - ', JSON.stringify(obj))
+    const fullPath = this.uri + this.uriPrefix + path
+    
 
-    const content = await this.party.encrypt(obj, this.remoteIdentity)
+    let content = null
+
+    if(data || this.useSessions){
+      content = {data}
+      
+      if(useSessions){ content.session = this.sessionId }
+
+      if(!sendClearTextRequest){
+        content = await this.party.encrypt(content, this.remoteIdentity)
+      }
+    }
+
+    debug('call', fullPath, ' req - ', JSON.stringify(content))
 
     let reply
     try {
-      const str = await RestComms.HttpPost(this.uri + path, content)
+      const str = await RestComms.HttpPost(fullPath, content)
       reply = JSON.parse(str)
 
       // debug('raw reply ->', reply)
     } catch (error) {
-      debug('rest', path, ' call fail ->', error.message)
+      debug('rest', fullPath, ' call fail ->', error.message)
       throw new Error('RestCommsError')
     }
 
@@ -124,13 +144,13 @@ class RestComms extends EventEmitter {
       expectClearTextReply
     )
 
-    debug('call', path, ' res - ', JSON.stringify(msg, null, 2))
+    debug('call', fullPath, ' res - ', JSON.stringify(msg, null, 2))
 
     return msg
   }
 
   async syncActors() {
-    const info = await this.call('api-v2-actor-info')
+    const info = await this.call('actor-info')
 
     debug('syncActors - got info', JSON.stringify(info, null, 2))
 
@@ -177,7 +197,7 @@ class RestComms extends EventEmitter {
       if (!this.uri) {
         await this.loadCloud()
       }
-      const serverIdentity = await RestComms.HttpGet(this.uri + 'api-v2-identity')
+      const serverIdentity = await RestComms.HttpGet(this.uri + `${this.uriPrefix}identity`)
       debug('server identity - ', serverIdentity)
 
       this.remoteIdentity = dataparty_crypto.Identity.fromString(serverIdentity)
@@ -199,7 +219,7 @@ class RestComms extends EventEmitter {
 
   async redeemInvite(code) {
     // await this.party.loadIdentity()
-    return this.call('api-v2-claim-user-invite', {
+    return this.call('claim-user-invite', {
       short_code: code
     })
   }
@@ -214,7 +234,7 @@ class RestComms extends EventEmitter {
     return this.party
       .loadIdentity()
       .then(() => {
-        return this.call('api-v2-oauth-github', { code: code })
+        return this.call('oauth-github', { code: code })
       })
       .then(sessionInfo => {
         debug(sessionInfo)
@@ -280,7 +300,7 @@ class RestComms extends EventEmitter {
     debug('actor', this.party.actor)
 
     try {
-      const reply = await this.call('api-v2-rest-session', {
+      const reply = await this.call('rest-session', {
         actor: {
           id: this.party.actor.id,
           type: this.party.actor.type
@@ -307,7 +327,7 @@ class RestComms extends EventEmitter {
       return this.websocketComm
     }
 
-    return this.call('api-v2-websocket-session').then(reply => {
+    return this.call('websocket-session').then(reply => {
       debug(reply)
       if (!this.wsUri) {
         this.loadCloud()
