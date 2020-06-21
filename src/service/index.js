@@ -15,12 +15,18 @@ module.exports = {
     pre: {
       decrypt: require('./middleware/pre/decrypt'),
       validate: require('./middleware/pre/validate')
+    },
+    post: {
+      validate: require('./middleware/post/validate.js')
     }
   },
   middleware_paths: {
     pre: {
       decrypt: Path.join(__dirname, './middleware/pre/decrypt.js'),
       validate: Path.join(__dirname, './middleware/pre/validate.js')
+    },
+    post: {
+      validate: Path.join(__dirname, './middleware/post/validate.js')
     }
   },
   endpoint: {

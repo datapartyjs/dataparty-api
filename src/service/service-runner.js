@@ -2,7 +2,8 @@ const Path = require('path')
 const Joi = require('@hapi/joi')
 const Hoek = require('@hapi/hoek')
 const {VM, VMScript} = require('vm2')
-const debug = require('debug')('dataparty.service-runner')
+const Debug = require('debug')
+const debug = Debug('dataparty.service-runner')
 const MiddlewareRunner = require('./middleware-runner')
 const EndpointContext = require('./endpoint-context')
 const EndpointRunner = require('./endpoint-runner')
@@ -143,15 +144,21 @@ class ServiceRunner {
         req: event.request, res: event.response,
         endpoint,
         party: this.party,
-        input: event.request.body
+        input: event.request.body, 
+        debug: Debug
       })
 
       debug('running', endpoint.info.Name)
 
       const middlewareCfg = Hoek.reach(endpoint, 'info.MiddlewareConfig')
-      await this.runPreMiddleware(middlewareCfg, context)
+      
+      await this.runMiddleware(middlewareCfg, context, 'pre')
   
       const result = await endpoint.run(context)
+
+      context.setOutput(result)
+
+      await this.runMiddleware(middlewareCfg, context, 'post')
 
       debug('result', result)
 
@@ -160,7 +167,7 @@ class ServiceRunner {
     }
   }
 
-  async runPreMiddleware(middlewareCfg, ctx, type='pre'){
+  async runMiddleware(middlewareCfg, ctx, type='pre'){
     debug(`run ${type} middleware`)
 
     const cfg = Hoek.reach(middlewareCfg, type)

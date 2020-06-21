@@ -12,9 +12,10 @@ class ExampleService extends Dataparty.IService {
     this.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
     this.addMiddleware(Dataparty.middleware_paths.pre.validate)
 
+    this.addMiddleware(Dataparty.middleware_paths.post.validate)
+
     this.addEndpoint(Dataparty.endpoint_paths.echo)
-    //this.addEndpoint(Dataparty.endpoint_paths.identity)
-    
+    this.addEndpoint(Dataparty.endpoint_paths.identity)
   }
 
 }

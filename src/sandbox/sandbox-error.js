@@ -15,8 +15,6 @@ class SandboxError extends Error {
   }
   
 
-
-
   async filterStackForModuleLines(stack, accessor){
 
     let founds = []
@@ -28,7 +26,6 @@ class SandboxError extends Error {
     const prefix = '(vm.js:'
     const resolvedStack = await Promise.all(stack.split('\n').map(async line=>{
 
-      console.log('STACK:',line)
       
       let idx = line.indexOf(prefix)
   

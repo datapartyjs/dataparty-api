@@ -47,18 +47,10 @@ class Sandbox {
     } catch(err) {
 
       debug('CodeVM.run - catch')
-      debug('offset', this.offset)
-      debug('payloadLength', this.payloadLines)
-      //debug('error',err)
-      //debug('map', JSON.parse(this.map))
       const sbError = new SandboxError(err)
 
       await sbError.resolveLocations(this)
 
-      debug(sbError.locations)
-
-
-      debug(sbError.locations)
       throw sbError
     }
   }

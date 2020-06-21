@@ -19,8 +19,21 @@ module.exports = class ServiceIdentity extends IEndpoint {
   static get MiddlewareConfig(){
     return {
       pre: {
-        decrpyt: false,
+        decrypt: false,
         validate: Joi.object().keys({}).description('no input allowed'),
+      },
+      post:{
+        validate: Joi.object().keys({
+          id: Joi.string(),
+          key: {
+            type: Joi.string().valid('ecdsa'),
+            public: Joi.object().keys({
+              box: Joi.string(),
+              sign: Joi.string()
+            }),
+            private: Joi.any().strip()
+          }
+        })
       }
     }
   }

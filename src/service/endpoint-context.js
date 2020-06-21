@@ -1,7 +1,7 @@
 const Debug = require('debug')
 
 class EndpointContext {
-  constructor({party, endpoint, req, res, input}){
+  constructor({party, endpoint, req, res, input, debug=Debug}){
     this.party = party
     this.endpoint = endpoint
     this.MiddlewareConfig = endpoint.info.MiddlewareConfig
@@ -19,7 +19,11 @@ class EndpointContext {
     this.input = input
     this.input_session_id = null
     this.inputError = null
-    this._debug = Debug('dataparty.context.undefined')
+
+    this.output = null
+    this.outputError = null
+    
+    this._debug = debug('dataparty.context.undefined')
     this._debugContent = []
   }
 
@@ -42,9 +46,19 @@ class EndpointContext {
     this._debug = Debug('input set')
   }
 
+  setOutput(output){
+    this.output = output
+    this._debug = Debug('output set')
+  }
+
   setInputError(error){
     this.inputError = error
     this._debug = Debug('input error', error)
+  }
+
+  setOutputError(error){
+    this.outputError = error
+    this._debug = Debug('output error', error)
   }
 
   setIdentity(identity){ this.identity = identity }
@@ -74,7 +88,6 @@ class EndpointContext {
 
     this._debugContent.push(logObj)
 
-    console.log(logObj)
     this._debug(newMsg, ...args)
   }
 }
