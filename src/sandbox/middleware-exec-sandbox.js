@@ -36,11 +36,11 @@ module.exports = async (ctx, static_ctx)=>{
     this.payloadLines = code.split('\n').length-1
   }
 
-  async run(ctx, config){
+  async run(ctx, static_ctx){
 
     debug('running')
 
-    this.result = await super.run(ctx, {Config: config})
+    this.result = await super.run(ctx, static_ctx)
 
     return this.result
   }

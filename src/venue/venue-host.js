@@ -1,27 +1,11 @@
 const Path = require('path')
-const debug = require('debug')('test.server-db')
-const Dataparty = require('../src')
+const debug = require('debug')('venue.host')
+const Dataparty = require('../index')
 
 const BouncerServerModels = require('@dataparty/bouncer-model')
 const BouncerClientModels = require('@dataparty/bouncer-model/dist/bouncer-model.json')
 
-class ExampleService extends Dataparty.IService {
-  constructor(opts){
-    super(opts)
-
-    this.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
-    this.addMiddleware(Dataparty.middleware_paths.pre.validate)
-
-    this.addMiddleware(Dataparty.middleware_paths.post.validate)
-    this.addMiddleware(Dataparty.middleware_paths.post.encrypt)
-
-    this.addEndpoint(Dataparty.endpoint_paths.echo)
-    this.addEndpoint(Dataparty.endpoint_paths.secureecho)
-    this.addEndpoint(Dataparty.endpoint_paths.identity)
-    this.addEndpoint(DatapartySrv.endpoint_paths.version)
-  }
-
-}
+const VenueService = require('./venue-service')
 
 async function main(){
 
@@ -35,7 +19,7 @@ async function main(){
     config: new Dataparty.Config.MemoryConfig()
   })
 
-  const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
+  const service = new VenueService({ name: '@dataparty/venue', version: '0.0.1' })
 
   const build = await service.compile(Path.join(__dirname,'../dataparty'), false)
 

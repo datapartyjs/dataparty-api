@@ -6,7 +6,7 @@ const SandboxError = require('./sandbox-error')
 
 class Sandbox {
   constructor(code, map, offsetToken='    let Lib = '){
-    debug('compiling code', typeof code)
+    debug('compiling code', code.length, 'Bytes')
     this.code = code
     this.map = map
 
@@ -14,8 +14,7 @@ class Sandbox {
     this.payloadLines = 0
     this.offsetToken = offsetToken
     this.offset = code.split(this.offsetToken)[0].split('\n').length-1
-    this.script = new VMScript(code)
-    debug('compiled')  
+    this.script = new VMScript(code).compile()
   }
 
   async loadSourceMap(){
@@ -27,7 +26,7 @@ class Sandbox {
   }
 
   async run(context, sandbox){
-    debug('running')
+    //debug('running')
     try{
       
       let vm = new NodeVM({

@@ -158,7 +158,7 @@ class ServiceRunner {
 
         await this.runMiddleware(middlewareCfg, context, 'pre')
     
-        const result = await endpoint.run(context)
+        const result = await endpoint.run(context, {Package: this.service.compiled.package})
 
         context.setOutput(result)
 
@@ -202,7 +202,7 @@ class ServiceRunner {
       debug('\t\trunning', name)
       const middleware = Hoek.reach(this.middleware, `${type}.${name}`)
 
-      await middleware.run(ctx, info)
+      await middleware.run(ctx, {Config: info})
     }
   }
 }
