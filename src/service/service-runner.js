@@ -8,6 +8,8 @@ const MiddlewareRunner = require('./middleware-runner')
 const EndpointContext = require('./endpoint-context')
 const EndpointRunner = require('./endpoint-runner')
 
+const DeltaTime = require('../utils/delta-time')
+
 const Router = require('origin-router').Router
 
 class ServiceRunner {
@@ -45,6 +47,8 @@ class ServiceRunner {
     }
 
     debug('loadEndpoint', name)
+
+    let dt = new DeltaTime().start()
     const build = Hoek.reach(this.service, `compiled.endpoints.${name}`)
     let endpoint = new EndpointRunner(build.code, build.map)
 
@@ -63,6 +67,8 @@ class ServiceRunner {
     this.endpoint[name] = endpoint
 
     this.router.add(name, this.endpointHandler(endpoint))
+    dt.end()
+    debug('loaded endpoint',name,'in',dt.deltaMs,'ms')
   }
 
 
@@ -85,6 +91,7 @@ class ServiceRunner {
 
     debug('loadMiddleware', type, name)
 
+    let dt = new DeltaTime().start()
     const build = Hoek.reach(this.service, `compiled.middleware.${type}.${name}`)
 
     if(!build || !build.code){
@@ -98,6 +105,9 @@ class ServiceRunner {
     await runner.start(this.party)
 
     this.middleware[type][name] = runner
+
+    dt.end()
+    debug('loaded middleware',name,'in',dt.deltaMs,'ms')
 
     return runner
   }
@@ -126,6 +136,8 @@ class ServiceRunner {
 
 
     let route = await this.router.route(req, res)
+
+    debug('req done')
 
 
     if(!route){
@@ -164,7 +176,10 @@ class ServiceRunner {
 
         await this.runMiddleware(middlewareCfg, context, 'post')
 
+        context.dt.end()
+
         /*debug('ctx.log', context._debugContent)*/
+        debug('ran endpoint', endpoint.info.Name, 'in', context.dt.deltaMs, 'ms')
         debug('result', context.output)
 
         context.res.send(context.output)
@@ -172,6 +187,10 @@ class ServiceRunner {
       }
       catch(err){
         debug('caught error', err)
+
+        context.dt.end()
+
+        debug('crashed (',endpoint.info.Name,') in', context.dt.deltaMs, 'ms')
 
         context.res.status(500).send({
           error: {
@@ -202,7 +221,11 @@ class ServiceRunner {
       debug('\t\trunning', name)
       const middleware = Hoek.reach(this.middleware, `${type}.${name}`)
 
+      const dt = new DeltaTime().start()
       await middleware.run(ctx, {Config: info})
+      dt.end()
+
+      debug('runMiddleware(',type,name,') in', dt.deltaMs, 'ms')
     }
   }
 }

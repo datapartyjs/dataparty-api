@@ -18,6 +18,10 @@ module.exports = class ServiceVersion extends IEndpoint {
 
   static get MiddlewareConfig(){
     return {
+      pre: {
+        decrypt: false,
+        validate: Joi.object().keys({}).description('no input allowed'),
+      },
       post:{
         validate: Joi.object().keys({
           name: Joi.string(),
