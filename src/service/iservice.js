@@ -5,6 +5,7 @@ const Hoek = require('@hapi/hoek')
 const {JSONPath} = require('jsonpath-plus')
 const gitRepoInfo = require('git-repo-info')
 const BouncerDb = require('@dataparty/bouncer-db')
+const mongoose = BouncerDb.mongoose()
 const json2ts = require('json-schema-to-typescript')
 const debug = require('debug')('dataparty.service.IService')
 
@@ -64,6 +65,7 @@ module.exports = class IService {
    * @param {dataparty.service.ISchema} schema_path 
    */
   addSchema(schema_path){
+    debug('addSchema', schema_path)
     const schema = require(schema_path)
     const name = schema.Type
 
@@ -72,6 +74,7 @@ module.exports = class IService {
   }
 
   addDocument(document_path){
+    debug('addDocument', document_path)
     const document = require(document_path)
     const name = document.DocumentSchema
 
@@ -118,6 +121,8 @@ module.exports = class IService {
     this.compiled.package.githash = info.sha
     this.compiled.package.branch = info.branch
 
+    debug('compiling sources',this.sources)
+
     await Promise.all([
       this.compileMiddleware('pre'),
       this.compileMiddleware('post'),
@@ -146,7 +151,6 @@ module.exports = class IService {
   async compileList(field, outputPath){
     // Build file list
     debug('compileList',field)
-    debug(this.sources)
     for(const name in this.sources[field]){
       debug('\r', field, name)
 
@@ -203,7 +207,9 @@ module.exports = class IService {
 
 
   async compileSchemas(buildTypeScript=false){
+    debug('compileSchema')
     for(let key in this.constructors.schemas){
+      debug('\tcompiling', key)
       const model = this.constructors.schemas[key]
       let schema = mongoose.Schema(model.Schema)
       schema = model.setupSchema(schema)

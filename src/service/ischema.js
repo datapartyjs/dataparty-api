@@ -1,5 +1,5 @@
 const debug = require('debug')('dataparty.service.ISchema')
-
+const MgoUtils = require('../utils/mongoose-scheme-utils')
 
 module.exports = class ISchema {
   constructor(){ }
@@ -31,6 +31,10 @@ module.exports = class ISchema {
 
   static get Type (){
     throw new Error('not implemented')
+  }
+
+  static get Utils(){
+    return MgoUtils
   }
 
   /*static get Class(){

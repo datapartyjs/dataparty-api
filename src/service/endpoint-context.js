@@ -1,5 +1,7 @@
 const Debug = require('debug')
 
+const DeltaTime = require('../utils/delta-time')
+
 class EndpointContext {
   constructor({party, endpoint, req, res, input, debug=Debug, sendFullErrors=false}){
     this.party = party
@@ -29,6 +31,7 @@ class EndpointContext {
     
     this._debug = debug('dataparty.context.undefined')
     this._debugContent = []
+    this.dt = new DeltaTime().start()
   }
 
   setReq(req){ this.req = req }

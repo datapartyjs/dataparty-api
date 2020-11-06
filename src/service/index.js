@@ -34,11 +34,13 @@ module.exports = {
   endpoint: {
     echo: require('./endpoints/echo'),
     secureecho: require('./endpoints/secure-echo'),
-    identity: require('./endpoints/service-identity')
+    identity: require('./endpoints/service-identity'),
+    version: require('./endpoints/service-version')
   },
   endpoint_paths: {
     echo: Path.join(__dirname, './endpoints/echo.js'),
     secureecho: Path.join(__dirname, './endpoints/secure-echo.js'),
-    identity: Path.join(__dirname, './endpoints/service-identity.js')
+    identity: Path.join(__dirname, './endpoints/service-identity.js'),
+    version: Path.join(__dirname, './endpoints/service-version.js')
   }
 }
