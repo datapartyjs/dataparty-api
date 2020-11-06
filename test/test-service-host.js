@@ -18,7 +18,7 @@ class ExampleService extends Dataparty.IService {
     this.addEndpoint(Dataparty.endpoint_paths.echo)
     this.addEndpoint(Dataparty.endpoint_paths.secureecho)
     this.addEndpoint(Dataparty.endpoint_paths.identity)
-    this.addEndpoint(DatapartySrv.endpoint_paths.version)
+    this.addEndpoint(Dataparty.endpoint_paths.version)
   }
 
 }
