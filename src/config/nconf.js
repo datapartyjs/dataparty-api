@@ -20,7 +20,6 @@ class NconfConfig {
 
   constructor(defaults, whitelist){
     this.whitelist = whitelist || []
-    defaults = defaults || {}
     this.basePath = defaults.basePath || BASE_PATH
     this.defaults = defaults || {}
     this.defaults.logicalSeparator = '.'
@@ -53,6 +52,8 @@ class NconfConfig {
       logicalSeparator: '.', 
       whitelist: this.whitelist,
     })
+
+    nconf.defaults(this.defaults)
 
     nconf.load()
     logger(`config ready: ${this.basePath}/${file_name}`)
