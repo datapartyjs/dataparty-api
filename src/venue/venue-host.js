@@ -21,7 +21,7 @@ async function main(){
 
   const service = new VenueService({ name: '@dataparty/venue', version: '0.0.1' })
 
-  const build = await service.compile(Path.join(__dirname,'../dataparty'), false)
+  const build = await service.compile(Path.join(__dirname,'../../dataparty'), true)
 
   debug('built')
 

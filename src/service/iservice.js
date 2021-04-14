@@ -141,7 +141,7 @@ module.exports = class IService {
       fs.writeFileSync(schemaOutput, JSON.stringify({
         package: this.compiled.package,
         ...this.compiled.schemas
-      }))
+      }, null, 2))
     }
 
     return this.compiled

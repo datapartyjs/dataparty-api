@@ -152,7 +152,7 @@ class ServiceRunner {
   endpointHandler(endpoint){
     return async (event)=>{
 
-      debug('event',event.method, event.pathname)
+      debug('event',event.method, event.pathname, event.request.ip, event.request.ips)
 
 
       const context = new EndpointContext({
