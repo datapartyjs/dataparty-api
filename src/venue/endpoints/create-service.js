@@ -62,22 +62,30 @@ module.exports = class CreateSrvEndpoint extends IEndpoint {
       debug('service created')
     }
     else{
-      debug('updating service')
-      debug(srvDoc.data)
-      await srvDoc.mergeData({
-        package: compiledSrv.package,
-        //schemas: compiledSrv.schemas,
-        //endpoints: compiledSrv.endpoints,
-        //midddleware: compiledSrv.middleware,
-        middleware_order: compiledSrv.middleware_order
-      })
 
-      debug(srvDoc.data)
 
       try{
+
+        debug('updating service')
+        debug(srvDoc.data)
+        await srvDoc.mergeData({
+          package: compiledSrv.package,
+          schemas: compiledSrv.schemas,
+          endpoints: compiledSrv.endpoints,
+          midddleware: compiledSrv.middleware,
+          middleware_order: compiledSrv.middleware_order
+        })
+  
+        //debug(srvDoc.data)
+  
+        debug('saving doc')
+
+
         await srvDoc.save()
       }
-      catch(err){}
+      catch(err){
+        console.log(err)
+      }
       debug('updated service')
     }
 

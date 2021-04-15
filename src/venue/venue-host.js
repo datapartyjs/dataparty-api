@@ -59,12 +59,24 @@ async function main(){
     }
   }
 
-  let party = new Dataparty.MongoParty({
+  /*let party = new Dataparty.MongoParty({
     uri,
     model: build.schemas,
     serverModels,
     config: new Dataparty.Config.MemoryConfig()
+  })*/
+
+  const dbPath = 'dataparty-venue.db'
+
+  debug('party db location', dbPath)
+
+  let party = new Dataparty.LocalParty({
+    path: dbPath,
+    model: build.schemas,
+    config: new Dataparty.Config.MemoryConfig()
   })
+
+
 
   debug('partying')
 

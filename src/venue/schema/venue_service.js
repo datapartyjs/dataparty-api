@@ -54,9 +54,9 @@ class VenueSrv extends Dataparty.ISchema {
 
   static permissions (context) {
     return {
-      read: false,
-      new: false,
-      change: false
+      read: true,
+      new: true,
+      change: true
     }
   }
 }

@@ -124,7 +124,9 @@ class IDocument extends EventEmitter {
    * @returns {object}
    */
   async setData(input){
+    debug('setData start')
     let valid = await this.party.factory.validate(this.type, input)
+    debug('setData done')
     this._data = valid
   }
 
@@ -138,6 +140,7 @@ class IDocument extends EventEmitter {
     delete value.$meta.version
     delete value.__v
 
+    debug('asign data')
     await this.setData(value)
     debug('data set')
     await this.party.update(value)
