@@ -8,6 +8,7 @@ class VenueService extends DatapartySrv.IService {
     super(opts)
 
     this.addSchema(Path.join(__dirname, './schema/ban_list.js'))
+    this.addSchema(Path.join(__dirname, './schema/venue_service.js'))
 
     this.addMiddleware(DatapartySrv.middleware_paths.pre.decrypt)
     this.addMiddleware(DatapartySrv.middleware_paths.pre.validate)
@@ -17,6 +18,8 @@ class VenueService extends DatapartySrv.IService {
 
     this.addEndpoint(DatapartySrv.endpoint_paths.identity)
     this.addEndpoint(DatapartySrv.endpoint_paths.version)
+
+    this.addEndpoint(Path.join(__dirname, './endpoints/create-service.js'))
   }
 
 }

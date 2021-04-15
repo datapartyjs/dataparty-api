@@ -114,7 +114,7 @@ class IDocument extends EventEmitter {
    * @returns {object}
    */
   async mergeData(input){
-    return this.setData(Object.assign({}, this.data, input))
+    return await this.setData(Object.assign({}, this.data, input))
   }
 
   /**
@@ -139,8 +139,11 @@ class IDocument extends EventEmitter {
     delete value.__v
 
     await this.setData(value)
+    debug('data set')
     await this.party.update(value)
+    debug('doc updated')
     await this.pull()
+    debug('doc pulled')
   }
 
 
@@ -298,7 +301,7 @@ class IDocument extends EventEmitter {
     const newMsg = this.party.cache.findById(this.type, this.id)
     const oldMsg = Object.assign({}, this.getData())
 
-    debug('new message', newMsg)
+    debug('new message', event.event, newMsg)
 
     switch (event.event){
       case 'remove':

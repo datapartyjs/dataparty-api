@@ -39,7 +39,7 @@ async function main(){
 
   const build = await service.compile(Path.join(__dirname,'../dataparty'), true)
 
-  debug('built')
+  debug('built', Object.keys(build))
 
   const runner = new Dataparty.ServiceRunner({
     party, service,

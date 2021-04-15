@@ -7,6 +7,7 @@ const gitRepoInfo = require('git-repo-info')
 const BouncerDb = require('@dataparty/bouncer-db')
 const mongoose = BouncerDb.mongoose()
 const json2ts = require('json-schema-to-typescript')
+const { build } = require('@hapi/joi')
 const debug = require('debug')('dataparty.service.IService')
 
 module.exports = class IService {
@@ -59,6 +60,9 @@ module.exports = class IService {
     }
    }
 
+  importBuild(buildOutput){
+    this.compiled = buildOutput
+  }
 
   /**
    * 
@@ -83,7 +87,7 @@ module.exports = class IService {
   }
 
   addEndpoint(endpoint_path){
-    debug('andEndpoint', endpoint_path)
+    debug('addEndpoint', endpoint_path)
     const endpoint = require(endpoint_path)
     const name = endpoint.Name
 
