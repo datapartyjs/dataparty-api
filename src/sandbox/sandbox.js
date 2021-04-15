@@ -33,10 +33,9 @@ class Sandbox {
         sandbox,
         require: {
           external: {
-            modules: ['debug', '@dataparty/crypto', '@hapi/joi', '@hapi/hoek', ]
+            modules: ['debug', '@dataparty/crypto', '@hapi/joi', '@hapi/hoek']
           },
-          builtin: ['*'], //! This should be empty typically
-          import: ['fs', 'readline', 'stream']
+          //builtin: ['*']
         }
       })
 
