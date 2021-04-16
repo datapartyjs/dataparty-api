@@ -2,6 +2,36 @@ const Ajv = require('ajv')
 const debug = require('debug')('dataparty.document-factory')
 const IDocument = require('./idocument')
 
+class DocumentValidationError extends Error {
+  constructor(ajvErrors){
+    super()
+
+    /*[
+        {
+          "keyword": "required",
+          "dataPath": "",
+          "schemaPath": "#/required",
+          "params": {
+            "missingProperty": "name"
+          },
+          "message": "should have required property 'name'"
+        }
+      ]
+    */
+
+    this.message='Validation failure\n'
+
+    for(let i=0; i<ajvErrors.length; i++){
+      const error = ajvErrors[i]
+      this.message += error.message + 'at data.'+error.dataPath
+    }
+
+    this.stack=''
+    this.name='DocumentValidationError'
+    this.code=this.name
+  }
+}
+
 /**
  * @class
  */
@@ -111,6 +141,7 @@ class DocumentFactory {
    * @param {*} data 
    */
   validate(type, data){
+    debug('validate',type)
     return new Promise((resolve, reject)=>{
 
       if(!this.validators[type]){
@@ -122,7 +153,8 @@ class DocumentFactory {
 
       if(!valid){
         let errors = this.validators[type].errors
-        return reject({error: errors})
+
+        return reject(new DocumentValidationError(errors))
       }
 
       return resolve(data)

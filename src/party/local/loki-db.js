@@ -39,7 +39,7 @@ module.exports = class LokiDb extends EventEmitter {
             autoload: true,
             autoloadCallback : resolve,
             autosave: true, 
-            autosaveInterval: 10000
+            autosaveInterval: 1000
           }
         )
 

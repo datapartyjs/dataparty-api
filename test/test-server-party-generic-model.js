@@ -4,7 +4,7 @@ const Dataparty = require('../src')
 
 async function main(){
 
-  const uri = 'mongodb://localhost:27017/server-party-test'
+  const uri = 'mongodb://localhost:27017/server-party-generics-test'
   debug('db location', uri)
 
   let party = new Dataparty.MongoParty({
@@ -21,8 +21,10 @@ async function main(){
     .where('name').equals('tester')
     .exec())[0]
 
-  
+
+
   if(!user){
+    debug('creating document')
     user = await party.createDocument('user', {
       name: 'tester',
       'created': (new Date()).toISOString(),
@@ -30,8 +32,11 @@ async function main(){
         'created': (new Date()).toISOString()
       }
     })
+    debug('created document')
   }
-    
+  else{
+    debug('loaded document')
+  }
 
   console.log(user.data)
   process.exit()
