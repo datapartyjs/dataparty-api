@@ -114,7 +114,7 @@ class IDocument extends EventEmitter {
    * @returns {object}
    */
   async mergeData(input){
-    return this.setData(Object.assign({}, this.data, input))
+    return await this.setData(Object.assign({}, this.data, input))
   }
 
   /**
@@ -124,7 +124,9 @@ class IDocument extends EventEmitter {
    * @returns {object}
    */
   async setData(input){
+    debug('setData start')
     let valid = await this.party.factory.validate(this.type, input)
+    debug('setData done')
     this._data = valid
   }
 
@@ -138,9 +140,13 @@ class IDocument extends EventEmitter {
     delete value.$meta.version
     delete value.__v
 
+    debug('asign data')
     await this.setData(value)
+    debug('data set')
     await this.party.update(value)
+    debug('doc updated')
     await this.pull()
+    debug('doc pulled')
   }
 
 
@@ -298,7 +304,7 @@ class IDocument extends EventEmitter {
     const newMsg = this.party.cache.findById(this.type, this.id)
     const oldMsg = Object.assign({}, this.getData())
 
-    debug('new message', newMsg)
+    debug('new message', event.event, newMsg)
 
     switch (event.event){
       case 'remove':

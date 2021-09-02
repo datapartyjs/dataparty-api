@@ -28,13 +28,14 @@ class ServiceRunner {
     debug('starting endpoints')
 
     const eps = Hoek.reach(this.service, 'compiled.endpoints')
-    const endpointsLoading = []
+    //const endpointsLoading = []
     for(let name in eps){
       debug('\t',name)
-      endpointsLoading.push( this.loadEndpoint(name) )
+      await this.loadEndpoint(name)
+      //endpointsLoading.push( this.loadEndpoint(name) )
     }
 
-    await Promise.all(endpointsLoading)
+    //await Promise.all(endpointsLoading)
     debug('endpoints ready:')
     for(let name in this.endpoint){
       debug('\t', Path.join('/', name))
@@ -86,6 +87,7 @@ class ServiceRunner {
 
   async loadMiddleware(name, type='pre'){ 
     if(this.middleware[type][name]){
+      debug('cached',type,'middleware',name)
       return this.middleware[type][name]
     }
 
@@ -107,7 +109,7 @@ class ServiceRunner {
     this.middleware[type][name] = runner
 
     dt.end()
-    debug('loaded middleware',name,'in',dt.deltaMs,'ms')
+    debug('loaded',type,'middleware',name,'in',dt.deltaMs,'ms')
 
     return runner
   }
@@ -150,7 +152,7 @@ class ServiceRunner {
   endpointHandler(endpoint){
     return async (event)=>{
 
-      debug('event',event.method, event.pathname)
+      debug('event',event.method, event.pathname, event.request.ip, event.request.ips)
 
 
       const context = new EndpointContext({

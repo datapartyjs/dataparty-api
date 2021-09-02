@@ -40,12 +40,12 @@ async function main(){
   await peer2.start()
 
   peer1.comms.socket.on('signal', data=>{
-    debug('p1 >> p2')
+    debug('p1 >> p2', data)
     peer2.comms.socket.signal(data)
   })
 
   peer2.comms.socket.on('signal', data=>{
-    debug('p1 << p2')
+    debug('p1 << p2', data)
     peer1.comms.socket.signal(data)
   })
 

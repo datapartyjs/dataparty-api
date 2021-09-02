@@ -23,9 +23,12 @@ async function main(){
 
   
   if(!user){
-    user = await local.createDocument('user', {name: 'tester'})
+    debug('creating document')
+    user = await local.createDocument('user', {name: 'tester', created: Date.now()})
   }
-    
+  else{
+    debug('loaded document')
+  }
 
   console.log(user.data)
   process.exit()

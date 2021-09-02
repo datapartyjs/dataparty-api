@@ -24,9 +24,14 @@ async function main(){
     .exec())[0]
 
   
-  if(!user){
-    user = await party.createDocument('user', {name: 'tester'})
-  }
+    if(!user){
+      debug('creating document')
+      user = await party.createDocument('user', {name: 'tester', created: Date.now()})
+      debug('created document')
+    }
+    else{
+      debug('loaded document')
+    }
     
 
   console.log(user.data)
