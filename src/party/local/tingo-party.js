@@ -1,24 +1,24 @@
 'use strict'
 
-const debug = require('debug')('dataparty.local-party')
+const debug = require('debug')('dataparty.tingo-party')
 
 const IParty = require('../iparty')
-const LokiDb = require('./loki-db')
+const TingoDb = require('./tingo-db')
 
 const Qb = require('../qb')
 
 
 /**
  * @class 
- * @alias module:dataparty.LocalParty
+ * @alias module:dataparty.TingoParty
  * @interface
  */
-class LocalParty extends IParty {
+class TingoParty extends IParty {
 
-  constructor ({path, dbAdapter, ...options}) {
+  constructor ({path, ...options}) {
     super(options)
 
-    this.db = new LokiDb({
+    this.db = new TingoDb({
       path, factory: this.factory
     })
 
@@ -39,4 +39,4 @@ class LocalParty extends IParty {
   }
 }
 
-module.exports = LocalParty
+module.exports = TingoParty

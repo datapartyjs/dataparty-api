@@ -1,13 +1,15 @@
+const fs = require('fs/promises')
 const debug = require('debug')('test.local-db')
 const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
 const Dataparty = require('../src')
 
+
 async function main(){
-  const dbPath = '/tmp/local-party-loki.db'
+  const dbPath = await fs.mkdtemp('/tmp/tingo-party')
 
   debug('db location', dbPath)
 
-  let local = new Dataparty.LocalParty({
+  let local = new Dataparty.TingoParty({
     path: dbPath,
     model: BouncerModel,
     config: new Dataparty.Config.MemoryConfig()

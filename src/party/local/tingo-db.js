@@ -1,24 +1,24 @@
 'use strict'
 
 const Hoek = require('@hapi/hoek')
-const Loki = require('lokijs')
-const LFSA = require('lokijs/src/loki-fs-structured-adapter')
+const Tingo = require('tingodb')()
 const ObjectId = require('bson-objectid')
 const EventEmitter = require('last-eventemitter')
+const {promisfy, waitFor} = require('promisfy')
 
 const LokiQuery = require('./loki-query')
-const debug = require('debug')('dataparty.local.loki-db')
+const debug = require('debug')('dataparty.local.tingo-db')
 
 
-module.exports = class LokiDb extends EventEmitter {
+module.exports = class TingoDb extends EventEmitter {
 
-  constructor ({path, factory, dbAdapter}) {
+  constructor ({path, factory, tingoOptions}) {
     super()
-    debug('constructor')
-    this.loki = null
+    debug('constructor path=',path)
+    this.tingo = null
     this.path = path
     this.factory = factory
-    this.dbAdapter = dbAdapter || new LFSA()
+    this.tingoOptions = tingoOptions || {}
     this.error = null
   }
 
@@ -29,17 +29,8 @@ module.exports = class LokiDb extends EventEmitter {
     await new Promise((resolve,reject)=>{
       try{
 
-        this.loki = new Loki(
-          this.path,
-          { 
-            adapter : this.dbAdapter,
-            autoload: true,
-            autoloadCallback : resolve,
-            autosave: true, 
-            autosaveInterval: 1000
-          }
-        )
-
+        this.tingo = new Tingo.Db(this.path, this.tingoOptions)
+        resolve()
       }
       catch(err){ this.error = err; reject(err) }
     })
@@ -57,26 +48,32 @@ module.exports = class LokiDb extends EventEmitter {
     debug(this.factory.getValidators())
 
     for(const collectionName of this.factory.getValidators()){
-      this.createCollection(collectionName)
+      await this.createCollection(collectionName)
     }
     
   }
 
-  createCollection(name){
+  async collectionNames(name){
+    let names = await promisfy(this.tingo.collectionNames.bind(this.tingo))({})
+
+    return names
+  }
+
+  async createCollection(name){
     debug('createCollection', name)
     const indexSettings = Hoek.reach(this.factory, 'model.IndexSettings.'+name)
 
-    const existing = this.loki.getCollection(name)
+    const existing = (await this.collectionNames()).indexOf(name) != -1
     if(existing !== null){ return }
 
     const options = {
-      unique: ['$meta.id'].concat(indexSettings.unique),
-      indices: ['$meta.id'].concat(indexSettings.indices)
+      unique: ['meta.id'].concat(indexSettings.unique),
+      indices: ['meta.id'].concat(indexSettings.indices)
     }
 
     debug('createCollection', name, options)
 
-    this.loki.addCollection(name, options)
+    let ollection = await promisfy(this.tingo.createCollection.bind(this.tingo))(name)
   }
 
   async handleCall(ask){
@@ -139,9 +136,18 @@ module.exports = class LokiDb extends EventEmitter {
 
     debug('loki-find', JSON.stringify(lokiQuery,null,2))
 
-    let collection = this.loki.getCollection(crufl.type)
+    let collection = await promisfy(this.tingo.collection.bind(this.tingo))(crufl.type)
 
-    let resultSet = collection.find(lokiQuery)
+    let resultSet = await new Promise((resolve,reject)=>{
+      let cursor = collection.find(lokiQuery) 
+      cursor.toArray((arr)=>{
+        if(!arr){ arr = [] }
+
+        resolve(arr)
+      })
+    })
+
+    debug(resultSet)
 
     //debug(collection)
     //debug('resultSet', resultSet)
@@ -157,7 +163,7 @@ module.exports = class LokiDb extends EventEmitter {
         msg.$meta.created = msg.meta.created
         msg.$meta.version = msg.meta.version
         delete msg.meta
-        delete msg.$loki
+        delete msg.$meta
 
         msgs.push(msg)
 
@@ -180,21 +186,32 @@ module.exports = class LokiDb extends EventEmitter {
   async applyCreate(crufl){
     let msgs = []
 
-    let collection = this.loki.getCollection(crufl.type)
-
+    let collection = await promisfy(this.tingo.collection.bind(this.tingo))(crufl.type)
 
     for(let createMsg of crufl.msgs){
       let raw = {...createMsg}
-      raw.$meta.id = (new ObjectId()).toHexString()
-      let doc = collection.insert(Object.assign({},raw))
       
+      raw.meta = raw.$meta
+      delete raw.$meta
+
+      raw.meta.id = (new ObjectId()).toHexString()
+
+      const docs = await promisfy(collection.insert.bind(collection))(Object.assign({},raw) )
+
+      debug('docs', docs)
+
+      const doc = docs[0]
 
       let msg = Object.assign({},doc)
-      msg.$meta.revision = msg.meta.revision
-      msg.$meta.created = msg.meta.created
-      msg.$meta.version = msg.meta.version
+
+      msg.$meta = {
+        id: msg.meta.id,
+        type: msg.meta.type,
+        revision: msg.meta.revision,
+        created: msg.meta.created,
+        version: msg.meta.version
+      }
       delete msg.meta
-      delete msg.$loki
 
       msgs.push(msg)
     }
@@ -205,7 +222,7 @@ module.exports = class LokiDb extends EventEmitter {
   async applyRemove(crufl){
     let msgs = []
 
-    let collection = this.loki.getCollection(crufl.type)
+    let collection = await promisfy(this.tingo.collection.bind(this.tingo))(crufl.type)
 
     for(let rmMsg of crufl.msgs){
       let msg = { $meta: {
@@ -214,7 +231,7 @@ module.exports = class LokiDb extends EventEmitter {
         type: rmMsg.$meta.type
       }}
       
-      collection.findAndRemove(msg)
+      await promisfy(collection.findAndRemove.bind(collection))(msg)
       msgs.push(msg)
     }
 
