@@ -6,7 +6,7 @@ const debug = require('debug')('dataparty.comms.rest')
 const WebsocketComms = require('./websocket-comms')
 const dataparty_crypto = require('@dataparty/crypto')
 
-const AuthError = require('./auth-error')
+const AuthError = require('../errors/auth-error')
 
 class RestComms extends EventEmitter {
   constructor({ remoteIdentity, config, party }) {

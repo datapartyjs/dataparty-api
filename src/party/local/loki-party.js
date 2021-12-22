@@ -3,7 +3,7 @@
 const debug = require('debug')('dataparty.loki-party')
 
 const IParty = require('../iparty')
-const LokiDb = require('./loki-db')
+const LokiDb = require('../../bouncer/db/loki-db')
 
 const Qb = require('../qb')
 

@@ -3,7 +3,7 @@
 const debug = require('debug')('dataparty.tingo-party')
 
 const IParty = require('../iparty')
-const TingoDb = require('./tingo-db')
+const TingoDb = require('../../bouncer/db/tingo-db')
 
 const Qb = require('../qb')
 

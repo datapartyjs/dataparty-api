@@ -5,7 +5,6 @@ const debug = require('debug')('dataparty.peer-party')
 
 const Qb = require('../qb')
 const IParty = require('../iparty')
-const LokiDb = require('../local/loki-db')
 const RTCSocketComms = require('../../comms/rtc-socket-comms')
 
 /**

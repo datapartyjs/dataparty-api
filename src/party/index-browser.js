@@ -7,7 +7,7 @@ const IDocument = require('./idocument')
 const DocumentFactory = require('./document-factory')
 const CloudDocument = require('./cloud/cloud-document')
 
-const LokiDb = require('./local/loki-db')
+const LokiDb = require('../bouncer/db/loki-db')
 
 module.exports = {
   IDocument, IParty, DocumentFactory,

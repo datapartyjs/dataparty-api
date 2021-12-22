@@ -6,9 +6,6 @@ const EventEmitter = require('last-eventemitter')
 const debug = require('debug')('dataparty.loki-cache')
 
 
-//const LokiIndexedAdapater = require('lokijs/src/loki-indexed-adapter')
-//const LokiAdapter = new LokiIndexedAdapater('dataparty-cache')
-
 module.exports = class LokiCache extends EventEmitter {
 
   constructor () {
@@ -153,7 +150,7 @@ module.exports = class LokiCache extends EventEmitter {
       const hits = []
       const misses = []
       for (const msg of msgs) {
-        const { type, id, version } = msg.$meta || {}
+        const { type, id, created, revision } = msg.$meta || {}
 
         const collection = this.db.getCollection(type)
         if (collection) {
@@ -167,7 +164,7 @@ module.exports = class LokiCache extends EventEmitter {
           delete cachedMsg.meta
           if (cachedMsg && cachedMsg.$meta && cachedMsg.$meta.id) {
 
-            if(version > -1 && cachedMsg.$meta.version != version){
+            if(revision > -1 && cachedMsg.$meta.revision != revision){
               misses.push(msg)
             }
             else{

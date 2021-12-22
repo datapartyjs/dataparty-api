@@ -1,7 +1,6 @@
 const Path = require('path')
 
 module.exports = {
-  ISchema: require('./ischema'),
   IContext: require('./icontext'),
   IService: require('./iservice'),
   IEndpoint: require('./iendpoint'),

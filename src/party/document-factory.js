@@ -2,35 +2,8 @@ const Ajv = require('ajv')
 const debug = require('debug')('dataparty.document-factory')
 const IDocument = require('./idocument')
 
-class DocumentValidationError extends Error {
-  constructor(ajvErrors){
-    super()
+const DocumentValidationError = require('../errors/document-validation-error')
 
-    /*[
-        {
-          "keyword": "required",
-          "dataPath": "",
-          "schemaPath": "#/required",
-          "params": {
-            "missingProperty": "name"
-          },
-          "message": "should have required property 'name'"
-        }
-      ]
-    */
-
-    this.message='Validation failure\n'
-
-    for(let i=0; i<ajvErrors.length; i++){
-      const error = ajvErrors[i]
-      this.message += error.message + 'at data.'+error.dataPath
-    }
-
-    this.stack=''
-    this.name='DocumentValidationError'
-    this.code=this.name
-  }
-}
 
 /**
  * @class

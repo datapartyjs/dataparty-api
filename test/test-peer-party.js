@@ -8,7 +8,7 @@ async function main(){
 
   debug('db location', dbPath)
 
-  let hostLocal = new Dataparty.LocalParty({
+  let hostLocal = new Dataparty.LokiParty({
     path: dbPath,
     model: BouncerModel,
     config: new Dataparty.Config.MemoryConfig()

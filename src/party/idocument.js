@@ -33,7 +33,7 @@ class IDocument extends EventEmitter {
 
     this._data = {
       ...data,
-      $meta: {id: id, type: type},
+      $meta: {id, type, revision: reach(data, '$meta.revision')}
     }
 
     if(this.party.cache){
@@ -55,10 +55,10 @@ class IDocument extends EventEmitter {
   get type(){ return reach(this._data, '$meta.type') }
 
   /**
-   * Document version string
+   * Document revision string
    * @type {string}
    */
-  get version(){ return reach(this._data, '$meta.version') }
+  get revision(){ return reach(this._data, '$meta.revision') }
 
   static get DocumentSchema(){
     return 'document'
@@ -136,9 +136,6 @@ class IDocument extends EventEmitter {
    */
   async save(){
     const value = Object.assign({}, this.data)
-
-    delete value.$meta.version
-    delete value.__v
 
     debug('asign data')
     await this.setData(value)
