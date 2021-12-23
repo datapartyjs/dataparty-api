@@ -49,6 +49,24 @@ module.exports = class ISchema {
     throw new Error('not implemented')
   }
 
+  /**
+   * Collection level read redaction
+   * @param {Object} msg msg object
+   * @param {} context 
+   */
+  static redactRead(msg, context){
+    return msg
+  }
+
+    /**
+   * Collection level read redaction
+   * @param {Object} msg msg object
+   * @param {} context 
+   */
+  static redactWrite(msg, context){
+    return msg
+  }
+
   static generate({JSONSchema, IndexSettings, Permissions}){
 
     return class GenericModel extends Schema {

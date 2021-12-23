@@ -1,30 +1,32 @@
 
 class ICrufler {
-  constructor({context}){
-
+  constructor({db, context}){
+    this.db = db
+    this.context = context
   }
-  //
-
-  async handleCrufl(){}
-
-  async applyCreate(){}
-  async applyRemove(){}
-  async applyUpdate(){}
-  async applyFind(){}
-  async applyLookup(){}
 
 
   /** override these functions in subclass */
 
-  redactRead(msg){}
-  redactWrite(msg){}
+  redactRead(msg){ throw new Error('not implemented') }
+  redactWrite(msg){ throw new Error('not implemented') }
 
-  isAllowedCollection(name){}
+  isAllowedCollection(name){ throw new Error('not implemented') }
 
-  async filterQuerySpec(spec){}
+  async filterQuerySpec(spec){ throw new Error('not implemented') }
 
-  async canCreate(msg){}
-  async canRemove(msg){}
-  async canUpdate(msg, newMsg){}
-  async canRead(msg){}
+  async canCreate(msg){ throw new Error('not implemented') }
+  async canRemove(msg){ throw new Error('not implemented') }
+  async canUpdate(msg, newMsg){ throw new Error('not implemented') }
+  async canRead(msg){ throw new Error('not implemented') }
+
+
+  //
+
+  async handleCrufl(){}
+
+  async applyCreate(crufl){}
+  async applyRemove(crufl){}
+  async applyUpdate(crufl){}
+  async applyFind(crufl, includeData = false){}
 }

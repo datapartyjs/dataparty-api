@@ -1,5 +1,6 @@
 'use strict'
 
+const IDb = require('../idb')
 const Hoek = require('@hapi/hoek')
 const Loki = require('lokijs')
 const LFSA = require('lokijs/src/loki-fs-structured-adapter')
@@ -12,11 +13,10 @@ const debug = require('debug')('dataparty.local.loki-db')
 module.exports = class LokiDb extends IDb {
 
   constructor ({path, factory, dbAdapter}) {
-    super()
+    super(factory)
     debug('constructor')
     this.loki = null
     this.path = path
-    this.factory = factory
     this.dbAdapter = dbAdapter || new LFSA()
     this.error = null
   }
@@ -43,28 +43,18 @@ module.exports = class LokiDb extends IDb {
       catch(err){ this.error = err; reject(err) }
     })
 
-    /** @todo
-      - create db collections
-      - set indicies
-      - set uniques
-    */
-
-
-    debug('started')
-
-    debug(this.factory.model.IndexSettings)
-    debug(this.factory.getValidators())
-
-    for(const collectionName of this.factory.getValidators()){
-      this.createCollection(collectionName)
-    }
-    
+    await super.start()
   }
 
-  createCollection(name){
-    debug('createCollection', name)
-    const indexSettings = Hoek.reach(this.factory, 'model.IndexSettings.'+name)
+  async getCollectionNames(){
+    const names = this.loki.listCollections()
 
+    return names.map(obj=>{return obj.name.replace(this.prefix,'')})
+  }
+
+  async createCollection(name, indexSettings){
+    debug('createCollection', name, indexSettings)
+    
     const existing = this.loki.getCollection(name)
     if(existing !== null){ return }
 
@@ -75,7 +65,7 @@ module.exports = class LokiDb extends IDb {
 
     debug('createCollection', name, options)
 
-    this.loki.addCollection(name, options)
+    this.loki.addCollection(this.prefix+name, options)
   }
 
   async handleCall(ask){
@@ -212,8 +202,8 @@ module.exports = class LokiDb extends IDb {
         id: rmMsg.$meta.id,
         type: rmMsg.$meta.type
       }}
-      
-      collection.findAndRemove(msg)
+
+      collection.findAndRemove(rmMsg)
       msgs.push(msg)
     }
 
