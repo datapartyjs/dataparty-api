@@ -36,10 +36,7 @@ module.exports = class TingoDb extends IDb {
     await super.start()
   }
 
-  stripMeta(doc){
-    const {meta, $meta, ...rawMsg} = doc
-    return rawMsg
-  }
+
 
   /** convert db documnet to plain object with $meta field */
   documentToObject(doc){
@@ -121,12 +118,14 @@ module.exports = class TingoDb extends IDb {
       revision: Hoek.reach(doc,'$meta.revision', {default: 1})
     }
 
-    this.factory.validate(collectionName, this.stripMeta(dbDoc))
+    const validatedDbDoc = await this.factory.validate(collectionName, this.stripMeta(dbDoc))
 
     const docs = await promisfy(collection.insert.bind(collection))( dbDoc )
 
     const finalDbDoc = docs[0]
     const finalObj = this.documentToObject(finalDbDoc)
+
+    this.emitChange(finalObj, 'create')
 
     return finalObj
   }
@@ -151,10 +150,12 @@ module.exports = class TingoDb extends IDb {
 
       this.factory.validate(collectionName, this.stripMeta(dbDoc))
 
-      const docs = await promisfy(collection.insert.bind(collection))( dbDoc )
+      const result = await promisfy(collection.insert.bind(collection))( dbDoc )
 
-      const finalDbDoc = docs[0]
+      const finalDbDoc = result[0]
       const finalObj = this.documentToObject(finalDbDoc)
+
+      this.emitChange(finalObj, 'create')
 
       resultSet.push(finalObj)
     }
@@ -163,12 +164,41 @@ module.exports = class TingoDb extends IDb {
 
   }
 
-  async findAndRemove(collectionName, rmMsg){ 
-    debug('findAndRemove collection', collectionName, ' rmMsg', rmMsg)
+  async update(collectionName, docs){ 
+    debug('update collection', collectionName, ' docs', docs)
 
     let collection = await this.getCollection(collectionName)
 
-    const dbRmMsg = this.documentFromObject(rmMsg)
-    await promisfy(collection.findAndRemove.bind(collection))( dbRmMsg )
+    const dbDocs = docs.map(this.documentFromObject)
+    const docs = await promisfy(collection.update.bind(collection))( dbRmMsg )
+
+    let objs = docs.map(doc=>{
+      let obj = this.documentToObject(doc)
+
+      this.emitChange(obj, 'remove')
+
+      return obj
+    })
+
+    return objs
+  }
+
+  async findAndRemove(collectionName, query){ 
+    debug('findAndRemove collection', collectionName, ' query', query)
+
+    let collection = await this.getCollection(collectionName)
+
+    const dbRmMsg = this.documentFromObject(query)
+    const docs = await promisfy(collection.findAndRemove.bind(collection))( dbRmMsg )
+
+    let objs = docs.map(doc=>{
+      let obj = this.documentToObject(doc)
+
+      this.emitChange(obj, 'remove')
+
+      return obj
+    })
+
+    return objs
   }
 }

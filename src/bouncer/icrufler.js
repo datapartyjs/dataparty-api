@@ -8,25 +8,14 @@ class ICrufler {
 
   /** override these functions in subclass */
 
-  redactRead(msg){ throw new Error('not implemented') }
-  redactWrite(msg){ throw new Error('not implemented') }
-
-  isAllowedCollection(name){ throw new Error('not implemented') }
-
-  async filterQuerySpec(spec){ throw new Error('not implemented') }
-
-  async canCreate(msg){ throw new Error('not implemented') }
-  async canRemove(msg){ throw new Error('not implemented') }
-  async canUpdate(msg, newMsg){ throw new Error('not implemented') }
-  async canRead(msg){ throw new Error('not implemented') }
 
 
   //
 
-  async handleCrufl(){}
+  async handleCrufl(){ throw new Error('not implemented') }
 
-  async applyCreate(crufl){}
-  async applyRemove(crufl){}
-  async applyUpdate(crufl){}
-  async applyFind(crufl, includeData = false){}
+  async applyCreate(crufl){ throw new Error('not implemented') }
+  async applyRemove(crufl){ throw new Error('not implemented') }
+  async applyUpdate(crufl){ throw new Error('not implemented') }
+  async applyFind(crufl, includeData = false){ throw new Error('not implemented') }
 }

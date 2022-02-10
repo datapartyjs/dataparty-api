@@ -18,12 +18,12 @@ module.exports = class LokiCache extends EventEmitter {
   }
 
   _emitChange(msg, change){
-    const { type, id } = msg.$meta
+    const { type, id, revision } = msg.$meta
     this.emit(
       `${type}:${id}`,
       {
         event: change,
-        msg: { type, id }
+        msg: { type, id, revision }
       }
     )
   }
@@ -150,7 +150,7 @@ module.exports = class LokiCache extends EventEmitter {
       const hits = []
       const misses = []
       for (const msg of msgs) {
-        const { type, id, created, revision } = msg.$meta || {}
+        const { type, id, revision } = msg.$meta || {}
 
         const collection = this.db.getCollection(type)
         if (collection) {

@@ -1,7 +1,7 @@
-class AdminCrufler {
+module.exports = class AdminCrufler {
 
-  constructor(options){
-    super(options)
+  constructor({db, context}){
+    super({db, context})
   }
 
   async handleCall(ask){
@@ -22,14 +22,15 @@ class AdminCrufler {
 
       debug('\tcrufl->', crufl.op, crufl.type)
 
-      //debug('\t\tcrufl ->', crufl)
-
       switch(crufl.op){
         case 'create':
           result.msgs = await this.applyCreate(crufl)
           break
         case 'remove':
           result.msgs = await this.applyRemove(crufl)
+          break
+        case 'update':
+          result.msgs = await this.applyUpdate(crufl)
           break
         case 'find':
           result.msgs = await this.applyFind(crufl, false)
@@ -111,5 +112,9 @@ class AdminCrufler {
     }
 
     return msgs
+  }
+
+  async applyUpdate(crufl){
+    return await this.db.update(crufl.type, crufl.msgs)
   }
 }

@@ -38,7 +38,23 @@ module.exports = class IDb extends EventEmitter {
 
   /** convert object with $meta field to db representation*/
   documentFromObject(obj){ throw new Error('not implemented') }
-  
+
+  stripMeta(doc){
+    const {meta, $meta, ...rawMsg} = doc
+    return rawMsg
+  }
+
+
+  emitChange(msg, change){
+    const { type, id, revision } = msg.$meta
+    this.emit(
+      `${type}:${id}`,
+      {
+        event: change,
+        msg: { type, id, revision }
+      }
+    )
+  }
 
   /**
    * Create collection with prefixed name
@@ -64,6 +80,8 @@ module.exports = class IDb extends EventEmitter {
   async insert(collectionName, doc){ throw new Error('not implemented') }
 
   async insertMany(collectionName, doc){ throw new Error('not implemented') }
+
+  async update(collectionName, query, doc){ throw new Error('not implemented') }
 
   async findAndRemove(collectionName, msg){ throw new Error('not implemented') }
 

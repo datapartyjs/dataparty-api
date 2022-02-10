@@ -113,13 +113,14 @@ class DocumentFactory {
    * @param {*} type 
    * @param {*} data 
    */
-  validate(type, data){
+  async validate(type, data){
     debug('validate',type)
     return new Promise((resolve, reject)=>{
 
       if(!this.validators[type]){
         debug('WARNING - validate with no such model type[', type, ']')
-        return resolve(data)
+        return reject(new DocumentValidationError('no such validator'))
+        //return resolve(data)
       }
 
       let valid = this.validators[type](data)
