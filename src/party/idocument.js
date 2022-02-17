@@ -33,7 +33,7 @@ class IDocument extends EventEmitter {
 
     this._data = {
       ...data,
-      $meta: {id, type, revision: reach(data, '$meta.revision')}
+      $meta: {id, type, ...data.$meta}
     }
 
     if(this.party.cache){
