@@ -3,13 +3,22 @@ const debug = require('debug')('test.local-db')
 const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
 const Dataparty = require('../src')
 
+let local=null
+
+async function getUser(name) {
+  return (await local.find()
+    .type('user')
+    .where('name').equals(name)
+    .exec())[0]
+}
+
 
 async function main(){
   const dbPath = await fs.mkdtemp('/tmp/tingo-party')
 
   debug('db location', dbPath)
 
-  let local = new Dataparty.TingoParty({
+  local = new Dataparty.TingoParty({
     path: dbPath,
     model: BouncerModel,
     config: new Dataparty.Config.MemoryConfig()
@@ -18,10 +27,7 @@ async function main(){
 
   await local.start()
 
-  let user = (await local.find()
-    .type('user')
-    .where('name').equals('tester')
-    .exec())[0]
+  let user = await getUser('tester')
 
   
   if(!user){
@@ -33,6 +39,18 @@ async function main(){
   }
 
   console.log(user.data)
+
+  user.data.name = 'renamed-tester'
+  await user.save()
+
+  console.log(user.data)
+
+
+  await user.remove()
+
+  console.log(await getUser('renamed-tester'))
+
+
   process.exit()
 }
 

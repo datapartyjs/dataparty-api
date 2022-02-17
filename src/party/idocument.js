@@ -71,7 +71,7 @@ class IDocument extends EventEmitter {
    */
 
   /**
-   * Document id string in format `<type>:<mongo-id>`
+   * Document id object
    * @type {IdObj}  
    */
   get idObj(){

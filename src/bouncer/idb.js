@@ -47,6 +47,11 @@ module.exports = class IDb extends EventEmitter {
     return rawMsg
   }
 
+  onlyMeta(objOrDoc){
+    const {meta, $meta, ...rawMsg} = objOrDoc
+    return {$meta: $meta || meta }
+  }
+
 
   emitChange(msg, change){
     const { type, id, revision } = msg.$meta

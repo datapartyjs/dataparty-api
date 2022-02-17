@@ -179,7 +179,32 @@ module.exports = class TingoDb extends IDb {
 
     let collection = await this.getCollection(collectionName)
 
-    let objs = docs.map()
+    let objs = []
+
+    for(let obj of docs){
+      let dbDoc = this.documentFromObject(obj)
+
+      dbDoc.meta.revision++
+
+      debug('updating',obj, 'to', dbDoc)
+
+      const stripped = this.stripMeta(dbDoc)
+
+      debug('validating', stripped,'from', dbDoc)
+
+      await this.factory.validate(collectionName, stripped)
+
+      debug('its good, updating', dbDoc)
+
+      const result = await promisfy(collection.update.bind(collection))( {_id: dbDoc._id}, dbDoc )
+
+      const finalObj = this.documentToObject(dbDoc)
+
+      this.emitChange(finalObj, 'update')
+
+      objs.push( finalObj )
+
+    }
 
     /*const dbDocs = docs.map(this.documentFromObject)
     const docs = await promisfy(collection.update.bind(collection))( dbRmMsg )
@@ -195,22 +220,22 @@ module.exports = class TingoDb extends IDb {
     return objs
   }
 
-  async findAndRemove(collectionName, query){ 
-    debug('findAndRemove collection', collectionName, ' query', query)
+  async findAndRemove(collectionName, obj){ 
+    debug('findAndRemove collection', collectionName, ' obj', obj)
 
     let collection = await this.getCollection(collectionName)
 
-    const dbRmMsg = this.documentFromObject(query)
-    const docs = await promisfy(collection.findAndRemove.bind(collection))( dbRmMsg )
+    const dbDoc = await promisfy(collection.findAndRemove.bind(collection))( { _id: obj.$meta.id } )
 
-    let objs = docs.map(doc=>{
-      let obj = this.documentToObject(doc)
+    debug('dbDoc', dbDoc)
 
-      this.emitChange(obj, 'remove')
+    let rmObj = this.documentToObject(dbDoc)
 
-      return obj
-    })
+    rmObj.$meta.removed = true
 
-    return objs
+
+    debug('obj', rmObj)
+
+    return rmObj
   }
 }

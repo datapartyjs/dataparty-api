@@ -104,7 +104,10 @@ module.exports = class LokiCache extends EventEmitter {
 
           if (cachedMsg) {
             try{
-              collection.remove(cachedMsg)
+              //collection.remove(cachedMsg)
+              collection.findAndRemove({
+                '$meta.id': id,
+              })
             }
             catch(err){
               debug('WARN', err)

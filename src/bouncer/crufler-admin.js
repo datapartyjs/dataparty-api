@@ -11,7 +11,7 @@ module.exports = class AdminCrufler extends ICrufler {
   }
 
   async handleCall(ask){
-    debug('handleCall')
+    debug('handleCall', ask)
     //debug('\task', JSON.stringify(ask,null,2))
 
     let complete = true
@@ -60,6 +60,9 @@ module.exports = class AdminCrufler extends ICrufler {
         process.exit()
       }
 
+      debug('completed', crufl)
+      debug('result', result)
+
       results.push(result)
     }
 
@@ -69,7 +72,7 @@ module.exports = class AdminCrufler extends ICrufler {
       complete
     }
 
-    //debug('replying', JSON.stringify(freshness,null,2))
+    debug('replying', JSON.stringify(freshness,null,2))
 
     return {freshness: results }
   }
@@ -125,8 +128,8 @@ module.exports = class AdminCrufler extends ICrufler {
         type: rmMsg.$meta.type
       }}
       
-      await this.db.findAndRemove(crufl.type, rmMsg)
-      msgs.push(msg)
+      let obj = await this.db.findAndRemove(crufl.type, rmMsg)
+      msgs.push(obj)
     }
 
     return msgs
