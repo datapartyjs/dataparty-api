@@ -12,7 +12,7 @@ module.exports = class ICrufler {
 
   //
 
-  async handleCrufl(){ throw new Error('not implemented') }
+  async handleCall(ask){ throw new Error('not implemented') }
 
   async applyCreate(crufl){ throw new Error('not implemented') }
   async applyRemove(crufl){ throw new Error('not implemented') }
