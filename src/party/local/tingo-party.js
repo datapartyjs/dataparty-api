@@ -4,6 +4,7 @@ const debug = require('debug')('dataparty.tingo-party')
 
 const IParty = require('../iparty')
 const TingoDb = require('../../bouncer/db/tingo-db')
+const AdminCrufler = require('../../bouncer/crufler-admin')
 
 const Qb = require('../qb')
 
@@ -22,6 +23,10 @@ class TingoParty extends IParty {
       path, factory: this.factory
     })
 
+    this.crufler = new AdminCrufler({
+      db: this.db
+    })
+
     this.qb = new Qb({
       call: this.handleCall.bind(this),
       cache: this.cache
@@ -35,7 +40,7 @@ class TingoParty extends IParty {
 
 
   async handleCall(ask){
-    return await this.db.handleCall(ask)
+    return await this.crufler.handleCall(ask)
   }
 }
 

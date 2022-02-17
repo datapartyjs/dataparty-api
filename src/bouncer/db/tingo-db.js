@@ -3,8 +3,9 @@
 
 const IDb = require('../idb')
 const Hoek = require('@hapi/hoek')
-const Tingo = require('tingodb')()
+
 const {promisfy} = require('promisfy')
+
 
 const debug = require('debug')('bouncer.db.tingo-db')
 
@@ -13,20 +14,21 @@ module.exports = class TingoDb extends IDb {
 
   constructor ({path, factory, tingoOptions, prefix}) {
     super(factory, prefix)
-    debug('constructor path=',path)
+    debug('constructor path=',path, tingoOptions)
     this.tingo = null
     this.path = path
-    this.tingoOptions = tingoOptions || {}
+    this.tingoOptions = tingoOptions || {nativeObjectID: true}
     this.error = null
   }
 
 
   async start(){
 
-    debug('starting')
+    debug('starting', this.tingoOptions)
     await new Promise((resolve,reject)=>{
       try{
 
+        const Tingo = require('tingodb')(this.tingoOptions)
         this.tingo = new Tingo.Db(this.path, this.tingoOptions)
         resolve()
       }
@@ -44,8 +46,8 @@ module.exports = class TingoDb extends IDb {
     obj.$meta = {
       id: Hoek.reach(obj,'meta.id', {default: obj._id}),
       type: Hoek.reach(obj,'meta.type'),
-      created: Hoek.reach(obj,'meta.created'),
-      revision: Hoek.reach(obj,'meta.revision'),
+      created: Hoek.reach(obj,'meta.created', {default: (new Date()).toISOString()}),
+      revision: Hoek.reach(obj,'meta.revision', {default: 1}),
       removed: Hoek.reach(obj,'meta.removed')
     }
     delete obj.meta
@@ -61,8 +63,8 @@ module.exports = class TingoDb extends IDb {
     doc.meta = {
       id: Hoek.reach(obj,'$meta.id', {default: obj._id}),
       type: Hoek.reach(obj,'$meta.type'),
-      created: Hoek.reach(obj,'$meta.created'),
-      revision: Hoek.reach(obj,'$meta.revision'),
+      created: Hoek.reach(obj,'$meta.created', {default: (new Date()).toISOString()}),
+      revision: Hoek.reach(obj,'$meta.revision', {default: 1}),
       removed: Hoek.reach(obj,'$meta.removed')
     }
     
@@ -131,24 +133,32 @@ module.exports = class TingoDb extends IDb {
   }
 
   async insertMany(collectionName, docs){ 
-    debug('insert collection=', collectionName, ' doc=', JSON.stringify(doc,null,2))
+    debug('insert collection=', collectionName, ' docs=', JSON.stringify(docs,null,2))
     let collection = await this.getCollection(collectionName)
 
     let resultSet = []
 
-    for(let doc of docs){
-      let dbDoc = {...doc}
-    
-      if(dbDoc._id===undefined){ dbDoc._id = new this.tingo.ObjectID().valueOf()  }
+    for(let obj of docs){
+      let temp = {...obj}
+      if(temp._id===undefined){ temp._id = (new this.tingo.ObjectID()).toString(); temp.$meta.id=temp._id;  }
 
-      dbDoc.meta = {
-        id: obj._id,
+      let dbDoc = this.documentFromObject(temp)
+
+
+      /*dbDoc.meta = {
+        id: dbDoc._id,
         type: collectionName,
         created: Hoek.reach(doc,'$meta.created', {default: Date.now()}),
         revision: Hoek.reach(doc,'$meta.revision', {default: 1})
-      }
+      }*/
 
-      this.factory.validate(collectionName, this.stripMeta(dbDoc))
+      const stripped = this.stripMeta(temp)
+
+      debug('validating', stripped,'from', temp)
+
+      await this.factory.validate(collectionName, stripped)
+
+      debug('its good, inserting', dbDoc)
 
       const result = await promisfy(collection.insert.bind(collection))( dbDoc )
 
@@ -169,16 +179,18 @@ module.exports = class TingoDb extends IDb {
 
     let collection = await this.getCollection(collectionName)
 
-    const dbDocs = docs.map(this.documentFromObject)
+    let objs = docs.map()
+
+    /*const dbDocs = docs.map(this.documentFromObject)
     const docs = await promisfy(collection.update.bind(collection))( dbRmMsg )
 
     let objs = docs.map(doc=>{
       let obj = this.documentToObject(doc)
 
-      this.emitChange(obj, 'remove')
+      this.emitChange(obj, 'update')
 
       return obj
-    })
+    })*/
 
     return objs
   }

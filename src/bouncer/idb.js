@@ -1,4 +1,6 @@
 
+const reach = require('../utils/reach')
+const debug = require('debug')('bouncer.idb')
 const EventEmitter = require('last-eventemitter')
 
 module.exports = class IDb extends EventEmitter {
@@ -9,6 +11,7 @@ module.exports = class IDb extends EventEmitter {
    * @param {string} prefix Prefix collection names
    */
   constructor(factory, prefix='api_'){
+    super()
     this.factory = factory
     this.prefix = prefix
   }
@@ -20,7 +23,7 @@ module.exports = class IDb extends EventEmitter {
 
     for(const collectionName of this.factory.getValidators()){
 
-      const indexSettings = Hoek.reach(this.factory, 'model.IndexSettings.'+collectionName)
+      const indexSettings = reach(this.factory, 'model.IndexSettings.'+collectionName)
       await this.createCollection(collectionName, indexSettings)
     }
   }

@@ -1,5 +1,5 @@
 
-class ICrufler {
+module.exports = class ICrufler {
   constructor({db, context}){
     this.db = db
     this.context = context

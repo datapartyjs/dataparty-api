@@ -1,4 +1,10 @@
-module.exports = class AdminCrufler {
+const debug = require('debug')('bouncer.crufler-admin')
+
+const MongoQuery = require('./mongo-query')
+
+const ICrufler = require('./icrufler')
+
+module.exports = class AdminCrufler extends ICrufler {
 
   constructor({db, context}){
     super({db, context})
@@ -20,27 +26,38 @@ module.exports = class AdminCrufler {
         error: null
       }
 
-      debug('\tcrufl->', crufl.op, crufl.type)
+      debug('\tcrufl->', crufl.type)
 
-      switch(crufl.op){
-        case 'create':
-          result.msgs = await this.applyCreate(crufl)
-          break
-        case 'remove':
-          result.msgs = await this.applyRemove(crufl)
-          break
-        case 'update':
-          result.msgs = await this.applyUpdate(crufl)
-          break
-        case 'find':
-          result.msgs = await this.applyFind(crufl, false)
-          break
-        case 'lookup':
-          result.msgs = await this.applyFind(crufl, true)
-          break
-        
-        default:
-          break
+      try{
+        switch(crufl.op){
+          case 'create':
+            result.msgs = await this.applyCreate(crufl)
+            break
+          case 'remove':
+            result.msgs = await this.applyRemove(crufl)
+            break
+          case 'update':
+            result.msgs = await this.applyUpdate(crufl)
+            break
+          case 'find':
+            result.msgs = await this.applyFind(crufl, false)
+            break
+          case 'lookup':
+            result.msgs = await this.applyFind(crufl, true)
+            break
+          
+          default:
+            break
+        }
+      }
+      catch(err){
+        debug(err)
+        result.error = err
+
+        debug(crufl)
+        debug(result)
+
+        process.exit()
       }
 
       results.push(result)
@@ -56,6 +73,7 @@ module.exports = class AdminCrufler {
 
     return {freshness: results }
   }
+
 
   async applyFind(crufl, includeData = false){
     debug('find', JSON.stringify(crufl,null,2))

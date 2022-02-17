@@ -26,7 +26,7 @@ async function main(){
   
   if(!user){
     debug('creating document')
-    user = await local.createDocument('user', {name: 'tester', created: Date.now()})
+    user = await local.createDocument('user', {name: 'tester', created: (new Date()).toISOString() })
   }
   else{
     debug('loaded document')
