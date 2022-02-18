@@ -9,12 +9,14 @@
   "backend": "dist/dataparty.js",
   "targets": {
     "frontend": {
+      "context": "browser",
       "source": "src/index-browser.js",
       "engines": {
         "browsers": "Chrome 80"
       }
     },
     "backend": {
+      "context": "node",
       "source": "src/index.js",
       "engines": {
         "node": ">= 12"
@@ -27,8 +29,8 @@
   ],
   "scripts": {
     "test": "./node_modules/.bin/eslint ./",
-    "build": "parcel build",
-    "prepare": "yarn build",
+    "build": "parcel build --no-scope-hoist",
+    "prepare": "npm run build",
     "watch": "parcel watch",
     "watch-test": "DEBUG=* nodemon --ignore service test/test-service-compile.js",
     "build-docs": "npx jsdoc -c jsdoc.json"

@@ -1,7 +1,7 @@
 const fs = require('fs/promises')
 const debug = require('debug')('test.local-db')
 const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
-const Dataparty = require('../src')
+const Dataparty = require('../dist/dataparty.js')
 
 let local=null
 
