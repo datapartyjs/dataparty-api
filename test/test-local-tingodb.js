@@ -41,6 +41,7 @@ async function main(){
   console.log(user.data)
 
   user.data.name = 'renamed-tester'
+  user.data.invalideField = true
   await user.save()
 
   console.log(user.data)

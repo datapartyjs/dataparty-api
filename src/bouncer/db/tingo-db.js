@@ -51,6 +51,7 @@ module.exports = class TingoDb extends IDb {
       removed: Hoek.reach(obj,'meta.removed')
     }
     delete obj.meta
+    delete obj._id
 
     return obj
   }
@@ -71,6 +72,17 @@ module.exports = class TingoDb extends IDb {
     delete doc.$meta
 
     return doc
+  }
+
+  ensureId(obj){
+    let temp = {...obj}
+    if(!reach(temp,'$meta.id')){
+      temp.$meta.id = new this.tingo.ObjectID().valueOf()
+    }
+
+    let dbDoc = this.documentFromObject(temp)
+    
+    return dbDoc
   }
 
   async getCollectionNames(name){
@@ -105,20 +117,20 @@ module.exports = class TingoDb extends IDb {
     return resultArray.map(this.documentToObject) || []
   }
 
-  async insert(collectionName, doc){ 
-    debug('insert collection=', collectionName, ' doc=', JSON.stringify(doc,null,2))
+  async insert(collectionName, obj){ 
+    debug('insert collection=', collectionName, ' doc=', JSON.stringify(obj,null,2))
     let collection = await this.getCollection(collectionName)
 
-    let dbDoc = {...doc}
+    let dbDoc = this.ensureId(obj)
     
-    if(dbDoc._id===undefined){ dbDoc._id = new this.tingo.ObjectID().valueOf()  }
+    /*if(dbDoc._id===undefined){ dbDoc._id = new this.tingo.ObjectID().valueOf()  }
 
     dbDoc.meta = {
       id: obj._id,
       type: collectionName,
       created: Hoek.reach(doc,'$meta.created', {default: Date.now()}),
       revision: Hoek.reach(doc,'$meta.revision', {default: 1})
-    }
+    }*/
 
     const validatedDbDoc = await this.factory.validate(collectionName, this.stripMeta(dbDoc))
 
@@ -229,13 +241,14 @@ module.exports = class TingoDb extends IDb {
 
     debug('dbDoc', dbDoc)
 
-    let rmObj = this.documentToObject(dbDoc)
+    let finalObj = this.documentToObject(dbDoc)
 
-    rmObj.$meta.removed = true
+    finalObj.$meta.removed = true
 
+    this.emitChange(finalObj, 'remove')
 
-    debug('obj', rmObj)
+    debug('obj', finalObj)
 
-    return rmObj
+    return finalObj
   }
 }

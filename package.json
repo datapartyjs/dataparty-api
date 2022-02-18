@@ -2,17 +2,34 @@
   "name": "@dataparty/api",
   "private": false,
   "version": "1.2.1",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "browser": "src/index-browser.js",
+  "source": "src/index.js",
+  "frontend": "dist/dataparty-browser.js",
+  "backend": "dist/dataparty.js",
+  "targets": {
+    "frontend": {
+      "source": "src/index-browser.js",
+      "engines": {
+        "browsers": "Chrome 80"
+      }
+    },
+    "backend": {
+      "source": "src/index.js",
+      "engines": {
+        "node": ">= 12"
+      }
+    }
+  },
   "files": [
     "dist",
     "src/*"
   ],
   "scripts": {
     "test": "./node_modules/.bin/eslint ./",
-    "build": "webpack",
+    "build": "parcel build",
     "prepare": "yarn build",
-    "watch": "webpack --watch",
+    "watch": "parcel watch",
     "watch-test": "DEBUG=* nodemon --ignore service test/test-service-compile.js",
     "build-docs": "npx jsdoc -c jsdoc.json"
   },
@@ -68,6 +85,7 @@
     "docdash": "^1.1.1",
     "jsdoc": "^3.6.2",
     "minami": "^1.2.3",
+    "parcel": "^2.3.1",
     "tmp": "^0.2.1",
     "webpack": "^4.17.2",
     "webpack-bundle-analyzer": "^3.8.0",
