@@ -64,14 +64,17 @@ describe('tingo party test', ()=>{
     expect(user.data.name).equal('tester')
 
     user.data.name = 'renamed-tester'
-    //user.data.invalideField = true
     await user.save()
 
-    let userFind = await getUser('renamed-tester')
+    let oldUser = await getUser('tester')
 
-    expect(userFind).not.undefined()
-    expect(userFind.data.name).equal('renamed-tester')
+    expect(oldUser).undefined()
 
-    await userFind.remove()
+    let renamedUser = await getUser('renamed-tester')
+
+    expect(renamedUser).not.undefined()
+    expect(renamedUser.data.name).equal('renamed-tester')
+
+    await renamedUser.remove()
   })
 })
