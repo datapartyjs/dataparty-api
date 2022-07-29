@@ -119,9 +119,9 @@ module.exports = class CloudQb {
 
       // otherwise build lookup for given ids
       } else {
-        debug('find -> has ids')
+        debug('find -> has ids', spec)
         const ids = 'id' in spec ? [spec.id] : spec.ids
-        const msgs = ids.map(id => Clerk.partyize(type, id))
+        const msgs = ids.map(id => Clerk.partyize(type, id+''))
         this.lookup(msgs, claim)
       }
     })

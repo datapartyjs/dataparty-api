@@ -57,7 +57,7 @@ module.exports = class AdminCrufler extends ICrufler {
         debug(crufl)
         debug(result)
 
-        process.exit()
+        //process.exit()
       }
 
       debug('completed', crufl)
@@ -86,7 +86,7 @@ module.exports = class AdminCrufler extends ICrufler {
 
     let resultSet = await this.db.find(crufl.type, query)
 
-    debug(resultSet)
+    debug('set',resultSet)
 
     let msgs = []
 

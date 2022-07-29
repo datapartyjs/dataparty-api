@@ -117,20 +117,11 @@ module.exports = class TingoDb extends IDb {
     return resultArray.map(this.documentToObject) || []
   }
 
-  async insert(collectionName, obj){ 
+  /*async insert(collectionName, obj){ 
     debug('insert collection=', collectionName, ' doc=', JSON.stringify(obj,null,2))
     let collection = await this.getCollection(collectionName)
 
     let dbDoc = this.ensureId(obj)
-    
-    /*if(dbDoc._id===undefined){ dbDoc._id = new this.tingo.ObjectID().valueOf()  }
-
-    dbDoc.meta = {
-      id: obj._id,
-      type: collectionName,
-      created: Hoek.reach(doc,'$meta.created', {default: Date.now()}),
-      revision: Hoek.reach(doc,'$meta.revision', {default: 1})
-    }*/
 
     const validatedDbDoc = await this.factory.validate(collectionName, this.stripMeta(dbDoc))
 
@@ -142,7 +133,7 @@ module.exports = class TingoDb extends IDb {
     this.emitChange(finalObj, 'create')
 
     return finalObj
-  }
+  }*/
 
   async insertMany(collectionName, docs){ 
     debug('insert collection=', collectionName, ' docs=', JSON.stringify(docs,null,2))
@@ -174,13 +165,18 @@ module.exports = class TingoDb extends IDb {
 
       const result = await promisfy(collection.insert.bind(collection))( dbDoc )
 
+      debug('inserted', result)
+
       const finalDbDoc = result[0]
       const finalObj = this.documentToObject(finalDbDoc)
+
+      debug('returning', finalObj)
 
       this.emitChange(finalObj, 'create')
 
       resultSet.push(finalObj)
     }
+
 
     return resultSet
 
@@ -217,6 +213,7 @@ module.exports = class TingoDb extends IDb {
       objs.push( finalObj )
 
     }
+
 
     /*const dbDocs = docs.map(this.documentFromObject)
     const docs = await promisfy(collection.update.bind(collection))( dbRmMsg )

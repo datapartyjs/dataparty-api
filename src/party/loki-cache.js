@@ -118,7 +118,7 @@ module.exports = class LokiCache extends EventEmitter {
         // otherwise insert new message (remove old message if it exists)
         } else {
 
-          debug('inserting msg')
+          debug('inserting msg', msg)
 
           // check if msg is already in cache
           if (cachedMsg) {

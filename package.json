@@ -28,7 +28,7 @@
     "src/*"
   ],
   "scripts": {
-    "test": "./node_modules/.bin/eslint ./",
+    "test": "npx lab",
     "build": "parcel build --no-scope-hoist",
     "prepare": "npm run build",
     "watch": "parcel watch",
@@ -82,6 +82,8 @@
   },
   "devDependencies": {
     "@dataparty/bouncer-model": "1.4.3",
+    "@hapi/code": "^9.0.1",
+    "@hapi/lab": "^25.0.1",
     "better-docs": "^1.1.6",
     "compression-webpack-plugin": "^2.0.0",
     "docdash": "^1.1.1",

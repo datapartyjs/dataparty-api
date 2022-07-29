@@ -4,6 +4,7 @@ const debug = require('debug')('dataparty.loki-party')
 
 const IParty = require('../iparty')
 const LokiDb = require('../../bouncer/db/loki-db')
+const AdminCrufler = require('../../bouncer/crufler-admin')
 
 const Qb = require('../qb')
 
@@ -23,6 +24,11 @@ class LokiParty extends IParty {
       path, factory: this.factory
     })
 
+    this.crufler = new AdminCrufler({
+      db: this.db
+    })
+
+
     this.qb = new Qb({
       call: this.handleCall.bind(this),
       cache: this.cache
@@ -36,7 +42,7 @@ class LokiParty extends IParty {
 
 
   async handleCall(ask){
-    return await this.db.handleCall(ask)
+    return await this.crufler.handleCall(ask)
   }
 }
 

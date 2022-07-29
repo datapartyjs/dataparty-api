@@ -1,7 +1,8 @@
 const fs = require('fs/promises')
-const debug = require('debug')('test.local-db')
+const debug = require('debug')('example.loki-db')
 const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
-const Dataparty = require('../dist/dataparty.js')
+const Dataparty = require('../src/index.js')
+
 
 let local=null
 
@@ -14,11 +15,11 @@ async function getUser(name) {
 
 
 async function main(){
-  const dbPath = await fs.mkdtemp('/tmp/tingo-party')
+  const dbPath = (await fs.mkdtemp('/tmp/loki-party')) + '/loki.db'
 
   debug('db location', dbPath)
 
-  local = new Dataparty.TingoParty({
+  local = new Dataparty.LokiParty({
     path: dbPath,
     model: BouncerModel,
     config: new Dataparty.Config.MemoryConfig()
@@ -40,19 +41,25 @@ async function main(){
 
   console.log(user.data)
 
+
   user.data.name = 'renamed-tester'
-  user.data.invalideField = true
+  //user.data.invalideField = true
   await user.save()
 
   console.log(user.data)
+
+  let userFind = await getUser('renamed-tester')
+
+  console.log(userFind)
+
+
+  console.log(dbPath)
 
 
   await user.remove()
 
   console.log(await getUser('renamed-tester'))
 
-
-  process.exit()
 }
 
 

@@ -22,6 +22,7 @@ module.exports = class IDb extends EventEmitter {
     debug(this.factory.getValidators())
 
     for(const collectionName of this.factory.getValidators()){
+      debug('creating collection', collectionName)
 
       const indexSettings = reach(this.factory, 'model.IndexSettings.'+collectionName)
       await this.createCollection(collectionName, indexSettings)
@@ -41,6 +42,8 @@ module.exports = class IDb extends EventEmitter {
 
   /** convert object with $meta field to db representation*/
   documentFromObject(obj){ throw new Error('not implemented') }
+
+  ensureId(obj){ throw new Error('not implemented') }
 
   stripMeta(doc){
     const {meta, $meta, ...rawMsg} = doc
