@@ -255,13 +255,11 @@ module.exports = class LokiDb extends IDb {
 
       debug('its good, updating', dbDoc)
 
-
       let old = collection.findOne( {'$meta.id': dbDoc._id})
       
       let mergedDoc = {...old, ...dbDoc}
 
       collection.update(mergedDoc)
-
 
       const finalObj = this.documentToObject(mergedDoc)
 
