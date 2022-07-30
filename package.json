@@ -100,6 +100,6 @@
     "type": "git",
     "url": "https://github.com/datapartyjs/dataparty-api.git"
   },
-  "author": "RosHub Inc. <code@roshub.io>",
+  "author": "dataparty <code@dataparty.xyz>",
   "license": "Apache-2.0"
 }
