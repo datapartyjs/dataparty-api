@@ -68,6 +68,9 @@ module.exports = class LokiDb extends IDb {
 
     debug('createCollection', name, options)
 
+
+    options.unique.push('$meta.id')
+
     let collection = this.loki.addCollection(this.prefix+name, options)
 
     debug(collection)
@@ -85,7 +88,7 @@ module.exports = class LokiDb extends IDb {
   documentToObject(doc){
     let obj = Object.assign({},doc)
     obj.$meta = {
-      id: Hoek.reach(obj,'meta.id', {default: obj._id}),
+      id: Hoek.reach(obj,'$meta.id', {default: obj._id}),
       type: Hoek.reach(doc,'$meta.type'),
       created: Hoek.reach(obj,'$meta.created', {default: (new Date()).toISOString()}),
       revision: Hoek.reach(obj,'$meta.revision', {default: 1}),

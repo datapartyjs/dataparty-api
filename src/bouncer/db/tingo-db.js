@@ -99,6 +99,22 @@ module.exports = class TingoDb extends IDb {
     if(this.hasCollection(name) !== null){ return }
 
     let collection = await promisfy(this.tingo.createCollection.bind(this.tingo))(this.prefix+name)
+
+    indexSettings.indices.map(index=>{
+      let obj={}
+      obj[index]=1
+      collection.createIndex(obj, {unique: false})
+    })
+
+    indexSettings.uniques.map(index=>{
+      let obj={}
+      obj[index]=1
+      collection.createIndex(obj, {unique: true})
+    })
+
+    
+    collection.createIndex({'$meta.id': 1}, {unique: true})
+
   }
 
 

@@ -3,7 +3,7 @@
 const fs = require('fs/promises')
 const debug = require('debug')('test.local-db')
 const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
-const Dataparty = require('../src/index.js')
+const Dataparty = require('../dist/dataparty.js')
 
 const Lab = require('@hapi/lab')
 const { expect } = require('@hapi/code');
