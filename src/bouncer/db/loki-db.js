@@ -280,7 +280,7 @@ module.exports = class LokiDb extends IDb {
 
     let collection = await this.getCollection(collectionName)
 
-    const dbDoc = collection.findAndRemove( { _id: obj.$meta.id } )
+    const dbDoc = collection.findAndRemove( { '$meta.id': obj.$meta.id } )
 
     debug('dbDoc', dbDoc)
 
