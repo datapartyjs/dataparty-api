@@ -13,6 +13,6 @@ module.exports = class IBouncer extends IParty {
 
   async aclAsk({ actor, bundle, context }){}
 
-  emitChange()
+  //emitChange()
   
 }
