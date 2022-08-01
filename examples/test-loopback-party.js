@@ -1,17 +1,21 @@
+const fs = require('fs/promises')
 const debug = require('debug')('test.local-db')
 const WRTC = require('wrtc')
 const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
 const Dataparty = require('../src')
 
 async function main(){
-  const dbPath = '/tmp/local-peer-party-loki.db'
+  const dbPath = await fs.mkdtemp('/tmp/tingo-party')
+  const configPath = await fs.mkdtemp('/tmp/tingo-party-config')
 
   debug('db location', dbPath)
 
-  let hostLocal = new Dataparty.LokiParty({
+  let config = new Dataparty.Config.JsonFileConfig({basePath: configPath})
+
+  let hostLocal = new Dataparty.TingoParty({
     path: dbPath,
     model: BouncerModel,
-    config: new Dataparty.Config.MemoryConfig()
+    config
   })
 
   let loopback = new Dataparty.Comms.LoopbackChannel()
@@ -25,7 +29,7 @@ async function main(){
     comms: comms1,
     hostParty: hostLocal,
     model: BouncerModel,
-    config: new Dataparty.Config.MemoryConfig()
+    config
   })
 
 
@@ -37,6 +41,8 @@ async function main(){
     config: new Dataparty.Config.MemoryConfig()
   })
 
+
+  await config.start()
 
 
   await peer1.loadIdentity()
@@ -78,6 +84,14 @@ async function main(){
 }
 
 
-main().catch(err=>{
-  console.error(err)
-})
+try{
+
+  main().catch(err=>{
+    console.error(err)
+  })
+
+}
+catch(err){
+  console.log('crash')
+  console.log(err)
+}
