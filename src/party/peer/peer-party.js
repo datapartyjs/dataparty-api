@@ -2,7 +2,7 @@
 
 const debug = require('debug')('dataparty.peer-party')
 
-
+//const WRTC = require('wrtc')
 const Qb = require('../qb')
 const IParty = require('../iparty')
 const RTCSocketComms = require('../../comms/rtc-socket-comms')
@@ -14,7 +14,7 @@ const RTCSocketComms = require('../../comms/rtc-socket-comms')
  */
 class PeerParty extends IParty {
 
-  constructor ({remoteIdentity, host, hostParty, wrtc, trickle=true, ...options}) {
+  constructor ({remoteIdentity, host, hostParty, wrtc/*=WRTC*/, trickle=true, ...options}) {
     super(options)
 
     this.comms = new RTCSocketComms({remoteIdentity, host, party: this, wrtc, trickle})
@@ -29,6 +29,10 @@ class PeerParty extends IParty {
     if(this.comms.host){
       this.hostParty = hostParty
     }
+  }
+
+  static get WRTC(){
+    return WRTC
   }
 
   async start(){
