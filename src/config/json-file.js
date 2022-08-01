@@ -3,7 +3,7 @@
 const fs = require('fs')
 const deepSet = require('deep-set')
 const reach = require('../utils/reach')
-const logger = require('debug')('dataparty.config.memory');
+const logger = require('debug')('dataparty.config.json-file');
 
 /**
  * @class
@@ -11,25 +11,37 @@ const logger = require('debug')('dataparty.config.memory');
  */
 class JsonFileConfig {
 
-  constructor(defaults){
+  constructor(defaults={}){
     this.path = reach(defaults, 'basePath') +'/config.json'
     this.defaults = defaults || {}
     this.content = Object.assign({}, this.defaults)
   }
 
   async load(){
-    if(!fs.existsSync(this.path)){return}
-    
-    let rawdata = fs.readFileSync(this.path)
+    logger('check exists', this.path)
+    if(fs.existsSync(this.path)){
+      
+      logger('does exist ... reading')
+      
+      let rawdata = fs.readFileSync(this.path, {encoding: 'utf8'})
+  
+      logger('read raw data')
+  
+      if(rawdata ){
+        logger('reading content')
+        this.content = JSON.parse(rawdata)
+      }
 
-    if(rawdata && rawdata.length > 0){
-      this.content = JSON.parse(rawdata)
+    }
+    else{
+      logger('does not exist')
+      await this.save()
     }
   }
 
   async start () {
     await this.load()
-    return this
+    logger('started')
   }
 
   clear () {
