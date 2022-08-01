@@ -5,7 +5,7 @@ const debug = require('debug')('dataparty.peer-party')
 //const WRTC = require('wrtc')
 const Qb = require('../qb')
 const IParty = require('../iparty')
-const RTCSocketComms = require('../../comms/rtc-socket-comms')
+//const RTCSocketComms = require('../../comms/rtc-socket-comms')
 
 /**
  * @class 
@@ -14,10 +14,12 @@ const RTCSocketComms = require('../../comms/rtc-socket-comms')
  */
 class PeerParty extends IParty {
 
-  constructor ({remoteIdentity, host, hostParty, wrtc/*=WRTC*/, trickle=true, ...options}) {
+  constructor ({comms, hostParty, ...options}) {
     super(options)
 
-    this.comms = new RTCSocketComms({remoteIdentity, host, party: this, wrtc, trickle})
+    this.comms = comms
+
+    this.comms.party = this
 
     this.qb = new Qb({
       call: this.handleCall.bind(this),

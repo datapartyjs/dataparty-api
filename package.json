@@ -1,7 +1,7 @@
 {
   "name": "@dataparty/api",
   "private": false,
-  "version": "1.2.6",
+  "version": "1.2.7",
   "main": "dist/dataparty.js",
   "browser": "src/index-browser.js",
   "source": "src/index.js",

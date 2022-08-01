@@ -14,10 +14,11 @@ async function main(){
     config: new Dataparty.Config.MemoryConfig()
   })
 
-  let comms1 = new Dataparty.Comms.RTCSocketComms({
+  let loopback = new Dataparty.Comms.LoopbackChannel()
+
+  let comms1 = new Dataparty.Comms.LoopbackComms({
     host: true,
-    wrtc: WRTC,
-    trickle: true
+    channel: loopback.peer1
   })
 
   let peer1 = new Dataparty.PeerParty({
@@ -28,10 +29,7 @@ async function main(){
   })
 
 
-  let comms2 = new Dataparty.Comms.RTCSocketComms({
-    wrtc: WRTC,
-    trickle: true
-  })
+  let comms2 = new Dataparty.Comms.LoopbackComms({ channel: loopback.peer2 })
 
   let peer2 = new Dataparty.PeerParty({
     comms: comms2,
@@ -50,15 +48,6 @@ async function main(){
   await peer1.start()
   await peer2.start()
 
-  peer1.comms.socket.on('signal', data=>{
-    debug('p1 >> p2', data)
-    peer2.comms.socket.signal(data)
-  })
-
-  peer2.comms.socket.on('signal', data=>{
-    debug('p1 << p2', data)
-    peer1.comms.socket.signal(data)
-  })
 
   debug('waiting for auth')
   await Promise.all([
@@ -82,6 +71,7 @@ async function main(){
   else{
     debug('loaded document')
   }
+    
 
   console.log(user.data)
   process.exit()
