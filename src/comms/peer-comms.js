@@ -106,6 +106,7 @@ class PeerComms extends SocketComms {
     if(this.socketInit){
       await this.socketInit()
     }
+    
     this.socket.on('close', this.onclose.bind(this))
 
     if(this.host){

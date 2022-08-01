@@ -14,27 +14,23 @@ async function main(){
     config: new Dataparty.Config.MemoryConfig()
   })
 
-  let comms1 = new Dataparty.Comms.RTCSocketComms({
-    host: true,
-    wrtc: WRTC,
-    trickle: true
-  })
-
   let peer1 = new Dataparty.PeerParty({
-    comms: comms1,
+    comms: new Dataparty.Comms.RTCSocketComms({
+      host: true,
+      wrtc: WRTC,
+      trickle: true
+    }),
     hostParty: hostLocal,
     model: BouncerModel,
     config: new Dataparty.Config.MemoryConfig()
   })
 
 
-  let comms2 = new Dataparty.Comms.RTCSocketComms({
-    wrtc: WRTC,
-    trickle: true
-  })
-
   let peer2 = new Dataparty.PeerParty({
-    comms: comms2,
+    comms: new Dataparty.Comms.RTCSocketComms({
+      wrtc: WRTC,
+      trickle: true
+    }),
     model: BouncerModel,
     config: new Dataparty.Config.MemoryConfig()
   })
