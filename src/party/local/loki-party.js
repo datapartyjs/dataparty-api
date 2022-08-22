@@ -1,26 +1,33 @@
 'use strict'
 
-const debug = require('debug')('dataparty.local-party')
+const debug = require('debug')('dataparty.loki-party')
 
 const IParty = require('../iparty')
-const LokiDb = require('./loki-db')
+const LokiDb = require('../../bouncer/db/loki-db')
+const AdminCrufler = require('../../bouncer/crufler-admin')
 
 const Qb = require('../qb')
 
 
 /**
  * @class 
- * @alias module:dataparty.LocalParty
+ * @alias module:dataparty.LokiParty
  * @interface
  */
-class LocalParty extends IParty {
+class LokiParty extends IParty {
 
   constructor ({path, dbAdapter, ...options}) {
     super(options)
 
     this.db = new LokiDb({
+      dbAdapter,
       path, factory: this.factory
     })
+
+    this.crufler = new AdminCrufler({
+      db: this.db
+    })
+
 
     this.qb = new Qb({
       call: this.handleCall.bind(this),
@@ -35,8 +42,8 @@ class LocalParty extends IParty {
 
 
   async handleCall(ask){
-    return await this.db.handleCall(ask)
+    return await this.crufler.handleCall(ask)
   }
 }
 
-module.exports = LocalParty
+module.exports = LokiParty

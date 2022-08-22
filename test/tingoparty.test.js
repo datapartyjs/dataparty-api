@@ -1,0 +1,80 @@
+'use strict';
+
+const fs = require('fs/promises')
+const debug = require('debug')('test.local-db')
+const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
+const Dataparty = require('../dist/dataparty.js')
+
+const Lab = require('@hapi/lab')
+const { expect } = require('@hapi/code');
+const { before, afterEach, beforeEach, describe, test, it } = exports.lab = Lab.script();
+
+let local=null
+
+async function getUser(name) {
+  return (await local.find()
+    .type('user')
+    .where('name').equals(name)
+    .exec())[0]
+}
+
+
+
+
+describe('tingo party test', ()=>{
+  //
+  before(async ()=>{
+    const dbPath = await fs.mkdtemp('/tmp/tingo-party')
+
+    debug('db location', dbPath)
+  
+    local = new Dataparty.TingoParty({
+      path: dbPath,
+      model: BouncerModel,
+      config: new Dataparty.Config.MemoryConfig()
+    })
+  
+  
+    await local.start()
+  })
+
+
+  test('create user', async ()=>{
+    let user = await getUser('tester')
+
+    expect(user).undefined()
+
+    debug('creating document')
+    user = await local.createDocument('user', {name: 'tester', created: (new Date()).toISOString() })
+
+    await user.remove()
+  })
+
+
+  test('create and rename user', async ()=>{
+
+    let user = await getUser('tester')
+
+    expect(user).undefined()
+
+    debug('creating document')
+    user = await local.createDocument('user', {name: 'tester', created: (new Date()).toISOString() })
+
+    expect(user).not.undefined()
+    expect(user.data.name).equal('tester')
+
+    user.data.name = 'renamed-tester'
+    await user.save()
+
+    let oldUser = await getUser('tester')
+
+    expect(oldUser).undefined()
+
+    let renamedUser = await getUser('renamed-tester')
+
+    expect(renamedUser).not.undefined()
+    expect(renamedUser.data.name).equal('renamed-tester')
+
+    await renamedUser.remove()
+  })
+})

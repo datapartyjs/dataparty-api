@@ -66,7 +66,7 @@ module.exports = class IService {
 
   /**
    * 
-   * @param {dataparty.service.ISchema} schema_path 
+   * @param {dataparty.bouncer.ISchema} schema_path 
    */
   addSchema(schema_path){
     debug('addSchema', schema_path)

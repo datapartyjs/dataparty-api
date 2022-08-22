@@ -137,14 +137,6 @@ class SocketComms extends EventEmitter {
 
         return this._ros
     }
-
-    /*encrypt(data){
-
-    }
-
-    decrypt(data){
-
-    }*/
 }
 
 module.exports = SocketComms

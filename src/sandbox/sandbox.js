@@ -2,7 +2,7 @@ const debug = require('debug')('dataparty.Sandbox')
 const {VM, NodeVM, VMScript} = require('vm2')
 const {SourceMapConsumer} = require('source-map')
 
-const SandboxError = require('./sandbox-error')
+const SandboxError = require('../errors/sandbox-error')
 
 class Sandbox {
   constructor(code, map, offsetToken='    let Lib = '){

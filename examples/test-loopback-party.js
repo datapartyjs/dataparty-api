@@ -1,33 +1,48 @@
+const fs = require('fs/promises')
 const debug = require('debug')('test.local-db')
 const WRTC = require('wrtc')
 const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
 const Dataparty = require('../src')
 
 async function main(){
-  const dbPath = '/tmp/local-peer-party-loki.db'
+  const dbPath = await fs.mkdtemp('/tmp/tingo-party')
+  const configPath = await fs.mkdtemp('/tmp/tingo-party-config')
 
   debug('db location', dbPath)
 
-  let hostLocal = new Dataparty.LocalParty({
+  let config = new Dataparty.Config.JsonFileConfig({basePath: configPath})
+
+  let hostLocal = new Dataparty.TingoParty({
     path: dbPath,
     model: BouncerModel,
-    config: new Dataparty.Config.MemoryConfig()
+    config
+  })
+
+  let loopback = new Dataparty.Comms.LoopbackChannel()
+
+  let comms1 = new Dataparty.Comms.LoopbackComms({
+    host: true,
+    channel: loopback.peer1
   })
 
   let peer1 = new Dataparty.PeerParty({
-    host: true,
+    comms: comms1,
     hostParty: hostLocal,
-    wrtc: WRTC,
     model: BouncerModel,
-    config: new Dataparty.Config.MemoryConfig()
+    config
   })
+
+
+  let comms2 = new Dataparty.Comms.LoopbackComms({ channel: loopback.peer2 })
 
   let peer2 = new Dataparty.PeerParty({
-    wrtc: WRTC,
+    comms: comms2,
     model: BouncerModel,
     config: new Dataparty.Config.MemoryConfig()
   })
 
+
+  await config.start()
 
 
   await peer1.loadIdentity()
@@ -39,15 +54,6 @@ async function main(){
   await peer1.start()
   await peer2.start()
 
-  peer1.comms.socket.on('signal', data=>{
-    debug('p1 >> p2', data)
-    peer2.comms.socket.signal(data)
-  })
-
-  peer2.comms.socket.on('signal', data=>{
-    debug('p1 << p2', data)
-    peer1.comms.socket.signal(data)
-  })
 
   debug('waiting for auth')
   await Promise.all([
@@ -65,7 +71,11 @@ async function main(){
 
   
   if(!user){
-    user = await peer2.createDocument('user', {name: 'tester'})
+    debug('creating document')
+    user = await peer2.createDocument('user', {name: 'tester', created: (new Date()).toISOString() })
+  }
+  else{
+    debug('loaded document')
   }
     
 
@@ -74,6 +84,14 @@ async function main(){
 }
 
 
-main().catch(err=>{
-  console.error(err)
-})
+try{
+
+  main().catch(err=>{
+    console.error(err)
+  })
+
+}
+catch(err){
+  console.log('crash')
+  console.log(err)
+}

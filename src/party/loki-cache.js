@@ -6,9 +6,6 @@ const EventEmitter = require('last-eventemitter')
 const debug = require('debug')('dataparty.loki-cache')
 
 
-//const LokiIndexedAdapater = require('lokijs/src/loki-indexed-adapter')
-//const LokiAdapter = new LokiIndexedAdapater('dataparty-cache')
-
 module.exports = class LokiCache extends EventEmitter {
 
   constructor () {
@@ -21,12 +18,12 @@ module.exports = class LokiCache extends EventEmitter {
   }
 
   _emitChange(msg, change){
-    const { type, id } = msg.$meta
+    const { type, id, revision } = msg.$meta
     this.emit(
       `${type}:${id}`,
       {
         event: change,
-        msg: { type, id }
+        msg: { type, id, revision }
       }
     )
   }
@@ -107,7 +104,10 @@ module.exports = class LokiCache extends EventEmitter {
 
           if (cachedMsg) {
             try{
-              collection.remove(cachedMsg)
+              //collection.remove(cachedMsg)
+              collection.findAndRemove({
+                '$meta.id': id,
+              })
             }
             catch(err){
               debug('WARN', err)
@@ -118,7 +118,7 @@ module.exports = class LokiCache extends EventEmitter {
         // otherwise insert new message (remove old message if it exists)
         } else {
 
-          debug('inserting msg')
+          debug('inserting msg', msg)
 
           // check if msg is already in cache
           if (cachedMsg) {
@@ -153,7 +153,7 @@ module.exports = class LokiCache extends EventEmitter {
       const hits = []
       const misses = []
       for (const msg of msgs) {
-        const { type, id, version } = msg.$meta || {}
+        const { type, id, revision } = msg.$meta || {}
 
         const collection = this.db.getCollection(type)
         if (collection) {
@@ -167,7 +167,7 @@ module.exports = class LokiCache extends EventEmitter {
           delete cachedMsg.meta
           if (cachedMsg && cachedMsg.$meta && cachedMsg.$meta.id) {
 
-            if(version > -1 && cachedMsg.$meta.version != version){
+            if(revision > -1 && cachedMsg.$meta.revision != revision){
               misses.push(msg)
             }
             else{

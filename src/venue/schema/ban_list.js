@@ -7,12 +7,12 @@ require('mongoose-schema-jsonschema')(BouncerDb.mongoose())
 const cryptoRandomString = require('crypto-random-string')
 const debug = require('debug')('venue.ban_list')
 
-const Dataparty = require('../../service')
+const Bouncer = require('../../bouncer')
 
-const Utils = Dataparty.ISchema.Utils
+const Utils = Bouncer.ISchema.Utils
 
 
-class BanList extends Dataparty.ISchema {
+class BanList extends Bouncer.ISchema {
 
   static get Type () { return 'ban_list' }
 
