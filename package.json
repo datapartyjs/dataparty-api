@@ -18,7 +18,7 @@
     "backend": {
       "context": "node",
       "source": "src/index.js",
-      "includeNodeModules": ["es5-ext", "websocket"],
+      "includeNodeModules": ["websocket", "es5-ext", "es5-iterator",  "es6-symbol", "next-tick", "yaeti", "utf-8-validate", "typedarray-to-buffer", "bufferutil" ],
       "engines": {
         "node": ">= 12"
       }
