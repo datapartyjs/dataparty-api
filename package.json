@@ -3,8 +3,6 @@
   "private": false,
   "version": "1.2.11",
   "main": "dist/dataparty.js",
-  "browser": "src/index-browser.js",
-  "source": "src/index.js",
   "frontend": "dist/dataparty-browser.js",
   "backend": "dist/dataparty.js",
   "targets": {
@@ -77,7 +75,7 @@
     "uuid": "^3.2.1",
     "uuidv4": "^6.2.12",
     "vm2": "^3.9.2",
-    "websocket": "^1.0.26",
+    "websocket": "github:sevenbitbyte/WebSocket-Node#parcel-build",
     "wreck": "14.0.2"
   },
   "devDependencies": {
