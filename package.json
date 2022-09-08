@@ -18,14 +18,18 @@
       "source": "src/index.js",
       "includeNodeModules": [
         "websocket",
-        "es5-ext",
+        "es5-ext/*",
         "es5-iterator",
         "es6-symbol",
         "next-tick",
         "yaeti",
         "utf-8-validate",
         "typedarray-to-buffer",
-        "bufferutil"
+        "bufferutil",
+        "json-schema-to-typescript",
+        "cli-color",
+        "url",
+        "d"
       ],
       "engines": {
         "node": ">= 12"
@@ -93,16 +97,11 @@
     "@hapi/code": "^9.0.1",
     "@hapi/lab": "^25.0.1",
     "better-docs": "^1.1.6",
-    "compression-webpack-plugin": "^2.0.0",
     "docdash": "^1.1.1",
     "jsdoc": "^3.6.2",
     "minami": "^1.2.3",
     "parcel": "^2.3.1",
     "tmp": "^0.2.1",
-    "webpack": "^4.17.2",
-    "webpack-bundle-analyzer": "^3.8.0",
-    "webpack-cli": "^3.1.0",
-    "webpack-node-externals": "^1.7.2",
     "wrtc": "^0.4.7"
   },
   "repository": {
