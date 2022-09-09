@@ -16,7 +16,9 @@
     "backend": {
       "context": "node",
       "source": "src/index.js",
+      "optimize": false,
       "includeNodeModules": [
+        "*",
         "websocket",
         "es5-ext/*",
         "es5-iterator",
@@ -28,7 +30,16 @@
         "bufferutil",
         "json-schema-to-typescript",
         "cli-color",
-        "d"
+        "d",
+        "simple-peer",
+        "last-eventemitter",
+        "@hapi/joi",
+        "@hapi/hoek",
+        "jsonpath-plus",
+        "git-repo-info",
+        "@zeit/ncc",
+        "debug",
+        "wreck"
       ],
       "engines": {
         "node": ">= 12"

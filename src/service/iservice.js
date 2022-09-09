@@ -6,7 +6,6 @@ const {JSONPath} = require('jsonpath-plus')
 const gitRepoInfo = require('git-repo-info')
 const BouncerDb = require('@dataparty/bouncer-db')
 const mongoose = BouncerDb.mongoose()
-const json2ts = require('json-schema-to-typescript')
 const { build } = require('@hapi/joi')
 const debug = require('debug')('dataparty.service.IService')
 
@@ -263,6 +262,8 @@ module.exports = class IService {
       }
   
       if(buildTypeScript){
+
+        const json2ts = require('json-schema-to-typescript')
         
         const tsWrite = json2ts.compile(jsonSchema).then( ts=>{
           tsOutput[model.Type] = ts
