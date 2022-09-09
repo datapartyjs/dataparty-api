@@ -332,14 +332,39 @@ module.exports = class CloudQb {
         unclaimed[check.uuid] = check
       }
 
+      let processing = []
       // process results for check claims
       for (const crufl of reply.freshness) {
-        await this.processClaim(crufl)
-        delete this.claimTable[crufl.uuid]
         delete unclaimed[crufl.uuid]
+
+        processing.push(new Promise(async (resolve,reject)=>{
+
+          try{
+            await this.processClaim(crufl)
+          }
+          catch(err){
+            debug('failed processing claim', JSON.stringify(crufl))
+            reject(err)
+          }
+
+          delete this.claimTable[crufl.uuid]
+          resolve()
+        }))
+
       }
 
       this.recheck(unclaimed)
+
+
+      try{
+        await Promise.all( processing )
+        debug('finished processing all claims for ask', ask.uuid)
+      }
+      catch(err){
+        debug('failed to process claims')
+        //ignore
+      }
+
 
     } catch (error) {
       debug('ask error path ->', error)
