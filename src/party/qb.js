@@ -58,16 +58,16 @@ const reach = require('../utils/reach')
 // }
 module.exports = class CloudQb {
 
-  constructor ({ call, cache, debounce }) {
+  constructor ({ call, cache, debounce=10, timeout=30000 }) {
 
     this.call = call // function to call data bouncer backend
     this.cache = cache // cache with insert / populate interface
 
     this.claimTable = {} // claims indexed by uuid
-    this.claimTimeout = 9000 // reject claims with no results within limit
+    this.claimTimeout = timeout  // reject claims with no results within limit
     this.checkStack = [] // collects debounced check requests
     this.checkTimeout = undefined // for pending ask
-    this.debounce = debounce | 10 // ms to wait before asking backend
+    this.debounce = debounce // ms to wait before asking backend
   }
 
   // async call to resolve query spec thru backend server & local cache
