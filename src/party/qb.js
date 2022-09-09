@@ -224,8 +224,8 @@ module.exports = class CloudQb {
 
       // if this lookup is following on another claim use its handlers instead
       if (parentClaim) {
-        claim.resolve = (args)=>{ console.log('resolve'); parentClaim.resolve(args); resolve(args) }
-        claim.reject = (args)=>{ console.log('reject'); parentClaim.reject(args); reject(args) }
+        claim.resolve = (args)=>{ parentClaim.resolve(args); resolve(args) }
+        claim.reject = (args)=>{  parentClaim.reject(args); reject(args) }
         claim.fresh = parentClaim.fresh
         if (parentClaim.spec) {
           claim.spec = parentClaim.spec
