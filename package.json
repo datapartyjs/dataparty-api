@@ -18,7 +18,7 @@
       "source": "src/index.js",
       "optimize": false,
       "includeNodeModules": [
-        "*",
+
         "websocket",
         "es5-ext/*",
         "es5-iterator",
@@ -37,7 +37,6 @@
         "@hapi/hoek",
         "jsonpath-plus",
         "git-repo-info",
-        "@zeit/ncc",
         "debug",
         "wreck"
       ],
