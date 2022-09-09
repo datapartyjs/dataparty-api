@@ -39,6 +39,7 @@ const reach = require('../utils/reach')
 //   type: '..', // collection result msgs belong to
 //   msgs: [msg0 .. msgN], // db misses indicated with null msg
 //   complete: boolean, // flag to indicate whether all msgs are included
+//   error: ErrorObject //  string or detailed error object
 // }
 //
 // // check calls are debounced & bundled into a single ask
@@ -223,8 +224,8 @@ module.exports = class CloudQb {
 
       // if this lookup is following on another claim use its handlers instead
       if (parentClaim) {
-        claim.resolve = parentClaim.resolve
-        claim.reject = parentClaim.reject
+        claim.resolve = ()=>{ parentClaim.resolve.apply(null,arguments); resolve.apply(null, arguments) }
+        claim.reject = ()=>{ parentClaim.reject.apply(null,arguments); reject.apply(null, arguments) }
         claim.fresh = parentClaim.fresh
         if (parentClaim.spec) {
           claim.spec = parentClaim.spec
@@ -322,6 +323,8 @@ module.exports = class CloudQb {
 
     try {
       const reply = await this.call(ask)
+
+      debug('reply ->', JSON.stringify(reply))
 
       // build check map to track whether results are complete
       const unclaimed = {}

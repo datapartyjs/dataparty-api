@@ -12,8 +12,9 @@ const LokiCache = require('./loki-cache.js') // insert | populate cache
  * @interface
  */
 class IParty {
-  constructor({config, cache, noCache=false, comms, model, factories, documentClass}){
+  constructor({config, cache, noCache=false, comms, model, factories, documentClass, qb=null}){
     this.config = config
+    this.qb = qb
 
     if(noCache){ this.cache = null }
     else{ this.cache = cache || new LokiCache() }

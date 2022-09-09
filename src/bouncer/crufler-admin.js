@@ -20,6 +20,7 @@ module.exports = class AdminCrufler extends ICrufler {
     for(let crufl of ask.crufls){
       let result = {
         op: crufl.op,
+        type: crufl.type,
         uuid: crufl.uuid,
         msgs: [],
         complete: true,
@@ -51,6 +52,7 @@ module.exports = class AdminCrufler extends ICrufler {
         }
       }
       catch(err){
+        debug('crufl error')
         debug(err)
         result.error = err
 
