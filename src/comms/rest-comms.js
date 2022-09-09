@@ -1,4 +1,3 @@
-const Url = require('url')
 const Wreck = require('wreck')
 const EventEmitter = require('last-eventemitter')
 const debug = require('debug')('dataparty.comms.rest')
