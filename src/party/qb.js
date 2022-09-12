@@ -128,7 +128,7 @@ module.exports = class Qb extends EventEmitter {
     return await this.queueRequest(crufl)
   }
 
-  async lookup(msgs){
+  async lookup(msgs, skipCache){
     debug('lookup - ', JSON.stringify(msgs,null,2))
 
     if(!msgs || msgs.length<1){
@@ -137,7 +137,7 @@ module.exports = class Qb extends EventEmitter {
 
     const crufl = new Crufl({ op:'lookup', msgs, qb: this, timeout:this.timeout})
 
-    return await this.queueRequest(crufl)
+    return await this.queueRequest(crufl, skipCache)
   }
 
   async waitForCruflComplete(crufl){
@@ -158,9 +158,9 @@ module.exports = class Qb extends EventEmitter {
     })
   }
 
-  async queueRequest(crufl){
+  async queueRequest(crufl, skipCache=false){
 
-    if(this.cache && crufl.op == 'lookup'){
+    if(this.cache && !skipCache && crufl.op == 'lookup'){
       //attempt cache retrieval
       debug('queueRequest - attempt cache lookup')
 
@@ -181,12 +181,12 @@ module.exports = class Qb extends EventEmitter {
           return populated.hits
         }
 
-      } else {
+      } else if( populated.misses.length > 0 && populated.hits.length > 0) {
         // otherwise keep original msg headers & initiate ask for misses
 
         debug('queueRequest - has partial result from cache')
 
-        let missingMsgs = await this.lookup(populated.misses)
+        let missingMsgs = await this.lookup(populated.misses, true)
 
         debug('queueRequest - completed partially from cache')
         crufl.clearTimeout()
