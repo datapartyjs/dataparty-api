@@ -16,7 +16,7 @@ const Qb = require('../qb')
  */
 class LokiParty extends IParty {
 
-  constructor ({path, dbAdapter, ...options}) {
+  constructor ({path, dbAdapter, qbOptions, ...options}) {
     super(options)
 
     this.db = new LokiDb({
@@ -31,7 +31,8 @@ class LokiParty extends IParty {
 
     this.qb = new Qb({
       call: this.handleCall.bind(this),
-      cache: this.cache
+      cache: this.cache,
+      ...qbOptions
     })
   }
 

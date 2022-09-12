@@ -14,7 +14,7 @@ const Qb = require('../qb')
  */
 class MongoParty extends IParty {
 
-  constructor ({uri, mongoOptions, serverModels, ...options}) {
+  constructor ({uri, mongoOptions, serverModels, qbOptions, ...options}) {
     super(options)
 
     this.db = new BouncerDb(uri, mongoOptions)
@@ -22,7 +22,8 @@ class MongoParty extends IParty {
 
     this.qb = new Qb({
       call: this.handleCall.bind(this),
-      cache: this.cache
+      cache: this.cache,
+      ...qbOptions
     })
   }
 

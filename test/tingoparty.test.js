@@ -3,7 +3,8 @@
 const fs = require('fs/promises')
 const debug = require('debug')('test.local-db')
 const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
-const Dataparty = require('../dist/dataparty.js')
+//const Dataparty = require('../dist/dataparty.js')
+const Dataparty = require('../src/index')
 
 const Lab = require('@hapi/lab')
 const { expect } = require('@hapi/code');
@@ -47,7 +48,13 @@ describe('tingo party test', ()=>{
     debug('creating document')
     user = await local.createDocument('user', {name: 'tester', created: (new Date()).toISOString() })
 
+    debug(user.data)
+
+    expect(user).not.undefined()
+    expect(user.data.name).equal('tester')
+
     await user.remove()
+
   })
 
 
@@ -76,5 +83,8 @@ describe('tingo party test', ()=>{
     expect(renamedUser.data.name).equal('renamed-tester')
 
     await renamedUser.remove()
+
+    let removedUser = await getUser('renamed-tester')
+    expect(removedUser).undefined()
   })
 })

@@ -16,7 +16,7 @@ const Qb = require('../qb')
  */
 class TingoParty extends IParty {
 
-  constructor ({path, ...options}) {
+  constructor ({path, qbOptions, ...options}) {
     super(options)
 
     this.db = new TingoDb({
@@ -29,7 +29,8 @@ class TingoParty extends IParty {
 
     this.qb = new Qb({
       call: this.handleCall.bind(this),
-      cache: this.cache
+      cache: this.cache,
+      ...qbOptions
     })
   }
 

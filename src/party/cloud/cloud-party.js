@@ -11,7 +11,7 @@ const RestComms = require('../../comms/rest-comms')
  */
 class CloudParty extends IParty {
 
-  constructor({config, ...options}){
+  constructor({config, qbOptions, ...options}){
     super({ 
       config,
       ...options
@@ -19,7 +19,8 @@ class CloudParty extends IParty {
 
     this.qb = new Qb({
       call: this.call.bind(this),
-      cache: this.cache
+      cache: this.cache,
+      qbOptions
     })
 
     this.rest = new RestComms({config: this.config, party: this})
