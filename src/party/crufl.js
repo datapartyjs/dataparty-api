@@ -100,17 +100,12 @@ module.exports = class Crufl extends EventEmitter {
   
           debug('lookup needed', this.result)
   
-          let msgs = await this.lookup(this.result.msgs)
-  
-          this.result.msgs = msgs
+          this.result.msgs = await this.lookup(this.result.msgs)
           break
         case 'lookup':
           if(this.cache){ this.cache.insert(this.result.msgs) }
     
           this.errors = this.anyErrors(this.result.msgs)
-          if(this.errors != false){ break }
-    
-          await this.lookup(this.filterInvalid(claim.msgs, result.msgs), claim)
           break
         case 'update':
         case 'create':
@@ -118,7 +113,6 @@ module.exports = class Crufl extends EventEmitter {
           if(this.cache){ this.cache.insert(this.result.msgs) }
     
           this.errors = this.anyErrors(this.result.msgs)
-          if(this.errors != false){ break }
     
           break
     
