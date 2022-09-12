@@ -110,7 +110,7 @@ module.exports = class Crufl extends EventEmitter {
           this.errors = this.anyErrors(this.result.msgs)
           if(this.errors != false){ break }
     
-          await this.lookup(filterInvalid(claim.msgs, result.msgs), claim)
+          await this.lookup(this.filterInvalid(claim.msgs, result.msgs), claim)
           break
         case 'update':
         case 'create':

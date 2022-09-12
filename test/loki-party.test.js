@@ -54,6 +54,27 @@ describe('tingo party test', ()=>{
     await user.remove()
   })
 
+  test('read user from cache', async ()=>{
+    let user = await getUser('tester')
+
+    expect(user).undefined()
+
+    debug('creating document')
+    user = await local.createDocument('user', {name: 'tester', created: (new Date()).toISOString() })
+
+    expect(user).not.undefined()
+    expect(user.data.name).equal('tester')
+
+    let secondRead = await getUser('tester')
+    let thirdRead = await getUser('tester')
+
+    expect(thirdRead).not.undefined()
+    expect(thirdRead.data.name).equal('tester')
+
+    await user.remove()
+  })
+
+
 
   test('create and rename user', async ()=>{
 
