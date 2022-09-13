@@ -258,9 +258,14 @@ module.exports = class Qb extends EventEmitter {
   async onReply(reply){
     debug('onReply - ', reply)
 
+    let resultPromises = []
+
     for(let result of reply.results){
-      await this.onResult(result)
+      let promise = this.onResult(result)
+      resultPromises.push(promise)
     }
+
+    await Promise.all(resultPromises)
   }
 
   async onResult(result){
