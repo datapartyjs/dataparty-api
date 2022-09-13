@@ -232,7 +232,7 @@ module.exports = class LokiDb extends IDb {
     return resultSet
 
   }
-
+  
   async update(collectionName, docs){ 
     debug('update collection', collectionName, ' docs', docs)
 

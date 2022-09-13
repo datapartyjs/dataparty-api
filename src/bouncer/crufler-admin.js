@@ -82,9 +82,17 @@ module.exports = class AdminCrufler extends ICrufler {
 
   async applyFind(crufl, includeData = false){
     debug('find', JSON.stringify(crufl,null,2))
-    let mongoQuery = new MongoQuery(crufl.spec)
+
+    let spec = crufl.spec ? crufl.spec : {
+      ids: crufl.msgs.map(m=>{return m.id}),
+      type: crufl.type
+    }
+
+    let mongoQuery = new MongoQuery(spec)
 
     let query = mongoQuery.getQueryDoc()
+
+    debug('query', query)
 
     let resultSet = await this.db.find(crufl.type, query)
 

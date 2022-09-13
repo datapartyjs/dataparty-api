@@ -57,14 +57,14 @@ class IParty {
   async createDocument(type, data, id){
     let Type = this.factory.getFactory(type)
 
-    return Type.create(this, {data, type, id})
+    return await Type.create(this, {data, type, id})
   }
 
   /**
    * @method
    */
   async create (type, ...msgs) {
-    return this.qb.create(type, msgs)
+    return await this.qb.create(type, msgs)
   }
 
 

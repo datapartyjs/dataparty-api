@@ -41,7 +41,7 @@ module.exports = class Crufl extends EventEmitter {
 
     } else if (this.spec !== undefined) {
 
-      debug('crufl('+this.op+') - created from spec')
+      debug('crufl('+this.op+') - created from spec', this.spec)
       this.type = spec.type
       if (!(typeof this.type === 'string' && this.type.length > 0)) {
         debug(spec)
