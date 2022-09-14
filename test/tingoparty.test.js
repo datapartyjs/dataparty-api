@@ -32,11 +32,42 @@ describe('tingo party test', ()=>{
     local = new Dataparty.TingoParty({
       path: dbPath,
       model: ExampleModel,
-      config: new Dataparty.Config.MemoryConfig()
+      config: new Dataparty.Config.MemoryConfig(),
+      noCache: false
     })
   
   
     await local.start()
+  })
+
+  test('create basic types', async ()=>{
+
+    let list = []
+
+    for(let i=0; i<10; i++){
+      let now = (new Date()).toISOString()
+      const item = await local.createDocument('basic_types',{
+        number: i,
+        string: ''+i,
+        time: now,
+        bool: i>5
+      })
+
+      expect(item).not.undefined()
+      expect(item.data.number).equal(i)
+      expect(item.data.string).equal(''+i)
+
+      list.push(item)
+    }
+
+
+    let found = await local.find()
+      .type('basic_types')
+      .where('number').gt(3)
+      .where('number').lt(7)
+      .exec()
+
+    console.log(found)
   })
 
 

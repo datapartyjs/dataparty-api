@@ -84,7 +84,7 @@ module.exports = class AdminCrufler extends ICrufler {
     debug('find', JSON.stringify(crufl,null,2))
 
     let spec = crufl.spec ? crufl.spec : {
-      ids: crufl.msgs.map(m=>{return m.id}),
+      ids: crufl.msgs.map(m=>{ debug(typeof m.$meta.id); return m.$meta.id}),
       type: crufl.type
     }
 

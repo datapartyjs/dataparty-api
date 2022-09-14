@@ -82,7 +82,7 @@ module.exports = class MongoQuery {
       for (const oid of this.spec.ids) {
         if (ObjectId.isValid(oid)) {
           debug('is valid')
-          let id = (new ObjectId(oid)).id
+          let id = (new ObjectId(oid)).toString()
           oids.push(id)
         }
         else{
