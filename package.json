@@ -53,6 +53,7 @@
     "build": "parcel build --no-scope-hoist",
     "prepare": "npm run build",
     "watch": "parcel watch",
+    "build-test": "node ./examples/party/example-build.js",
     "watch-test": "DEBUG=* nodemon --ignore service test/test-service-compile.js",
     "build-docs": "npx jsdoc -c jsdoc.json"
   },
