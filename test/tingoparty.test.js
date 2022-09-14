@@ -2,7 +2,7 @@
 
 const fs = require('fs/promises')
 const debug = require('debug')('test.local-db')
-const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
+const ExampleModel = require('../examples/dataparty/@dataparty-api.dataparty-schema.json')
 //const Dataparty = require('../dist/dataparty.js')
 const Dataparty = require('../src/index')
 
@@ -31,7 +31,7 @@ describe('tingo party test', ()=>{
   
     local = new Dataparty.TingoParty({
       path: dbPath,
-      model: BouncerModel,
+      model: ExampleModel,
       config: new Dataparty.Config.MemoryConfig()
     })
   
