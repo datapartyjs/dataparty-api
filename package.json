@@ -38,7 +38,7 @@
         "jsonpath-plus",
         "eventemitter2",
         "object-assign",
-        "xmldom", "socket.io", "ws", "pngparse",
+        "xmldom", "socket.io/*", "ws", "pngparse",
         "websocket",
         "es5-ext/*",
         "es5-iterator",
@@ -87,6 +87,7 @@
     "@dataparty/bouncer-db": "1.0.1",
     "@dataparty/crypto": "datapartyjs/dataparty-crypto#parcel-build",
     "@hapi/joi": "^17.1.1",
+    "@hapi/wreck": "18.0.0",
     "@zeit/ncc": "^0.22.3",
     "ajv": "6.9.1",
     "body-parser": "^1.19.0",
@@ -127,8 +128,7 @@
     "uuid": "^3.2.1",
     "uuidv4": "^6.2.12",
     "vm2": "^3.9.2",
-    "websocket": "github:sevenbitbyte/WebSocket-Node#parcel-build",
-    "@hapi/wreck": "18.0.0"
+    "websocket": "github:sevenbitbyte/WebSocket-Node#parcel-build"
   },
   "devDependencies": {
     "@dataparty/bouncer-model": "1.4.3",
@@ -138,6 +138,7 @@
     "docdash": "^1.1.1",
     "jsdoc": "^3.6.2",
     "minami": "^1.2.3",
+    "mongodb-client-encryption": "^2.2.1",
     "parcel": "^2.3.1",
     "tmp": "^0.2.1",
     "wrtc": "^0.4.7"
