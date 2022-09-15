@@ -5,9 +5,9 @@
   "main": "dist/dataparty.js",
   "frontend": "dist/dataparty-browser.js",
   "backend": "dist/dataparty.js",
-   "alias": {
-     "events": "last-eventemitter"
-   },
+  "alias": {
+    "events": "last-eventemitter"
+  },
   "targets": {
     "frontend": {
       "context": "browser",
@@ -84,6 +84,7 @@
     "lodash": "^4.17.4",
     "lokijs": "1.5.6",
     "mkdirp": "^0.5.1",
+    "moment": "^2.29.4",
     "morgan": "^1.10.0",
     "nconf": "^0.10.0",
     "node-persist": "^3.0.1",
