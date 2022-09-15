@@ -38,11 +38,15 @@
         "eventemitter3",
         "@hapi/joi",
         "@hapi/hoek",
+        "@hapi/boom",
+        "@hapi/bourne",
+        "@hapi/wreck",
+        "hoek",
         "jsonpath-plus",
         "git-repo-info",
         "debug",
         "wreck",
-        "pify"
+        "boom"
       ],
       "engines": {
         "node": ">= 12"
@@ -107,7 +111,7 @@
     "uuidv4": "^6.2.12",
     "vm2": "^3.9.2",
     "websocket": "github:sevenbitbyte/WebSocket-Node#parcel-build",
-    "wreck": "14.0.2"
+    "@hapi/wreck": "18.0.0"
   },
   "devDependencies": {
     "@dataparty/bouncer-model": "1.4.3",
