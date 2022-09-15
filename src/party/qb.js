@@ -3,7 +3,6 @@
 const debug = require('debug')('dataparty.party.qb')
 const EventEmitter = require("last-eventemitter")
 
-const moment = require('moment')
 const uuidv4 = require('uuid/v4')
 
 const Clerk = require('./clerk.js')
@@ -221,7 +220,6 @@ module.exports = class Qb extends EventEmitter {
 
       if(!this.send_timer){
         this.send_timer = setTimeout(async ()=>{ await this.onSendTimer() }, this.debounce)
-        this.send_timer_created = moment()
       }
     }
 
@@ -235,7 +233,6 @@ module.exports = class Qb extends EventEmitter {
     this.send_queue = []
     delete this.send_timer
     this.send_timer = null
-    this.send_timer_created = null
 
     await this.sendRequests(crufls)
   }
