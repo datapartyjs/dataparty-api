@@ -12,6 +12,7 @@
     "frontend": {
       "context": "browser",
       "source": "src/index-browser.js",
+      "includeNodeModules": true,
       "engines": {
         "browsers": "Chrome 80"
       }
@@ -32,7 +33,6 @@
         "utf-8-validate",
         "typedarray-to-buffer",
         "bufferutil",
-        "json-schema-to-typescript",
         "cli-color",
         "d",
         "simple-peer",
@@ -70,7 +70,7 @@
   },
   "dependencies": {
     "@dataparty/bouncer-db": "1.0.1",
-    "@dataparty/crypto": "1.0.1",
+    "@dataparty/crypto": "datapartyjs/dataparty-crypto#parcel-build",
     "@hapi/joi": "^17.1.1",
     "@zeit/ncc": "^0.22.3",
     "ajv": "6.9.1",

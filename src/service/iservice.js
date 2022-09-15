@@ -262,7 +262,8 @@ module.exports = class IService {
       }
   
       if(buildTypeScript){
-
+        throw 'implementation removed'
+        /*
         const json2ts = require('json-schema-to-typescript')
         
         const tsWrite = json2ts.compile(jsonSchema).then( ts=>{
@@ -270,7 +271,7 @@ module.exports = class IService {
         })
         
         tsWrites.push(tsWrites)
-        
+        */
       }
   
     }
