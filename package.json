@@ -21,6 +21,8 @@
       "source": "src/index.js",
       "optimize": false,
       "includeNodeModules": [
+        "@dataparty/crypto",
+        "ms",
         "websocket",
         "es5-ext/*",
         "es5-iterator",
