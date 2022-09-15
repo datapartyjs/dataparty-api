@@ -1,5 +1,5 @@
 'use strict';
-const Hoek = require('hoek')
+const reach = require('./reach')
 const BouncerDb = require('@dataparty/bouncer-db')
 const mongoose = BouncerDb.mongoose()
 
@@ -99,12 +99,12 @@ exports.objRef = function(doc, subpath=undefined, options={}){
     typePath = subpath+'.type'
   }
 
-  let id = Hoek.reach(doc, idPath) 
+  let id = reach(doc, idPath) 
 
   if(typeof id !== 'object'){ id = new mongoose.Types.ObjectId(id) }
 
   return {
     id: id,
-    type: Hoek.reach(doc, typePath) || options.type
+    type: reach(doc, typePath) || options.type
   }
 }
