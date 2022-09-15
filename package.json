@@ -19,7 +19,7 @@
     "backend": {
       "context": "node",
       "source": "src/index.js",
-      "optimize": true,
+      "optimize": false,
       "includeNodeModules": [
         "websocket",
         "es5-ext/*",
