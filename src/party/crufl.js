@@ -81,14 +81,20 @@ module.exports = class Crufl extends EventEmitter {
   async onResult(result){
     debug('onResult', result)
 
-    if(this.timeout == true){
-      throw new Error('result after timeout - '+this.uuid)
-    }
-
-    this.result = result
-    this.clearTimeout()
 
     try{
+
+      if(this.result != null){
+        throw new Error('onResult called more than once - '+this.uuid)
+      }
+
+      if(this.timeout == true){
+        throw new Error('result after timeout - '+this.uuid)
+      }
+
+      this.result = result
+      this.clearTimeout()
+
       if(this.result.op != this.op){ throw new Error('result op does not match request') }
 
       switch(this.result.op){
@@ -117,7 +123,7 @@ module.exports = class Crufl extends EventEmitter {
           break
     
       default:
-        throw new Error(`unsupported result op: ${result.op}`)
+        throw new Error(`unsupported result op: ${result.op} - `+this.uuid)
       }
   
     }
@@ -134,12 +140,11 @@ module.exports = class Crufl extends EventEmitter {
   onTimeout(){
     debug('onTimeout')
 
+    if(this.result != null){ return }
+
     this.timeout = true
     this.timeoutTimer = null
     this.endTime = moment()
-
-    this.errors = new Error('crufl timeout')
-    
     this.emit('complete')
   }
 

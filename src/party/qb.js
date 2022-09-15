@@ -141,14 +141,14 @@ module.exports = class Qb extends EventEmitter {
   }
 
   async waitForCruflComplete(crufl){
-    return new Promise((resolve,reject)=>{
+    return await new Promise((resolve,reject)=>{
 
       crufl.once('complete', ()=>{
         debug('crufl completed in',crufl.duration,'ms', crufl.request, crufl.result)
 
         delete this.crufls[crufl.uuid]
 
-        if(crufl.op == 'find'){
+        if(crufl.op == 'find' && this.find_dedup){
           delete this.find_map[ crufl.specHash ]
         }
 
@@ -204,7 +204,7 @@ module.exports = class Qb extends EventEmitter {
       } else {
         debug('deduping find op - waiting for pending crufl', pendingCrufl.uuid)
         crufl.clearTimeout()
-        return this.waitForCruflComplete(pendingCrufl)
+        return await this.waitForCruflComplete(pendingCrufl)
       }
     }
 
@@ -225,7 +225,7 @@ module.exports = class Qb extends EventEmitter {
       }
     }
 
-    return resultPromise
+    return await resultPromise
   }
 
   async onSendTimer(){

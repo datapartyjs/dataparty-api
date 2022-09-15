@@ -5,6 +5,9 @@
   "main": "dist/dataparty.js",
   "frontend": "dist/dataparty-browser.js",
   "backend": "dist/dataparty.js",
+   "alias": {
+     "events": "last-eventemitter"
+   },
   "targets": {
     "frontend": {
       "context": "browser",
@@ -16,7 +19,7 @@
     "backend": {
       "context": "node",
       "source": "src/index.js",
-      "optimize": false,
+      "optimize": true,
       "includeNodeModules": [
         "websocket",
         "es5-ext/*",
@@ -37,7 +40,8 @@
         "jsonpath-plus",
         "git-repo-info",
         "debug",
-        "wreck"
+        "wreck",
+        "pify"
       ],
       "engines": {
         "node": ">= 12"
@@ -86,6 +90,7 @@
     "nodemon-webpack-plugin": "^3.0.1",
     "origin-router": "^1.6.4",
     "parse-url": "^5.0.1",
+    "pify": "^6.1.0",
     "promisfy": "^1.2.0",
     "prompt": "^1.0.0",
     "roslib": "^0.20.0",
