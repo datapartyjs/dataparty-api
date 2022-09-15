@@ -1,7 +1,7 @@
 'use strict'
 
 const debug = require('debug')('dataparty.party.qb')
-const EventEmitter = require("last-eventemitter")
+const EventEmitter = require("eventemitter3")
 
 const uuidv4 = require('uuid/v4')
 

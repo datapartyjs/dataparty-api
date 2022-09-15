@@ -1,7 +1,7 @@
 'use strict'
 
 const debug = require('debug')('dataparty.party.crufl')
-const EventEmitter = require("last-eventemitter")
+const EventEmitter = require("eventemitter3")
 
 const moment = require('moment')
 

@@ -2,7 +2,7 @@
 
 const cloneDeep = require('lodash/cloneDeep')
 const Loki = require('lokijs')
-const EventEmitter = require('last-eventemitter')
+const EventEmitter = require('eventemitter3')
 const debug = require('debug')('dataparty.loki-cache')
 
 

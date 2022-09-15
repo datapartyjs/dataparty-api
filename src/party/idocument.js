@@ -2,7 +2,7 @@
 
 const reach = require('../utils/reach')
 const debug = require('debug')('dataparty.idocument')
-const EventEmitter = require('last-eventemitter')
+const EventEmitter = require('eventemitter3')
 
 /**
  * Represents a document with caching and local+remote change notifications

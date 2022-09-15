@@ -1,7 +1,7 @@
 'use strict'
 
 const debug = require('debug')('dataparty.op.socket-op')
-const EventEmitter = require('last-eventemitter')
+const EventEmitter = require('eventemitter3')
 
 class SocketOp extends EventEmitter {
     constructor(op, data, socket){

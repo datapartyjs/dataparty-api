@@ -1,7 +1,7 @@
 'use strict'
 
 const debug = require('debug')('dataparty.comms.ble-op')
-const EventEmitter = require('last-eventemitter')
+const EventEmitter = require('eventemitter3')
 
 class BLEOp extends EventEmitter {
   constructor(request, ble){

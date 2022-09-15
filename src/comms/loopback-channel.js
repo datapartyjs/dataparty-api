@@ -1,4 +1,4 @@
-const EventEmitter = require("last-eventemitter")
+const EventEmitter = require("eventemitter3")
 
 class PeerNode {
   constructor(peer){

@@ -1,7 +1,7 @@
 
 const reach = require('../utils/reach')
 const debug = require('debug')('bouncer.idb')
-const EventEmitter = require('last-eventemitter')
+const EventEmitter = require('eventemitter3')
 
 module.exports = class IDb extends EventEmitter {
 

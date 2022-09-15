@@ -1,5 +1,5 @@
 const debug = require('debug')('dataparty.comms.loopback-socket')
-const EventEmitter = require('last-eventemitter')
+const EventEmitter = require('eventemitter3')
 
 module.exports = class LoopbackSocket extends EventEmitter {
   constructor(channel){
