@@ -1,4 +1,4 @@
-const Wreck = require('wreck')
+const Wreck = require('@hapi/wreck')
 const EventEmitter = require('eventemitter3')
 const debug = require('debug')('dataparty.comms.rest')
 
