@@ -64,7 +64,7 @@ const Crufl = require('./crufl')
 
 
 module.exports = class Qb extends EventEmitter {
-  constructor({call, cache, debounce=false, timeout=300, find_dedup=false}){
+  constructor({call, cache, debounce=10, timeout=3000, find_dedup=true}){
 
     super()
     
@@ -145,14 +145,14 @@ module.exports = class Qb extends EventEmitter {
       crufl.once('complete', ()=>{
         debug('crufl completed in',crufl.duration,'ms', crufl.request, crufl.result)
 
-        delete this.crufls[crufl.uuid]
-
         if(crufl.op == 'find' && this.find_dedup){
           delete this.find_map[ crufl.specHash ]
         }
 
         if(crufl.errors != false){ reject(crufl.errors) }
         else { resolve(crufl.result.msgs) }
+
+        delete this.crufls[crufl.uuid]
       })
     })
   }

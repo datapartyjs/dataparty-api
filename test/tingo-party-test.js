@@ -66,8 +66,6 @@ describe('tingo party test', ()=>{
       .where('number').gt(3)
       .where('number').lt(7)
       .exec()
-
-    console.log(found)
   })
 
 

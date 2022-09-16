@@ -138,13 +138,14 @@ module.exports = class Crufl extends EventEmitter {
   }
 
   onTimeout(){
-    debug('onTimeout')
+    debug('timeout')
 
     if(this.result != null){ return }
 
     this.timeout = true
     this.timeoutTimer = null
     this.endTime = moment()
+    this.errors = new Error('crufl timeout')
     this.emit('complete')
   }
 
