@@ -149,7 +149,7 @@ module.exports = class Qb extends EventEmitter {
           delete this.find_map[ crufl.specHash ]
         }
 
-        if(crufl.errors != false){ reject(crufl.errors) }
+        if(crufl.errors != false){ reject(crufl) }
         else { resolve(crufl.result.msgs) }
 
         delete this.crufls[crufl.uuid]
