@@ -5,6 +5,7 @@
   "main": "dist/dataparty.js",
   "frontend": "dist/dataparty-browser.js",
   "backend": "dist/dataparty.js",
+  "embedded": "dist/dataparty-embedded.js",
   "alias": {
     "events": "eventemitter3"
   },
@@ -21,50 +22,16 @@
       "context": "node",
       "source": "src/index.js",
       "optimize": false,
-      "includeNodeModules": [
-        "@dataparty/crypto",
-        "ms",
-        "roslib",
-        "lokijs",
-        "bson-objectid",
-        "promisfy",
-        "deep-set",
-        "nconf",
-        "mkdirp",
-        "jshashes",
-        "uuid",
-        "lodash",
-        "lodash/*",
-        "jsonpath-plus",
-        "eventemitter2",
-        "object-assign",
-        "xmldom", "socket.io/*", "ws", "pngparse",
-        "websocket",
-        "es5-ext/*",
-        "es5-iterator",
-        "es6-symbol",
-        "next-tick",
-        "yaeti",
-        "utf-8-validate",
-        "typedarray-to-buffer",
-        "bufferutil",
-        "cli-color",
-        "d",
-        "simple-peer",
-        "last-eventemitter",
-        "eventemitter3",
-        "@hapi/joi",
-        "@hapi/hoek",
-        "@hapi/boom",
-        "@hapi/bourne",
-        "@hapi/wreck",
-        "hoek",
-        "jsonpath-plus",
-        "git-repo-info",
-        "debug",
-        "wreck",
-        "boom"
-      ],
+      "includeNodeModules": false,
+      "engines": {
+        "node": ">= 12"
+      }
+    },
+    "embedded": {
+      "context": "electron-main",
+      "source": "src/index-embedded.js",
+      "optimize": false,
+      "includeNodeModules": true,
       "engines": {
         "node": ">= 12"
       }

@@ -1,8 +1,5 @@
 'use strict';
 const reach = require('./reach')
-const BouncerDb = require('@dataparty/bouncer-db')
-const mongoose = BouncerDb.mongoose()
-
 
 // variables for vapor mongoose schema validation
 
@@ -53,7 +50,7 @@ exports.actor = function(types){
   }
   
   return {
-    id: {type: mongoose.Schema.ObjectId},
+    id: String,
     type: {
       enum: types,
       type: String,
@@ -73,38 +70,4 @@ exports.metadataValue = function(doc,key){
   return undefined
 }
 
-exports.profile = {
-  fullname: exports.name,
-  photo: { type: String, maxlength: 500, description: 'user photo url' },
-  created: exports.created,
-  bio: exports.string(450),
-  email: exports.string(100),
-  description: exports.string(250),
-  company: exports.string(100),
-  location: exports.string(100),
-  social: {
-    twitter: exports.string(100),
-    linkedin: exports.string(100),
-    github: exports.string(100),
-  }
-}
 
-
-exports.objRef = function(doc, subpath=undefined, options={}){
-  let idPath = 'id'
-  let typePath = 'type'
-
-  if(subpath!==undefined){
-    idPath = subpath+'.id'
-    typePath = subpath+'.type'
-  }
-
-  let id = reach(doc, idPath) 
-
-  if(typeof id !== 'object'){ id = new mongoose.Types.ObjectId(id) }
-
-  return {
-    id: id,
-    type: reach(doc, typePath) || options.type
-  }
-}

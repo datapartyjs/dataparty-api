@@ -1,5 +1,5 @@
 const debug = require('debug')('dataparty.comms.ros-shim')
-const ROSLIB = require('roslib')
+const ROSLIB = require('roslib/src/RosLib')
 
 class RosShim extends ROSLIB.Ros {
     constructor(socket){
