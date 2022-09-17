@@ -151,14 +151,17 @@ class IDocument extends EventEmitter {
 
     debug('creating document ', type, id)
 
-    const rawDocument = (await party.create(type, data))[0]
+    const rawDocuments = (await party.create(type, data))
     
-    const docs = (await party.find()
+      debug('hydrating', rawDocuments)
+      return (await party.factory.hydrate(rawDocuments))[0]
+
+    /*const docs = (await party.find()
       .type(rawDocument.$meta.type)
       .id(rawDocument.$meta.id)
       .exec())
 
-    return docs[0]
+    return docs[0]*/
   }
 
   async remove(){
