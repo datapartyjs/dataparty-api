@@ -38,6 +38,7 @@ describe('tingo party test', ()=>{
   
   
     await local.start()
+    await local.db.compactDatabase()
   })
 
   test('create basic types', async ()=>{

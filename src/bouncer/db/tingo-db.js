@@ -24,6 +24,8 @@ module.exports = class TingoDb extends IDb {
 
   async start(){
 
+    if(this.tingo != null){ return }
+
     debug('starting', this.tingoOptions)
     await new Promise((resolve,reject)=>{
       try{
@@ -38,6 +40,11 @@ module.exports = class TingoDb extends IDb {
     await super.start()
   }
 
+  async compactDatabase(){
+    debug('compactDatabase ...')
+    await promisfy(this.tingo.compactDatabase.bind(this.tingo))()
+    debug('compactDatabase done')
+  }
 
 
   /** convert db documnet to plain object with $meta field */

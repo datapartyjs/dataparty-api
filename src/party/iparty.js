@@ -24,6 +24,7 @@ class IParty {
     this._actor = {id: undefined, type: undefined}
     this._actors = []
     this._identity = undefined
+    this.started = false
 
     /**
      * @member factory 
@@ -33,6 +34,9 @@ class IParty {
 
   /** @method */
   async start(){
+    
+    if(this.started){ return }
+
     debug('start')
     if(this.config){
       await this.config.start()
@@ -46,6 +50,8 @@ class IParty {
       this.loadIdentity(),
       this.loadActor(),
     ])
+
+    this.started = true
 
     debug('\tDocument Validators', this.factory.getValidators())
     debug('\tDocument Classes', this.factory.getTypes())
