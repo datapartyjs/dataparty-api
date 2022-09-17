@@ -91,11 +91,9 @@ module.exports = class AdminCrufler extends ICrufler {
 
     let mongoQuery = new MongoQuery(spec)
 
-    let query = mongoQuery.getQueryDoc()
 
-    debug('query', query)
 
-    let resultSet = await this.db.find(crufl.type, query)
+    let resultSet = await this.db.find(crufl.type, mongoQuery)
 
     debug('set',resultSet)
 

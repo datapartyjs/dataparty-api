@@ -185,12 +185,25 @@ module.exports = class LokiDb extends IDb {
     return {freshness: results }
   }*/
 
-  async find(collectionName, query){
+  async find(collectionName, mongoQuery){
+
+    let query = mongoQuery.getQueryDoc()
+
     debug('find collection=', collectionName, ' query=', JSON.stringify(query,null,2))
     let collection = await this.getCollection(collectionName)
-    let resultArray = collection.find(query)
+    let resultSet = collection.find(query)
 
-    return resultArray.map(this.documentToObject) || []
+
+    if(mongoQuery.hasLimit()){
+      resultSet = resultSet.limit(mongoQuery.getLimit())
+    }
+
+    if(mongoQuery.hasSort()){
+      let sortPath = Object.keys(mongoQuery.getSort())[0]
+      resultSet = resultSet.simplesort( sortPath )
+    }
+
+    return resultSet.map(this.documentToObject) || []
   }
 
   async insertMany(collectionName, docs){ 

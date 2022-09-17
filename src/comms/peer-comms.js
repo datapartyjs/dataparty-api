@@ -17,6 +17,8 @@ class PeerComms extends SocketComms {
     this.oncall = null
 
     this._host_auth_timeout = null
+
+    this.pending_calls = 0
   }
 
   async handleClientCall(message){
@@ -48,6 +50,7 @@ class PeerComms extends SocketComms {
     if (request.op == 'peer-call') {
       debug('peer-call')
       if(request.endpoint == 'api-v2-peer-bouncer'){
+        this.pending_calls++
         debug('ask->',request.data)
         this.send({
           op: 'status',
@@ -55,6 +58,7 @@ class PeerComms extends SocketComms {
           state: 'Finished_Success',
           ...await this.party.handleCall(request.data)
         })
+        this.pending_calls--
       }
     }
   }
