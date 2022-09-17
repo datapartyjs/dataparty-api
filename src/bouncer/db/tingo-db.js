@@ -92,20 +92,17 @@ module.exports = class TingoDb extends IDb {
     return dbDoc
   }
 
-  async getCollectionNames(name){
+  async getCollectionNames(){
     let names = await promisfy(this.tingo.collectionNames.bind(this.tingo))({})
 
-    return names.map(name=>{
-      return name.replace(this.prefix, '')
+    return names.map(col=>{
+      return col.name.replace(this.prefix, '')
     })
   }
 
-  async createCollection(name, indexSettings){
-    debug('createCollection', name, indexSettings)
+  async ensureIndex(nameOrCollection, indexSettings){
+    let collection = typeof nameOrCollection == 'string' ? await this.getCollection(nameOrCollection) : nameOrCollection
 
-    if(this.hasCollection(name) !== null){ return }
-
-    let collection = await promisfy(this.tingo.createCollection.bind(this.tingo))(this.prefix+name)
 
     indexSettings.indices.map(index=>{
       let obj={}
@@ -113,15 +110,27 @@ module.exports = class TingoDb extends IDb {
       collection.createIndex(obj, {unique: false})
     })
 
-    indexSettings.uniques.map(index=>{
+    indexSettings.unique.map(index=>{
       let obj={}
       obj[index]=1
       collection.createIndex(obj, {unique: true})
     })
 
     
-    collection.createIndex({'$meta.id': 1}, {unique: true})
+    collection.createIndex({'_id': 1}, {unique: true})
+  }
 
+  async createCollection(name, indexSettings){
+    debug('createCollection', name, indexSettings)
+
+    if(this.hasCollection(name) !== null){
+      await this.ensureIndex(name, indexSettings)
+      return
+    }
+
+    let collection = await promisfy(this.tingo.createCollection.bind(this.tingo))(this.prefix+name)
+
+    await this.ensureIndex(collection, indexSettings)
   }
 
 
