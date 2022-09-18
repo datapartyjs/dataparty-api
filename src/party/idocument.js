@@ -140,10 +140,13 @@ class IDocument extends EventEmitter {
     debug('asign data')
     await this.setData(value)
     debug('data set')
-    await this.party.update(value)
+    const expectedRevision = reach(this.data, '$meta.revision', -1) + 1
+    const rawDocument = (await this.party.update(value))[0]
     debug('doc updated')
-    await this.pull()
-    debug('doc pulled')
+    if(expectedRevision != reach(rawDocument, '$meta.revision')){
+      console.log('pull')
+      await this.pull()
+    }
   }
 
 
