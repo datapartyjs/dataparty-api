@@ -191,7 +191,7 @@ module.exports = class LokiDb extends IDb {
 
     debug('find collection=', collectionName, ' query=', JSON.stringify(query,null,2))
     let collection = await this.getCollection(collectionName)
-    let resultSet = collection.find(query)
+    let resultSet = collection.chain().find(query)
 
 
     if(mongoQuery.hasLimit()){
@@ -203,7 +203,7 @@ module.exports = class LokiDb extends IDb {
       resultSet = resultSet.simplesort( sortPath )
     }
 
-    return resultSet.map(this.documentToObject) || []
+    return resultSet.data().map(this.documentToObject) || []
   }
 
   async insertMany(collectionName, docs){ 
