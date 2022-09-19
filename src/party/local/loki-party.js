@@ -16,12 +16,13 @@ const Qb = require('../qb')
  */
 class LokiParty extends IParty {
 
-  constructor ({path, dbAdapter, qbOptions, ...options}) {
+  constructor ({path, dbAdapter, qbOptions, lokiOptions, ...options}) {
     super(options)
 
     this.db = new LokiDb({
       dbAdapter,
-      path, factory: this.factory
+      path, factory: this.factory,
+      lokiOptions
     })
 
     this.crufler = new AdminCrufler({

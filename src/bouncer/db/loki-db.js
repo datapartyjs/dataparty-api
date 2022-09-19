@@ -14,10 +14,11 @@ const debug = require('debug')('dataparty.local.loki-db')
 
 module.exports = class LokiDb extends IDb {
 
-  constructor ({path, factory, dbAdapter}) {
+  constructor ({path, factory, dbAdapter, lokiOptions}) {
     super(factory)
     debug('constructor')
     this.loki = null
+    this.lokiOptions = lokiOptions
     this.path = path
     this.dbAdapter = dbAdapter || new LFSA()
     this.error = null
@@ -32,7 +33,8 @@ module.exports = class LokiDb extends IDb {
     this.loki = new Loki(
       this.path,
       { 
-        adapter : this.dbAdapter
+        adapter : this.dbAdapter,
+        ...this.lokiOptions
       }
     )
 
