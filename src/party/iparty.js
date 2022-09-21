@@ -12,8 +12,9 @@ const LokiCache = require('./loki-cache.js') // insert | populate cache
  * @interface
  */
 class IParty {
-  constructor({config, cache, noCache=false, comms, model, factories, documentClass}){
+  constructor({config, cache, noCache=false, comms, model, factories, documentClass, qb=null}){
     this.config = config
+    this.qb = qb
 
     if(noCache){ this.cache = null }
     else{ this.cache = cache || new LokiCache() }
@@ -23,6 +24,7 @@ class IParty {
     this._actor = {id: undefined, type: undefined}
     this._actors = []
     this._identity = undefined
+    this.started = false
 
     /**
      * @member factory 
@@ -32,6 +34,9 @@ class IParty {
 
   /** @method */
   async start(){
+    
+    if(this.started){ return }
+
     debug('start')
     if(this.config){
       await this.config.start()
@@ -46,6 +51,8 @@ class IParty {
       this.loadActor(),
     ])
 
+    this.started = true
+
     debug('\tDocument Validators', this.factory.getValidators())
     debug('\tDocument Classes', this.factory.getTypes())
   }
@@ -56,14 +63,14 @@ class IParty {
   async createDocument(type, data, id){
     let Type = this.factory.getFactory(type)
 
-    return Type.create(this, {data, type, id})
+    return await Type.create(this, {data, type, id})
   }
 
   /**
    * @method
    */
   async create (type, ...msgs) {
-    return this.qb.create(type, msgs)
+    return await this.qb.create(type, msgs)
   }
 
 

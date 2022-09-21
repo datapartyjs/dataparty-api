@@ -1,7 +1,7 @@
 'use strict'
 
 const debug = require('debug')('dataparty.comms.socketcomms')
-const EventEmitter = require('last-eventemitter')
+const EventEmitter = require('eventemitter3')
 
 const {Message, Routines} = require('@dataparty/crypto')
 

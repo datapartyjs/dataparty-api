@@ -20,6 +20,7 @@ module.exports = class AdminCrufler extends ICrufler {
     for(let crufl of ask.crufls){
       let result = {
         op: crufl.op,
+        type: crufl.type,
         uuid: crufl.uuid,
         msgs: [],
         complete: true,
@@ -51,6 +52,7 @@ module.exports = class AdminCrufler extends ICrufler {
         }
       }
       catch(err){
+        debug('crufl error')
         debug(err)
         result.error = err
 
@@ -74,17 +76,24 @@ module.exports = class AdminCrufler extends ICrufler {
 
     debug('replying', JSON.stringify(freshness,null,2))
 
-    return {freshness: results }
+
+    return freshness
   }
 
 
   async applyFind(crufl, includeData = false){
     debug('find', JSON.stringify(crufl,null,2))
-    let mongoQuery = new MongoQuery(crufl.spec)
 
-    let query = mongoQuery.getQueryDoc()
+    let spec = crufl.spec ? crufl.spec : {
+      ids: crufl.msgs.map(m=>{ debug(typeof m.$meta.id); return m.$meta.id}),
+      type: crufl.type
+    }
 
-    let resultSet = await this.db.find(crufl.type, query)
+    let mongoQuery = new MongoQuery(spec)
+
+
+
+    let resultSet = await this.db.find(crufl.type, mongoQuery)
 
     debug('set',resultSet)
 

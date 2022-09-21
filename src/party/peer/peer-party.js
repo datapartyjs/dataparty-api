@@ -14,7 +14,7 @@ const IParty = require('../iparty')
  */
 class PeerParty extends IParty {
 
-  constructor ({comms, hostParty, ...options}) {
+  constructor ({comms, hostParty, qbOptions={debounce: 10, find_dedup:true, timeout: 10000}, ...options}) {
     super(options)
 
     this.comms = comms
@@ -23,7 +23,8 @@ class PeerParty extends IParty {
 
     this.qb = new Qb({
       call: this.handleCall.bind(this),
-      cache: this.cache
+      cache: this.cache,
+      ...qbOptions
     })
 
     this.hostParty = null

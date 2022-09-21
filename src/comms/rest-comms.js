@@ -1,6 +1,5 @@
-const Url = require('url')
-const Wreck = require('wreck')
-const EventEmitter = require('last-eventemitter')
+const Wreck = require('@hapi/wreck')
+const EventEmitter = require('eventemitter3')
 const debug = require('debug')('dataparty.comms.rest')
 
 const WebsocketComms = require('./websocket-comms')

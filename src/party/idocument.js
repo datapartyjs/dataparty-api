@@ -2,7 +2,7 @@
 
 const reach = require('../utils/reach')
 const debug = require('debug')('dataparty.idocument')
-const EventEmitter = require('last-eventemitter')
+const EventEmitter = require('eventemitter3')
 
 /**
  * Represents a document with caching and local+remote change notifications
@@ -140,10 +140,13 @@ class IDocument extends EventEmitter {
     debug('asign data')
     await this.setData(value)
     debug('data set')
-    await this.party.update(value)
+    const expectedRevision = reach(this.data, '$meta.revision', -1) + 1
+    const rawDocument = (await this.party.update(value))[0]
     debug('doc updated')
-    await this.pull()
-    debug('doc pulled')
+    if(expectedRevision != reach(rawDocument, '$meta.revision')){
+      console.log('pull')
+      await this.pull()
+    }
   }
 
 
@@ -151,14 +154,17 @@ class IDocument extends EventEmitter {
 
     debug('creating document ', type, id)
 
-    const rawDocument = (await party.create(type, data))[0]
+    const rawDocuments = (await party.create(type, data))
     
-    const docs = (await party.find()
+      debug('hydrating', rawDocuments)
+      return (await party.factory.hydrate(rawDocuments))[0]
+
+    /*const docs = (await party.find()
       .type(rawDocument.$meta.type)
       .id(rawDocument.$meta.id)
       .exec())
 
-    return docs[0]
+    return docs[0]*/
   }
 
   async remove(){

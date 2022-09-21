@@ -1,7 +1,7 @@
 'use strict'
 
 const debug = require('debug')('dataparty.comms.websocket-op')
-const EventEmitter = require('last-eventemitter')
+const EventEmitter = require('eventemitter3')
 
 class WebsocketOp extends EventEmitter {
     constructor(op, data, socket){

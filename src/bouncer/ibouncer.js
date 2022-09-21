@@ -1,4 +1,4 @@
-const EventEmitter = require('last-eventemitter')
+const EventEmitter = require('eventemitter3')
 
 const IParty = require('../iparty')
 const Qb = require('../qb')

@@ -16,11 +16,12 @@ const Qb = require('../qb')
  */
 class TingoParty extends IParty {
 
-  constructor ({path, ...options}) {
+  constructor ({path, qbOptions, tingoOptions, ...options}) {
     super(options)
 
     this.db = new TingoDb({
-      path, factory: this.factory
+      path, factory: this.factory,
+      tingoOptions
     })
 
     this.crufler = new AdminCrufler({
@@ -29,7 +30,8 @@ class TingoParty extends IParty {
 
     this.qb = new Qb({
       call: this.handleCall.bind(this),
-      cache: this.cache
+      cache: this.cache,
+      ...qbOptions
     })
   }
 

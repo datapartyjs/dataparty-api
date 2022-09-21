@@ -2,8 +2,9 @@
 
 const fs = require('fs/promises')
 const debug = require('debug')('test.local-db')
-const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
-const Dataparty = require('../dist/dataparty.js')
+const ExampleModel = require('../examples/dataparty/@dataparty-api.dataparty-schema.json')
+//const Dataparty = require('../dist/dataparty.js')
+const Dataparty = require('../src/index')
 
 const Lab = require('@hapi/lab')
 const { expect } = require('@hapi/code');
@@ -30,12 +31,42 @@ describe('tingo party test', ()=>{
   
     local = new Dataparty.TingoParty({
       path: dbPath,
-      model: BouncerModel,
-      config: new Dataparty.Config.MemoryConfig()
+      model: ExampleModel,
+      config: new Dataparty.Config.MemoryConfig(),
+      noCache: false
     })
   
   
     await local.start()
+    await local.db.compactDatabase()
+  })
+
+  test('create basic types', async ()=>{
+
+    let list = []
+
+    for(let i=0; i<10; i++){
+      let now = (new Date()).toISOString()
+      const item = await local.createDocument('basic_types',{
+        number: i,
+        string: ''+i,
+        time: now,
+        bool: i>5
+      })
+
+      expect(item).not.undefined()
+      expect(item.data.number).equal(i)
+      expect(item.data.string).equal(''+i)
+
+      list.push(item)
+    }
+
+
+    let found = await local.find()
+      .type('basic_types')
+      .where('number').gt(3)
+      .where('number').lt(7)
+      .exec()
   })
 
 
@@ -47,7 +78,13 @@ describe('tingo party test', ()=>{
     debug('creating document')
     user = await local.createDocument('user', {name: 'tester', created: (new Date()).toISOString() })
 
+    debug(user.data)
+
+    expect(user).not.undefined()
+    expect(user.data.name).equal('tester')
+
     await user.remove()
+
   })
 
 
@@ -76,5 +113,8 @@ describe('tingo party test', ()=>{
     expect(renamedUser.data.name).equal('renamed-tester')
 
     await renamedUser.remove()
+
+    let removedUser = await getUser('renamed-tester')
+    expect(removedUser).undefined()
   })
 })

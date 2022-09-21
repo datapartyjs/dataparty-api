@@ -14,10 +14,11 @@ const debug = require('debug')('dataparty.local.loki-db')
 
 module.exports = class LokiDb extends IDb {
 
-  constructor ({path, factory, dbAdapter}) {
+  constructor ({path, factory, dbAdapter, lokiOptions}) {
     super(factory)
     debug('constructor')
     this.loki = null
+    this.lokiOptions = lokiOptions
     this.path = path
     this.dbAdapter = dbAdapter || new LFSA()
     this.error = null
@@ -32,7 +33,8 @@ module.exports = class LokiDb extends IDb {
     this.loki = new Loki(
       this.path,
       { 
-        adapter : this.dbAdapter
+        adapter : this.dbAdapter,
+        ...this.lokiOptions
       }
     )
 
@@ -185,12 +187,25 @@ module.exports = class LokiDb extends IDb {
     return {freshness: results }
   }*/
 
-  async find(collectionName, query){
+  async find(collectionName, mongoQuery){
+
+    let query = mongoQuery.getQueryDoc()
+
     debug('find collection=', collectionName, ' query=', JSON.stringify(query,null,2))
     let collection = await this.getCollection(collectionName)
-    let resultArray = collection.find(query)
+    let resultSet = collection.chain().find(query)
 
-    return resultArray.map(this.documentToObject) || []
+
+    if(mongoQuery.hasLimit()){
+      resultSet = resultSet.limit(mongoQuery.getLimit())
+    }
+
+    if(mongoQuery.hasSort()){
+      let sortPath = Object.keys(mongoQuery.getSort())[0]
+      resultSet = resultSet.simplesort( sortPath )
+    }
+
+    return resultSet.data().map(this.documentToObject) || []
   }
 
   async insertMany(collectionName, docs){ 
@@ -232,7 +247,7 @@ module.exports = class LokiDb extends IDb {
     return resultSet
 
   }
-
+  
   async update(collectionName, docs){ 
     debug('update collection', collectionName, ' docs', docs)
 

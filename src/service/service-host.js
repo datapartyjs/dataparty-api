@@ -1,5 +1,4 @@
 const CORS = require('cors')
-const Pify = require('pify')
 const {URL} = require('url')
 const net = require('net')
 const http = require('http')
@@ -10,6 +9,9 @@ const bodyParser = require('body-parser')
 const expressListRoutes = require('express-list-routes')
 const debug = require('debug')('dataparty.service-host')
 
+const Pify = async (p)=>{
+  return await p
+}
 
 /**
  * @class

@@ -1,9 +1,13 @@
 'use strict'
 
-const debug = require('debug')('dataparty.cloud.qb')
-const uuidv4 = require('uuid/v4') // random uuid generator
+const debug = require('debug')('dataparty.party.qb')
+const EventEmitter = require("eventemitter3")
+
+const uuidv4 = require('uuid/v4')
+
 const Clerk = require('./clerk.js')
-const reach = require('../utils/reach')
+const Crufl = require('./crufl')
+
 // qb (query backend / queen bee / quarterback -> the leader of the party)
 // handles backend communication to data-bouncer server
 // * caches msguments locally to save bandwidth
@@ -39,6 +43,7 @@ const reach = require('../utils/reach')
 //   type: '..', // collection result msgs belong to
 //   msgs: [msg0 .. msgN], // db misses indicated with null msg
 //   complete: boolean, // flag to indicate whether all msgs are included
+//   error: ErrorObject //  string or detailed error object
 // }
 //
 // // check calls are debounced & bundled into a single ask
@@ -56,442 +61,223 @@ const reach = require('../utils/reach')
 //   results: [result0 .. resultN], // results for checks
 //   complete: boolean, // flag to indicate whether all results are included
 // }
-module.exports = class CloudQb {
 
-  constructor ({ call, cache, debounce }) {
 
-    this.call = call // function to call data bouncer backend
-    this.cache = cache // cache with insert / populate interface
+module.exports = class Qb extends EventEmitter {
+  constructor({call, cache, debounce=10, timeout=3000, find_dedup=true}){
 
-    this.claimTable = {} // claims indexed by uuid
-    this.claimTimeout = 9000 // reject claims with no results within limit
-    this.checkStack = [] // collects debounced check requests
-    this.checkTimeout = undefined // for pending ask
-    this.debounce = debounce | 10 // ms to wait before asking backend
+    super()
+    
+    this.call = call
+    this.cache = cache
+
+    this.debounce = debounce
+    this.timeout = timeout
+    this.find_dedup = find_dedup
+
+    this.crufls = {}
+
+    this.find_map = {}
+
+    this.send_queue = []
+    this.send_timer = null
+    this.send_timer_created = null
   }
 
-  // async call to resolve query spec thru backend server & local cache
-  async find (spec) {
+  async find(spec){
+    debug('find -', JSON.stringify(spec,null,2))
 
-    const type = spec.type
-    if (!(typeof type === 'string' && type.length > 0)) {
-      debug(spec)
-      throw (new Error('outside cant process query without type!\n'+JSON.stringify(spec,null,2)))
+    // if no ids given aggregate find check into ask call
+    if (!('id' in spec || 'ids' in spec)) {
+      debug('find -> has no id or ids')
+
+      const crufl = new Crufl({ op: 'find', spec, qb: this, timeout:this.timeout})
+      const reply = await this.queueRequest(crufl)
+
+      return reply
+
+    // otherwise build lookup for given ids
+    } else {
+      debug('find -> has ids', spec)
+      const ids = 'id' in spec ? [spec.id] : spec.ids
+      const msgs = ids.map(id => Clerk.partyize(spec.type, id+''))
+
+      const crufl = new Crufl({ op: 'lookup', msgs, qb: this, timeout:this.timeout})
+      const reply = await this.queueRequest(crufl)
+
+      return reply
     }
 
-    return new Promise((resolve, reject) => {
-
-
-      const type = spec.type
-      if (!(typeof type === 'string' && type.length > 0)) {
-        debug(spec)
-        throw (new Error('cant process query without type!\n'+JSON.stringify(spec,null,2)))
-      }
-
-      // build bouncer check object
-      const check = {
-        op: 'find',
-        uuid: uuidv4(),
-        type: type,
-        spec: spec // query spec to execute
-      }
-
-      // keep resolve / reject handlers & spec in claim
-      const claim = {
-        op: check.op,
-        uuid: check.uuid,
-        fresh: Date.now(),
-        resolve: resolve,
-        reject: reject,
-        spec: spec,
-        entryStack: undefined
-      }
-
-      if(debug.enabled){
-        claim.entryStack = {}
-        Error.captureStackTrace( claim.entryStack )
-      }
-
-      // if no ids given aggregate find check into ask call
-      if (!('id' in spec || 'ids' in spec)) {
-        debug('find -> has no id or ids')
-        this.pushCheck(check, claim)
-
-      // otherwise build lookup for given ids
-      } else {
-        debug('find -> has ids', spec)
-        const ids = 'id' in spec ? [spec.id] : spec.ids
-        const msgs = ids.map(id => Clerk.partyize(type, id+''))
-        this.lookup(msgs, claim)
-      }
-    })
   }
 
-  // insert list of objects into given db collection
-  async create (type, msgs) {
+  async create(type, msgs){
+    debug('create - ', type, JSON.stringify(msgs,null,2))
 
     // shallow copy given msgs & insert metadata props
     const partyMsgs = msgs.map(msg => Clerk.partyize(type, msg))
 
-    // return promise resolving to list of successfully inserted msgs
-    return this.modify(partyMsgs, 'create')
+    return await this.modify(partyMsgs, 'create')
   }
 
-  // make async call to update | create | remove list of msgs
-  async modify (msgs, op) {
-    return new Promise((resolve, reject) => {
+  async modify(msgs, op){
+    debug('modify - ', op, JSON.stringify(msgs,null,2))
 
-      // validate msgs share a type
-      const [type, typedMsgs] = Clerk.validateOneType(msgs)
-      if (type === null) {
-        return reject(new Error('cant modify msgs: no type set!'))
-      }
+    const crufl = new Crufl({ op, msgs, qb: this, timeout:this.timeout})
 
-      debug('modify -> ', op, msgs)
+    return await this.queueRequest(crufl)
+  }
 
-      // build bouncer check object
-      const check = {
-        op: op,
-        uuid: uuidv4(),
-        type: type,
-        msgs: typedMsgs
-      }
+  async lookup(msgs, skipCache){
+    debug('lookup - ', JSON.stringify(msgs,null,2))
 
-      // keep resolve / reject handlers in claim
-      const claim = {
-        op: check.op,
-        uuid: check.uuid,
-        fresh: Date.now(),
-        resolve: resolve,
-        reject: reject,
-        spec: typedMsgs,
-        entryStack: undefined
-      }
+    if(!msgs || msgs.length<1){
+      return []
+    }
 
-      if(debug.enabled){
-        claim.entryStack = {}
-        Error.captureStackTrace( claim.entryStack )
-      }
+    const crufl = new Crufl({ op:'lookup', msgs, qb: this, timeout:this.timeout})
 
-      // aggregate check into ask call
-      this.pushCheck(check, claim)
+    return await this.queueRequest(crufl, skipCache)
+  }
+
+  async waitForCruflComplete(crufl){
+    return await new Promise((resolve,reject)=>{
+
+      crufl.once('complete', ()=>{
+        debug('crufl completed in',crufl.duration,'ms', crufl.request, crufl.result)
+
+        if(crufl.op == 'find' && this.find_dedup){
+          delete this.find_map[ crufl.specHash ]
+        }
+
+        if(crufl.errors != false){ 
+          reject(crufl)
+          this.emit('error',crufl)
+        }
+        else { resolve(crufl.result.msgs) }
+
+        delete this.crufls[crufl.uuid]
+      })
     })
   }
 
-  // attempt lookup of given msg metadata against local cache before
-  // generating server check for cache misses
-  // * called by find to populate msgs returned by search
-  // * called by itself until timeout is reached to allow downloading partial
-  //   msg listings & intercall cache invalidation
-  async lookup (msgs, parentClaim) {
-    return new Promise(async (resolve, reject) => {
+  async queueRequest(crufl, skipCache=false){
 
-      debug('lookup', msgs)
+    if(this.cache && !skipCache && crufl.op == 'lookup'){
+      //attempt cache retrieval
+      debug('queueRequest - attempt cache lookup')
 
-      // if no messages given resolve to empty list
-      if (msgs.length < 1) {
-        return resolve([])
-      }
+      // check for msgs in cache
+      const populated = await this.cache.populate(crufl.msgs)
 
-      // validate msgs share a type
-      const [type, typedMsgs] = Clerk.validateOneType(msgs)
-      if (type === null) {
-        return reject(new Error('cant lookup msgs: no type set!'))
-      }
+      // if there were no misses resolve with hits
+      if (populated.misses.length === 0) {
 
-      // build lookup check & claim
-      const check = {
-        op: 'lookup',
-        uuid: uuidv4(),
-        type: type,
-        msgs: typedMsgs
-      }
-      const claim = {
-        op: check.op,
-        uuid: check.uuid,
-        fresh: Date.now(),
-        resolve: resolve,
-        reject: reject,
-        spec: typedMsgs,
-        entryStack: undefined
-      }
+        debug('queueRequest - completed from cache')
 
-      if(debug.enabled){
-        claim.entryStack = {}
-        Error.captureStackTrace( claim.entryStack )
-      }
+        crufl.clearTimeout()
 
-      // if this lookup is following on another claim use its handlers instead
-      if (parentClaim) {
-        claim.resolve = parentClaim.resolve
-        claim.reject = parentClaim.reject
-        claim.fresh = parentClaim.fresh
-        if (parentClaim.spec) {
-          claim.spec = parentClaim.spec
-        }
-      }
-
-      if(!this.cache){
-        claim.msgs = typedMsgs
-        check.msgs = typedMsgs
-        this.pushCheck(check, claim)
-      } else {
-
-        // check for msgs in cache
-        const populated = await this.cache.populate(typedMsgs)
-
-        // debug('cache results: ' + JSON.stringify(populated, null, 2))
-
-        // if there were no misses resolve with hits
-        if (populated.misses.length === 0) {
-
-          // if selection was specified resolve selection
-          if (claim.spec && claim.spec.select) {
-            claim.resolve(
-              Clerk.selectAll(claim.spec.select, populated.hits))
-          } else {
-            claim.resolve(populated.hits)
-          }
-
-        // if claim is stale (from inherited stamp) call reject handler
-        } else if (Date.now() - claim.fresh > this.claimTimeout) {
-          claim.reject(
-            new Error(`server timeout on lookup op: id ${claim.uuid}`))
-
-        // otherwise keep original msg headers & initiate ask for misses
+        // if selection was specified resolve selection
+        if (crufl.spec && crufl.spec.select) {
+          return Clerk.selectAll(crufl.spec.select, populated.hits)
         } else {
-          claim.msgs = typedMsgs
-          check.msgs = populated.misses
-          this.pushCheck(check, claim)
+          return populated.hits
         }
 
-      }
-    })
-  }
+      } else if( populated.misses.length > 0 && populated.hits.length > 0) {
+        // otherwise keep original msg headers & initiate ask for misses
 
-  // debounce server communication by aggregating check calls within a
-  // time window into a single ask call
-  // * check claim table for stale claims & reject them
-  pushCheck (check, claim) {
+        debug('queueRequest - has partial result from cache')
 
-    debug('pushing check onto stack:', check)
+        let missingMsgs = await this.lookup(populated.misses, true)
 
-    // push check onto stack (other checks can be pushed in debounce window)
-    this.checkStack.push(check)
+        debug('queueRequest - completed partially from cache')
+        crufl.clearTimeout()
 
-    // add claim to claim table
-    this.claimTable[claim.uuid] = claim
-
-    // if check timeout isnt set start debounce window ask call
-    if (this.checkTimeout) {
-      debug('check timeout already set, waiting!')
-    } else {
-      debug(`setting ask timeout callback in ${this.debounce} ms`)
-      this.checkTimeout = setTimeout(this.sendAsk.bind(this), this.debounce)
-    }
-
-    // reject stale claims
-    const now = Date.now()
-    for (const oldClaim of Object.values(this.claimTable)) {
-      if (now - oldClaim.fresh > this.claimTimeout) {
-        oldClaim.reject(
-          new Error(`server timeout: op ${oldClaim.op} id ${oldClaim.uuid}`))
-        delete this.claimTable[oldClaim.uuid]
+        return [...populated.hits, ...missingMsgs]
       }
     }
-  }
 
-  // to be called asynchronously after debounce timeout to aggregate checks
-  async sendAsk () {
 
-    // package check stack into an ask
-    const ask = {
-      uuid: uuidv4(),
-      crufls: this.checkStack
-    }
+    if(this.find_dedup && crufl.op == 'find'){
+      let pendingCrufl = this.find_map[ crufl.specHash ]
 
-    // init new checkstack & clear flag
-    this.checkStack = []
-    clearTimeout(this.checkTimeout) // should have already fired but make sure
-    this.checkTimeout = undefined
-
-    // if there are no checks in ask just return
-    if (ask.crufls.length < 1) {
-      return
-    }
-
-    try {
-      const reply = await this.call(ask)
-
-      // build check map to track whether results are complete
-      const unclaimed = {}
-      for (const check of ask.crufls) {
-        unclaimed[check.uuid] = check
-      }
-
-      // process results for check claims
-      for (const crufl of reply.freshness) {
-        await this.processClaim(crufl)
-        delete this.claimTable[crufl.uuid]
-        delete unclaimed[crufl.uuid]
-      }
-
-      this.recheck(unclaimed)
-
-    } catch (error) {
-      debug('ask error path ->', error)
-
-      for (const crufl of ask.crufls) {
-
-        const claim = this.claimTable[crufl.uuid]
-        claim.reject(error)
-        delete this.claimTable[claim.uuid]
-      }
-
-      debug('ask error handled')
-    }
-  }
-
-  // push unclaimed checks back onto check stack unless stale
-  recheck (unclaimed) {
-    for (const check of Object.values(unclaimed)) {
-
-      // get matching claim from claim table or else
-      const claim = this.claimTable[check.uuid]
-      if (claim === undefined) {
-        throw new Error(
-          `no claim for check op ${check.op} id ${check.uuid}`)
-      }
-
-      // if claim is stale call reject handler & delete from table
-      if (Date.now() - claim.fresh > this.claimTimeout) {
-        claim.reject(
-          new Error(`server timeout after incomplete result: op ${claim.op}`))
-        delete this.claimTable[claim.uuid]
-
-      // otherwise put claim back on check stack & init ask
+      if(!pendingCrufl){
+        this.find_map[ crufl.specHash ] = crufl
       } else {
-        this.checkStack.push(check)
-        if (!this.checkTimeout) {
-          this.checkTimeout = setTimeout(this.sendAsk.bind(this), this.debounce)
-        }
+        debug('deduping find op - waiting for pending crufl', pendingCrufl.uuid)
+        crufl.clearTimeout()
+        return await this.waitForCruflComplete(pendingCrufl)
       }
     }
+
+    this.crufls[crufl.uuid] = crufl
+
+    
+    let resultPromise = this.waitForCruflComplete(crufl)
+
+    if(this.debounce === false || this.debounce < 1){
+      await this.sendRequests([crufl])
+    }
+    else{
+      this.send_queue.push(crufl)
+
+      if(!this.send_timer){
+        this.send_timer = setTimeout(async ()=>{ await this.onSendTimer() }, this.debounce)
+      }
+    }
+
+    return await resultPromise
   }
 
-  // process result from data bouncer server against stored claim
-  async processClaim (result) {
+  async onSendTimer(){
 
-    debug('processing claim for result ->', JSON.stringify(result))
+    const crufls = this.send_queue
 
+    this.send_queue = []
+    delete this.send_timer
+    this.send_timer = null
 
-    // find matching claim or else
-    const claim = this.claimTable[result.uuid]
-    if (claim === undefined) {
-      throw new Error(`no claim for result op ${result.op} id ${result.uuid}`)
+    await this.sendRequests(crufls)
+  }
+
+  async sendRequests(crufls){
+
+    if(crufls.length < 1){ return }
+
+    const request = {
+      uuid: uuidv4(), crufls: crufls.map(c=>c.request)
     }
 
-    // if claim & result ops dont match reject claim
-    if (result.op !== claim.op) {
-      return claim.reject(
-        new Error(`result op ${result.op} !== claim op ${claim.op}`))
+    debug('doRequest -', JSON.stringify(request,null,2))
+
+    const reply = await this.call(request)
+
+    await this.onReply(reply)
+  }
+
+  async onReply(reply){
+    debug('onReply - ', reply)
+
+    let resultPromises = []
+
+    for(let result of reply.results){
+      let promise = this.onResult(result)
+      resultPromises.push(promise)
     }
 
-    // if result error is set reject with error
-    if (result.error) {
-      debug('rejecting', result.error)
-      return claim.reject(new Error(result.error))
-    }
+    await Promise.all(resultPromises)
+  }
 
-    let errors
-    // handle result according to operation
-    switch (result.op) {
+  async onResult(result){
+    debug('onResult', result)
 
-    // convert find claim to lookup to populate msg headers with params
-    case 'find':
-      if (!result.msgs || result.msgs.length < 1) {
-        return claim.resolve([])
-      }
-      return this.lookup(result.msgs, claim)
 
-    // push populated result msgs into cache & lookup original msgs again
-    // * if results are incomplete or cache was invalidated lookup will
-    //   repeat until claim timeout is reached or all msgs marked as invalid
-    case 'lookup':
-      if(this.cache){ await this.cache.insert(result.msgs) }
-      errors = anyErrors(result.msgs, claim)
-      if(errors != false){
-        return claim.reject(errors)
-      }
+    let crufl = this.crufls[result.uuid]
 
-      return this.lookup(filterInvalid(claim.msgs, result.msgs), claim)
+    if(crufl !== undefined){
+      await crufl.onResult(result)
 
-    // resolve update, create & remove with flat list of msgs
-    // * insert new versions of msgs into cache
-    // * msgs not in backend db have msg._id set to null, invalidate cached
-    case 'update':
-    case 'create':
-    case 'remove':
-      if(this.cache){ this.cache.insert(result.msgs) }
-
-      errors = anyErrors(result.msgs, claim)
-      if(errors != false){
-        return claim.reject(errors)
-      }
-
-      return claim.resolve(result.msgs)
-
-    default:
-      return claim.reject(new Error(`unexpected result op: ${result.op}`))
+      delete this.crufls[result.uuid]
     }
   }
 }
-
-// give up on messages that the backend flags as invalid
-const filterInvalid = (reqMsgs, resMsgs) => {
-  const idmap = {}
-  for (const msg of reqMsgs) {
-    idmap[msg._id] = msg
-  }
-  for (const msg of resMsgs) {
-    if (msg.$meta.error) {
-      delete idmap[msg._id]
-    }
-  }
-  return Object.values(idmap)
-}
-
-const anyErrors = (msgs, claim) => {
-
-  let errors = undefined
-
-  for (const msg of msgs) {
-    if (msg.$meta.error) {
-      if(!errors){errors={}}
-      let errArr = errors[msg.$meta.error]
-
-      if(!errArr){ errArr = errors[msg.$meta.error] = [] }
-
-      errArr.push(msg.$meta.id)
-    }
-  }
-
-
-  if(errors){
-    let e = new Error( Object.keys(errors)[0] )
-    let details = {
-      errors: errors,
-      op: claim.op,
-      uuid: claim.uuid,
-      spec: claim.spec,
-      fresh: claim.fresh,
-      entryStack: reach(claim, 'entryStack.stack', '').split('\n')
-    }
-    e.name = Object.keys(errors)[0]
-    e.message = JSON.stringify(details, null, 2)
-    return e
-  }
-
-  return false
-}
-

@@ -1,5 +1,5 @@
 const debug = require('debug')('dataparty.comms.loopback-socket')
-const EventEmitter = require('last-eventemitter')
+const EventEmitter = require('eventemitter3')
 
 module.exports = class LoopbackSocket extends EventEmitter {
   constructor(channel){
@@ -31,15 +31,17 @@ module.exports = class LoopbackSocket extends EventEmitter {
       this.emit('connect', true)
       debug('checkConnected - connected')
     }
-    else{
+    else if(!this.ready){
       this.channel.post('connected', true)
     }
   }
 
   onconnected(){
     debug('onconnected')
-    this.ready_remote = true
-    this.checkConnected()
+    if(!this.ready_remote){
+      this.ready_remote = true
+      this.checkConnected()
+    }
   }
 
   onclose(){

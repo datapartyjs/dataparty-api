@@ -82,7 +82,7 @@ module.exports = class MongoQuery {
       for (const oid of this.spec.ids) {
         if (ObjectId.isValid(oid)) {
           debug('is valid')
-          let id = (new ObjectId(oid)).id
+          let id = (new ObjectId(oid)).toString()
           oids.push(id)
         }
         else{
@@ -159,7 +159,8 @@ const buildQueryDoc = (node, cursor) => {
     }
 
     // single value leaf ops insert op node below given path
-    // -> { 'param.path': { '$op': value } }    case 'exists':
+    // -> { 'param.path': { '$op': value } }
+    case 'exists':
     case 'gt':
     case 'lt':
     case 'size':
