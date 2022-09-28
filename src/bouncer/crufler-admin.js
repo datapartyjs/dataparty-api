@@ -95,7 +95,7 @@ module.exports = class AdminCrufler extends ICrufler {
 
     let resultSet = await this.db.find(crufl.type, mongoQuery)
 
-    debug('set',resultSet)
+    debug('resultSet',resultSet)
 
     let msgs = []
 
@@ -118,7 +118,7 @@ module.exports = class AdminCrufler extends ICrufler {
       }
     }
 
-    debug(msgs)
+    debug('applyFind found msgs', msgs)
     return msgs
   }
 

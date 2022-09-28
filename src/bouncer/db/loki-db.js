@@ -9,7 +9,7 @@ const ObjectId = require('bson-objectid')
 
 const MongoQuery = require('../mongo-query')
 const { promisfy } = require('promisfy')
-const debug = require('debug')('dataparty.local.loki-db')
+const debug = require('debug')('bouncer.db.loki-db')
 
 
 module.exports = class LokiDb extends IDb {

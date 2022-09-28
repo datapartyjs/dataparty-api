@@ -42,7 +42,7 @@
     "src/*"
   ],
   "scripts": {
-    "test": "npx lab",
+    "test": "npx lab test/zango-party-test.js",
     "build": "parcel build --no-scope-hoist",
     "prepare": "npm run build",
     "watch": "parcel watch",
@@ -95,7 +95,8 @@
     "uuid": "^3.2.1",
     "uuidv4": "^6.2.12",
     "vm2": "^3.9.2",
-    "websocket": "github:sevenbitbyte/WebSocket-Node#parcel-build"
+    "websocket": "github:sevenbitbyte/WebSocket-Node#parcel-build",
+    "zangodb": "github:sevenbitbyte/zangodb#hash-patch"
   },
   "devDependencies": {
     "@dataparty/bouncer-model": "1.4.3",
@@ -103,6 +104,7 @@
     "@hapi/lab": "^25.0.1",
     "better-docs": "^1.1.6",
     "docdash": "^1.1.1",
+    "fake-indexeddb": "^4.0.0",
     "jsdoc": "^3.6.2",
     "minami": "^1.2.3",
     "mongodb-client-encryption": "^2.2.1",

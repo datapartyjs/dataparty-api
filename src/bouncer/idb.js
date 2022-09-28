@@ -46,7 +46,7 @@ module.exports = class IDb extends EventEmitter {
   ensureId(obj){ throw new Error('not implemented') }
 
   stripMeta(doc){
-    const {meta, $meta, ...rawMsg} = doc
+    const {_id, meta, $meta, ...rawMsg} = doc
     return rawMsg
   }
 
