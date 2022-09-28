@@ -1,7 +1,7 @@
 {
   "name": "@dataparty/api",
   "private": false,
-  "version": "1.2.11",
+  "version": "1.2.12",
   "main": "dist/dataparty.js",
   "frontend": "dist/dataparty-browser.js",
   "backend": "dist/dataparty.js",
@@ -42,7 +42,7 @@
     "src/*"
   ],
   "scripts": {
-    "test": "npx lab test/zango-party-test.js",
+    "test": "npx lab",
     "build": "parcel build --no-scope-hoist",
     "prepare": "npm run build",
     "watch": "parcel watch",
