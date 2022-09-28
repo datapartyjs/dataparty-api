@@ -144,7 +144,7 @@ class IDocument extends EventEmitter {
     const rawDocument = (await this.party.update(value))[0]
     debug('doc updated')
     if(expectedRevision != reach(rawDocument, '$meta.revision')){
-      console.log('pull')
+      debug('pull')
       await this.pull()
     }
   }

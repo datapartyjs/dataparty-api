@@ -6,5 +6,6 @@ module.exports = {
   MongoQuery: require('./mongo-query'),
 
   LokiDb: require('./db/loki-db'),
-  TingoDb: require('./db/tingo-db')
+  TingoDb: require('./db/tingo-db'),
+  ZangoDb: require('./db/zango-db')
 }

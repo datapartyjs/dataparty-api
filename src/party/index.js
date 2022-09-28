@@ -3,7 +3,9 @@ const PeerParty = require('./peer/peer-party')
 const CloudParty = require('./cloud/cloud-party')
 const LokiParty = require('./local/loki-party')
 const TingoParty = require('./local/tingo-party')
+const ZangoParty = require('./local/zango-party')
 const MongoParty = require('./mongo/mongo-party')
+
 
 const IDocument = require('./idocument')
 const DocumentFactory = require('./document-factory')
@@ -13,5 +15,5 @@ module.exports = {
   IDocument, IParty, DocumentFactory,
   CloudDocument,
   CloudParty, LokiParty, PeerParty, MongoParty,
-  TingoParty
+  TingoParty, ZangoParty
 }
