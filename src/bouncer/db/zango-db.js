@@ -11,13 +11,6 @@ const { promisfy } = require('promisfy')
 const debug = require('debug')('bouncer.db.zango-db')
 
 
-/*
-if (!process.browser) {
-  global.indexedDB = require('fake-indexeddb');
-  global.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
-}
-*/
-
 module.exports = class ZangoDb extends IDb {
 
   constructor ({dbname, factory}) {
