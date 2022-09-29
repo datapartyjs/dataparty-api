@@ -7,5 +7,5 @@ module.exports = {
 
   LokiDb: require('./db/loki-db'),
   TingoDb: require('./db/tingo-db'),
-  //ZangoDb: require('./db/zango-db')
+  ZangoDb: require('./db/zango-db')
 }
