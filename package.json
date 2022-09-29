@@ -79,7 +79,6 @@
     "morgan": "^1.10.0",
     "nconf": "^0.10.0",
     "node-persist": "^3.0.1",
-    "nodemon-webpack-plugin": "^3.0.1",
     "origin-router": "^1.6.4",
     "parse-url": "^5.0.1",
     "promisfy": "^1.2.0",
