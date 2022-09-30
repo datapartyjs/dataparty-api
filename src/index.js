@@ -5,7 +5,7 @@ const Bouncer = require('./bouncer')
 const Service = require('./service')
 const Sandbox = require('./sandbox')
 
-module.exports = {
+export default {
   Comms,
   Config,
   Bouncer,

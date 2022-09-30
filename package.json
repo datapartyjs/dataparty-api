@@ -7,7 +7,10 @@
   "backend": "dist/dataparty.js",
   "embedded": "dist/dataparty-embedded.js",
   "alias": {
-    "events": "eventemitter3"
+    "events": "eventemitter3",
+    "process": "process/browser.js",
+    "assert": "assert",
+    "crypto": "crypto-browserify"
   },
   "targets": {
     "frontend": {
@@ -15,7 +18,7 @@
       "source": "src/index-browser.js",
       "optimize": false,
       "includeNodeModules": true,
-      "scopeHoist": true,
+      "scopeHoist": false,
       "engines": {
         "browsers": "Chrome 80"
       }
