@@ -2,7 +2,7 @@
 
 const IDb = require('../idb')
 const Hoek = require('@hapi/hoek')
-import zango from 'zangodb'
+const zango = require('zangodb')
 const reach = require('../../utils/reach')
 const ObjectId = require('bson-objectid')
 

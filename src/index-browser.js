@@ -10,8 +10,11 @@ const Config = {
 }
 
 
-export default {
+let lib = {
   Comms,
   Config,
   ...Party
 }
+
+
+module.exports = lib
