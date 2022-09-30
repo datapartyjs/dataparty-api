@@ -36,6 +36,7 @@
       "context": "electron-main",
       "source": "src/index-embedded.js",
       "optimize": false,
+      "scopeHoist": false,
       "includeNodeModules": true,
       "engines": {
         "node": ">= 12"
