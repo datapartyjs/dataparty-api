@@ -1,11 +1,15 @@
-const Wreck = require('@hapi/wreck')
+const axios = require('axios')
 const EventEmitter = require('eventemitter3')
 const debug = require('debug')('dataparty.comms.rest')
 
-const WebsocketComms = require('./websocket-comms')
 const dataparty_crypto = require('@dataparty/crypto')
 
+const WebsocketComms = require('./websocket-comms')
 const AuthError = require('../errors/auth-error')
+
+
+const DEFAULT_REST_TIMEOUT = 30000
+
 
 class RestComms extends EventEmitter {
   constructor({ remoteIdentity, config, party }) {
@@ -348,30 +352,18 @@ class RestComms extends EventEmitter {
   }
 
   static async HttpRequest(verb, url, data) {
-    // debug(typeof data)
-    const payload = JSON.stringify(data)
+
     debug(`${verb} - ${url}`)
-    // debug('sending - ', payload)
-    try {
-      const res = await Wreck.request(verb, url, {
-        payload,
-        headers: {
-          'content-type': 'application/json'
-        }
-      })
 
-      const body = await Wreck.read(res, {
-        timeout: 30000
-      })
+    const response = await axios({
+      method: verb,
+      url,
+      data,
+      headers: {'Content-Type': 'application/json'},
+      timeout: DEFAULT_REST_TIMEOUT
+    })
 
-      const str = body.toString()
-
-      debug(str)
-
-      return str
-    } catch (error) {
-      throw error
-    }
+    return response.data
   }
 
   static async HttpGet(url) {

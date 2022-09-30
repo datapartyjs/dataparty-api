@@ -10,8 +10,8 @@ if (!process.browser) {
 const fs = require('fs/promises')
 const debug = require('debug')('test.local-db')
 const ExampleModel = require('../examples/dataparty/@dataparty-api.dataparty-schema.json')
-//const Dataparty = require('../dist/dataparty.js')
-const Dataparty = require('../src/index')
+const Dataparty = require('../dist/dataparty.js')
+//const Dataparty = require('../src/index')
 
 const Lab = require('@hapi/lab')
 const { expect } = require('@hapi/code');
