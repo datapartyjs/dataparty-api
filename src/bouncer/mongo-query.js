@@ -160,6 +160,8 @@ const buildQueryDoc = (node, cursor) => {
 
     // single value leaf ops insert op node below given path
     // -> { 'param.path': { '$op': value } }
+    case 'regex':
+    case 'contains':
     case 'exists':
     case 'gt':
     case 'lt':
