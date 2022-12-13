@@ -243,6 +243,18 @@ module.exports = class Query {
     return this // enable chaining
   }
 
+  contains (value) { // @leaf `{$contains: a}`
+    const op = { op: 'contains', param: this.cloneWhere(), value: value }
+    this.currentMatch.push(op)
+    return this // enable chaining
+  }
+
+  regex (value) { // @leaf `{$regex: a}`
+    const op = { op: 'regex', param: this.cloneWhere(), value: value }
+    this.currentMatch.push(op)
+    return this // enable chaining
+  }
+
   exists (flag) { // @leaf `{$eq: a}`
     const does = flag === true || flag === undefined // defaults to true
     const op = { op: 'exists', param: this.cloneWhere(), value: does }

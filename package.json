@@ -1,7 +1,7 @@
 {
   "name": "@dataparty/api",
   "private": false,
-  "version": "1.2.13",
+  "version": "1.2.14",
   "main": "dist/dataparty.js",
   "frontend": "dist/dataparty-browser.js",
   "backend": "dist/dataparty.js",
@@ -36,6 +36,7 @@
       "context": "electron-main",
       "source": "src/index-embedded.js",
       "optimize": false,
+      "scopeHoist": false,
       "includeNodeModules": true,
       "engines": {
         "node": ">= 12"
