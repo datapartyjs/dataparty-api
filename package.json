@@ -102,6 +102,7 @@
     "uuidv4": "^6.2.12",
     "vm2": "^3.9.2",
     "websocket": "github:sevenbitbyte/WebSocket-Node#parcel-build",
+    "ws": "^8.11.0",
     "zangodb": "github:sevenbitbyte/zangodb#hash-patch"
   },
   "devDependencies": {

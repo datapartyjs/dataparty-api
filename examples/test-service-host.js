@@ -37,7 +37,7 @@ async function main(){
 
   const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
 
-  const build = await service.compile(Path.join(__dirname,'../dataparty'), true)
+  const build = await service.compile(Path.join(__dirname,'/dataparty'), true)
 
   debug('built', Object.keys(build))
 
@@ -46,7 +46,11 @@ async function main(){
     sendFullErrors: true
   })
   
-  const host = new Dataparty.ServiceHost({runner, trust_proxy: true})
+  const host = new Dataparty.ServiceHost({
+    runner,
+    trust_proxy: false,
+    wsEnabled: true
+  })
 
   await party.start()
   await runner.start()

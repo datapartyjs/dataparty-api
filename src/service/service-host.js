@@ -9,6 +9,8 @@ const bodyParser = require('body-parser')
 const expressListRoutes = require('express-list-routes')
 const debug = require('debug')('dataparty.service-host')
 
+const ServiceHostWebsocket = require('./service-host-websocket')
+
 const Pify = async (p)=>{
   return await p
 }
@@ -22,6 +24,8 @@ class ServiceHost {
     cors = {},
     trust_proxy = false,
     listenUri = 'http://0.0.0.0:4001',
+    wsEnabled = true,
+    wsPort = null,
     runner
   }={}){
     this.apiApp = express()
@@ -45,11 +49,20 @@ class ServiceHost {
     this.errorHandlerTimer = null
 
     this.apiServerUri = new URL(listenUri)
+
+    if(wsEnabled){
+      this.wsServer = new ServiceHostWebsocket({
+        trust_proxy,
+        port: wsPort,
+        runner: this.runner
+      })
+    }
+
   }
 
   async start(){
 
-    debug('starting server')
+    debug('starting server', this.apiServerUri.toString())
 
     if(this.apiServer==null){
       debug('adding default endpoints')
@@ -81,7 +94,6 @@ class ServiceHost {
 
     }
 
-    debug('server listening', this.apiServerUri.toString())
 
     await new Promise((resolve,reject)=>{
       this.apiServer.listen(listenPort, listenHost, resolve)
@@ -94,6 +106,11 @@ class ServiceHost {
 
     debug('server listening')
     debug('address', this.apiServer.address())
+
+    if(this.wsServer && this.apiServer){
+      debug('starting websocket')
+      this.wsServer.start(this.apiServer)
+    }
   }
 
   async stop(){
