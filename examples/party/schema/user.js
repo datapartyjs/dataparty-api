@@ -14,7 +14,7 @@ class User extends ISchema {
       photo: { type: String, maxlength: 500, description: 'user photo url' },
       created: Utils.created,
       enabled: Boolean,
-      profile: Utils.profile,
+      profile: Object,
       tutorial: {
         done: Boolean
       }
