@@ -1,5 +1,5 @@
 const {URL} = require('url')
-const debug = require('debug')('dataparty.service-host-websocket')
+const debug = require('debug')('dataparty.service.host-websocket')
 
 const ws = require('ws')
 const WebSocketServer = ws.WebSocketServer
@@ -62,13 +62,24 @@ class ServiceHostWebsocket{
   }
 
   getConnectionIp(req){
+    let ip = null
     if(this.trust_proxy){
-      const ip = req.headers['x-forwarded-for'].split(',')[0].trim();
 
-      return ip
+      if(!req.headers['x-forwarded-for']){
+        debug('getConnectionIp - WARN - connection without x-forwarded-for', req.socket.remoteAddress)
+      }
+      else{
+        debug('getConnectionIp - xfwd', req.headers['x-forwarded-for'])
+        ip = req.headers['x-forwarded-for'].split(',')[0].trim();
+      }
     }
 
-    return req.socket.remoteAddress
+    if(!ip){
+      return req.socket.remoteAddress
+    }
+
+    return ip
+
   }
 
   handleConnection(conn, req){
@@ -80,13 +91,17 @@ class ServiceHostWebsocket{
     conn.on('pong', ()=>{
       conn.isAlive = true
     })
+
+    conn.on('close',()=>{
+      debug('connection closed', conn.ip)
+    })
   }
 
   checkClients(){
-    debug('checkClients')
+    debug('checkClients', this.ws.clients.size)
     this.ws.clients.forEach( (conn)=>{
       if (conn.isAlive === false){
-        debug('\t','terminating client')
+        debug('\t','terminating client', conn.ip)
         return conn.terminate()
       }
   

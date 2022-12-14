@@ -41,7 +41,7 @@ async function main(){
 
   debug('built', Object.keys(build))
 
-  const runner = new Dataparty.ServiceRunner({
+  const runner = new Dataparty.ServiceRunnerNode({
     party, service,
     sendFullErrors: true
   })

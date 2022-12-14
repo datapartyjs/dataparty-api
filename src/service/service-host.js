@@ -7,7 +7,7 @@ const morgan = require('morgan')
 const express = require('express')
 const bodyParser = require('body-parser')
 const expressListRoutes = require('express-list-routes')
-const debug = require('debug')('dataparty.service-host')
+const debug = require('debug')('dataparty.service.host')
 
 const ServiceHostWebsocket = require('./service-host-websocket')
 

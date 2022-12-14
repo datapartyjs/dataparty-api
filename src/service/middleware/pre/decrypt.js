@@ -27,7 +27,7 @@ module.exports = class Decrypt extends IMiddleware {
     
   }
 
-  static async run(context){
+  static async run(context, {Config}){
 
     if (!Config){ return }
 

@@ -3,16 +3,13 @@ const Joi = require('@hapi/joi')
 const Hoek = require('@hapi/hoek')
 const {VM, VMScript} = require('vm2')
 const Debug = require('debug')
-const debug = Debug('dataparty.service.runner')
-const MiddlewareRunner = require('./middleware-runner')
+const debug = Debug('dataparty.service.runner-node')
 const EndpointContext = require('./endpoint-context')
-const EndpointRunner = require('./endpoint-runner')
-
 const DeltaTime = require('../utils/delta-time')
 
 const Router = require('origin-router').Router
 
-class ServiceRunner {
+class ServiceRunnerNode {
   constructor({service, party, sendFullErrors=false}){
     this.party = party
     this.service = service
@@ -51,12 +48,11 @@ class ServiceRunner {
 
     let dt = new DeltaTime().start()
     const build = Hoek.reach(this.service, `compiled.endpoints.${name}`)
-    let endpoint = new EndpointRunner(build.code, build.map)
 
-    debug('getting info')
-    await endpoint.getInfo()
+    "use strict"
+    let endpoint = eval(build.code/*, build.map*/)
 
-    debug('got info')
+    debug('endpoint info', endpoint.info)
 
     await this.checkEndpointConfig(endpoint)
 
@@ -101,17 +97,27 @@ class ServiceRunner {
       throw new Error(`middleware ${type} [${name}] does not exist`)
     }
 
-    let runner = new MiddlewareRunner(build.code, build.map)
+    let ret = async ()=>{
+      "use strict"
+      let middle = eval(build.code/*, build.map/*/)
 
-    await runner.getInfo()
-    await runner.start(this.party)
+      debug('middleware info', middle.info)
 
-    this.middleware[type][name] = runner
+      //await runner.getInfo()
+      //await runner.start(this.party)
+      await middle.start(this.party)
 
-    dt.end()
-    debug('loaded',type,'middleware',name,'in',dt.deltaMs,'ms')
+      this.middleware[type][name] = middle
 
-    return runner
+      dt.end()
+      debug('loaded',type,'middleware',name,'in',dt.deltaMs,'ms')
+
+      return middle
+    }
+
+    return await ret()
+
+    
   }
 
   async checkEndpointConfig(endpoint){
@@ -224,7 +230,7 @@ class ServiceRunner {
       const middleware = Hoek.reach(this.middleware, `${type}.${name}`)
 
       const dt = new DeltaTime().start()
-      await middleware.run(ctx, {Config: info})
+      await middleware.run(ctx, {Config:info})
       dt.end()
 
       debug('runMiddleware(',type,name,') in', dt.deltaMs, 'ms')
@@ -232,4 +238,4 @@ class ServiceRunner {
   }
 }
 
-module.exports = ServiceRunner
+module.exports = ServiceRunnerNode

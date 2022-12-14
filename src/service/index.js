@@ -7,6 +7,7 @@ module.exports = {
   IMiddleware: require('./imiddleware'),
   ServiceHost: require('./service-host'),
   ServiceRunner: require('./service-runner'),
+  ServiceRunnerNode: require('./service-runner-node'),
   EndpointRunner: require('./endpoint-runner'),
   EndpointContext: require('./endpoint-context'),
   MiddlewareRunner: require('./middleware-runner'),

@@ -2,10 +2,8 @@
 
 const debug = require('debug')('dataparty.peer-party')
 
-//const WRTC = require('wrtc')
 const Qb = require('../qb')
 const IParty = require('../iparty')
-//const RTCSocketComms = require('../../comms/rtc-socket-comms')
 
 /**
  * @class 
@@ -32,10 +30,6 @@ class PeerParty extends IParty {
     if(this.comms.host){
       this.hostParty = hostParty
     }
-  }
-
-  static get WRTC(){
-    return WRTC
   }
 
   async start(){

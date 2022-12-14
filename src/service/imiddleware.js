@@ -23,7 +23,16 @@ module.exports = class IMiddleware {
 
   }
 
-  static async run(context){
+  static async run(context, {Config}){
     throw new Error('not implemented')
+  }
+
+  static get info(){
+    return {
+      Name: this.Name,
+      Type: this.Type,
+      Description: this.Description,
+      ConfigSchema: this.ConfigSchema
+    }
   }
 }
