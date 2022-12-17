@@ -6,6 +6,9 @@ const WebSocketServer = ws.WebSocketServer
 
 const WATCHDOG_INTERVAL = 30000
 
+const Comms = require('../comms')
+const PeerParty = require('../party/peer/peer-party')
+
 class ServiceHostWebsocket{
 
   constructor({trust_proxy, port, path, runner, wsSettings}){
@@ -44,7 +47,7 @@ class ServiceHostWebsocket{
 
   handleUpgrade(request, socket, head){
 
-    debug('handleUpgrade', request.url)
+    debug('handleUpgrade', request.headers.host, request.url)
 
     if(request.url == this.path){
       this.doUpgrade(request, socket, head)
@@ -56,7 +59,6 @@ class ServiceHostWebsocket{
   doUpgrade(request, socket, head){
     debug('doUpgrade')
     this.ws.handleUpgrade(request, socket, head, (conn)=>{
-      debug('head', head)
       this.ws.emit('connection', conn, request)
     })
   }
@@ -82,10 +84,10 @@ class ServiceHostWebsocket{
 
   }
 
-  handleConnection(conn, req){
+  async handleConnection(conn, req){
    conn.ip = this.getConnectionIp(req)
     
-    debug('handleConnection - ', conn.ip)
+    debug('handleConnection - ', conn.ip, '\t>\t' , req.headers.host, req.url)
 
     conn.isAlive = true
     conn.on('pong', ()=>{
@@ -95,6 +97,23 @@ class ServiceHostWebsocket{
     conn.on('close',()=>{
       debug('connection closed', conn.ip)
     })
+
+    debug('creating peer party')
+
+    let peer = new PeerParty({
+      hostParty: this.runner.party,
+      mode: this.runner.party.model,
+      config: this.runner.party.config,
+      comms: new Comms.WebsocketComms({
+        host: true,
+        connection: conn,
+        discoverRemoteIdentity: true
+      })
+    })
+
+    await peer.start()
+    debug('peer created')
+
   }
 
   checkClients(){

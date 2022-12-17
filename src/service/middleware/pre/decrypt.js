@@ -31,11 +31,15 @@ module.exports = class Decrypt extends IMiddleware {
 
     if (!Config){ return }
 
-    context.debug('input', context.input)
+    if(!context.input || !context.input.enc){
+      throw new Error('insecure message')
+    }
+
+    context.debug('input', context.input, typeof context.input)
   
 
     const msg = new Message(context.input)
-    context.debug('privateIdentity', context.party.privateIdentity)
+    context.debug('privateIdentity', context.party.privateIdentity.id)
 
     const publicKeys = Routines.extractPublicKeys(msg.enc)
 

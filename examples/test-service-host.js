@@ -25,15 +25,18 @@ class ExampleService extends Dataparty.IService {
 
 async function main(){
 
-  const uri = 'mongodb://localhost:27017/server-party-test'
-  debug('db location', uri)
+  //const uri = 'mongodb://localhost:27017/server-party-test'
+  //debug('db location', uri)
 
-  let party = new Dataparty.MongoParty({
-    uri,
+  const path = '/data/datparty/srv-party'
+
+  let party = new Dataparty.TingoParty({
+    path,
     model: BouncerClientModels,
     serverModels: BouncerServerModels,
     config: new Dataparty.Config.MemoryConfig()
   })
+
 
   const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
 

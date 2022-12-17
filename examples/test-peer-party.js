@@ -18,7 +18,8 @@ async function main(){
     comms: new Dataparty.Comms.RTCSocketComms({
       host: true,
       wrtc: WRTC,
-      trickle: true
+      trickle: true,
+      discoverRemoteIdentity: true
     }),
     hostParty: hostLocal,
     model: BouncerModel,
@@ -29,7 +30,8 @@ async function main(){
   let peer2 = new Dataparty.PeerParty({
     comms: new Dataparty.Comms.RTCSocketComms({
       wrtc: WRTC,
-      trickle: true
+      trickle: true,
+      session: 'foobar'
     }),
     model: BouncerModel,
     config: new Dataparty.Config.MemoryConfig()
@@ -40,7 +42,7 @@ async function main(){
   await peer1.loadIdentity()
   await peer2.loadIdentity()
 
-  peer1.comms.remoteIdentity = peer2.identity
+  //peer1.comms.remoteIdentity = peer2.identity
   peer2.comms.remoteIdentity = peer1.identity
 
   await peer1.start()

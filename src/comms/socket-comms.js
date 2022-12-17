@@ -10,11 +10,12 @@ const RosShim = require('./ros-shim')
 
 
 class SocketComms extends EventEmitter {
-    constructor({session, uri, party, remoteIdentity}){
+    constructor({session, uri, party, remoteIdentity, discoverRemoteIdentity}){
         super()
         this.uri = uri
         this.session = session
         this.remoteIdentity = remoteIdentity
+        this.discoverRemoteIdentity = discoverRemoteIdentity
 
         this.party = party //used for access to primary identity
 
@@ -84,10 +85,20 @@ class SocketComms extends EventEmitter {
       
               return resolve(msg.decrypt(this.party._identity).then(content=>{
                 const senderPub = Routines.extractPublicKeys(msg.enc)
+                debug('sender', sender, '\tdiscover', this.discoverRemoteIdentity)
+                if(this.discoverRemoteIdentity && !sender){
+                    debug('discovered remote identity', senderPub)
+                    this.remoteIdentity = {
+                        key: {
+                            public: senderPub
+                        }
+                    }
+                    sender = this.remoteIdentity
+                }
                 debug(`senderPub - ${senderPub}`)
       
                 if(senderPub.box != sender.key.public.box || senderPub.sign != sender.key.public.sign){
-                  return Promise.reject('TRUST - reply is not from service')
+                  return Promise.reject('TRUST - reply is not from expected remote')
                 }
 
                 debug('decrypted data')
