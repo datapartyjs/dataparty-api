@@ -4,7 +4,7 @@ const debug = require('debug')('dataparty.comms.rest')
 
 const dataparty_crypto = require('@dataparty/crypto')
 
-const WebsocketComms = require('./old-websocket-comms')
+//const WebsocketComms = require('./old-websocket-comms')
 const AuthError = require('../errors/auth-error')
 
 
@@ -325,6 +325,7 @@ class RestComms extends EventEmitter {
     }
   }
 
+  /*
   async websocket(reuse = true) {
     if (reuse && this.websocketComm && this.websocketComm.connected) {
       return this.websocketComm
@@ -349,7 +350,7 @@ class RestComms extends EventEmitter {
 
       return comm.authorized()
     })
-  }
+  }*/
 
   static async HttpRequest(verb, url, data) {
 
