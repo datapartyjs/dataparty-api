@@ -35,7 +35,7 @@ async function main(){
     path,
     model: BouncerClientModels,
     serverModels: BouncerServerModels,
-    config: new Dataparty.Config.MemoryConfig()
+    config: new Dataparty.Config.JsonFileConfig({basePath: '/data/datparty/'})
   })
 
   const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
