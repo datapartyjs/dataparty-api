@@ -132,8 +132,8 @@ class RestComms extends EventEmitter {
 
     let reply
     try {
-      const str = await RestComms.HttpPost(fullPath, content)
-      reply = JSON.parse(str)
+      reply = await RestComms.HttpPost(fullPath, content)
+      //reply = JSON.parse(str)
 
       // debug('raw reply ->', reply)
     } catch (error) {
@@ -203,7 +203,7 @@ class RestComms extends EventEmitter {
       const serverIdentity = await RestComms.HttpGet(this.uri + `${this.uriPrefix}identity`)
       debug('server identity - ', serverIdentity)
 
-      this.remoteIdentity = dataparty_crypto.Identity.fromString(serverIdentity)
+      this.remoteIdentity = new dataparty_crypto.Identity(serverIdentity)
     }
 
     return this.remoteIdentity
