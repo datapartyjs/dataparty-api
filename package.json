@@ -1,7 +1,7 @@
 {
   "name": "@dataparty/api",
   "private": false,
-  "version": "1.2.14",
+  "version": "1.2.15",
   "main": "dist/dataparty.js",
   "frontend": "dist/dataparty-browser.js",
   "backend": "dist/dataparty.js",
@@ -17,8 +17,7 @@
       "context": "browser",
       "source": "src/index-browser.js",
       "optimize": false,
-      "includeNodeModules": true,
-      "scopeHoist": false,
+      "outputFormat": "global",
       "engines": {
         "browsers": "Chrome 80"
       }

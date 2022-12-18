@@ -18,3 +18,4 @@ let lib = {
 
 
 module.exports = lib
+window.Dataparty = lib
