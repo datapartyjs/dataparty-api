@@ -41,9 +41,10 @@ class ServiceHost {
 
     if(debug.enabled){ this.apiApp.use(morgan('combined')) }
 
+    this.apiApp.use(multer().array())
     this.apiApp.use(bodyParser.urlencoded({ extended: true }))
     this.apiApp.use(bodyParser.json())
-    this.apiApp.use(multer().none())
+    this.apiApp.use(bodyParser.raw())
 
     this.apiApp.set('trust proxy', trust_proxy)
 
