@@ -5,7 +5,6 @@ const http = require('http')
 const https = require('https')
 const morgan = require('morgan')
 const express = require('express')
-const multer  = require('multer')
 const bodyParser = require('body-parser')
 const expressListRoutes = require('express-list-routes')
 const debug = require('debug')('dataparty.service.host')
@@ -41,7 +40,6 @@ class ServiceHost {
 
     if(debug.enabled){ this.apiApp.use(morgan('combined')) }
 
-    this.apiApp.use(multer().array())
     this.apiApp.use(bodyParser.urlencoded({ extended: true }))
     this.apiApp.use(bodyParser.json())
     this.apiApp.use(bodyParser.raw())
