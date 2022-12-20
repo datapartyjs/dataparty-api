@@ -43,7 +43,7 @@ class ServiceHost {
 
     this.apiApp.use(bodyParser.urlencoded({ extended: true }))
     this.apiApp.use(bodyParser.json())
-    this.apiApp.use(multer())
+    this.apiApp.use(multer().none())
 
     this.apiApp.set('trust proxy', trust_proxy)
 
