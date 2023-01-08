@@ -7,12 +7,12 @@ const SocketComms = require('./socket-comms')
 const AUTH_TIMEOUT_MS = 3000
 
 class PeerComms extends SocketComms {
-  constructor({remoteIdentity, host, party, socket}){
-    super({remoteIdentity, party})
+  constructor({remoteIdentity, discoverRemoteIdentity, host, party, socket, ...options}){
+    super({remoteIdentity, discoverRemoteIdentity, party, ...options})
 
     this.socket = socket || null
 
-    this.host = host
+    this.host = host   //! Is comms host
     this.party = party
     this.oncall = null
 
@@ -114,10 +114,12 @@ class PeerComms extends SocketComms {
     this.socket.on('close', this.onclose.bind(this))
 
     if(this.host){
+      debug('host mode comms')
       this.socket.on('connect', this.handleClientConnection.bind(this))
       this.socket.on('data', this.handleClientCall.bind(this))
     }
     else{
+      debug('client mode comms')
       this.socket.on('connect', this.onopen.bind(this))
       this.socket.on('data', this.handleMessage.bind(this))
     }
@@ -132,7 +134,7 @@ class PeerComms extends SocketComms {
   }
 
   close(){
-    debug('Client closing connection')
+    debug('closing connection')
     this.socket.destroy()
 }
 

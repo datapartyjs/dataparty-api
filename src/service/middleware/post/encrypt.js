@@ -27,7 +27,7 @@ module.exports = class Encrypt extends IMiddleware {
     
   }
 
-  static async run(ctx){
+  static async run(ctx, {Config}){
 
     if (!Config){ return }
   

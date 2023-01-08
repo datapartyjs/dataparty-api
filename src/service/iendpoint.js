@@ -19,7 +19,15 @@ module.exports = class IEndpoint {
     
   }
 
-  static async run(context){
+  static async run(context, {Package}){
     throw new Error('not implemented')
+  }
+
+  static get info(){
+    return {
+      Name: this.Name,
+      Description: this.Description,
+      MiddlewareConfig: this.MiddlewareConfig
+    }
   }
 }

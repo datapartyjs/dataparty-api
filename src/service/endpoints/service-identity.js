@@ -38,7 +38,7 @@ module.exports = class ServiceIdentity extends IEndpoint {
     }
   }
 
-  static async run(ctx, static_ctx){
+  static async run(ctx, {Package}){
 
   
     const identity = ctx.party.identity

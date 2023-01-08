@@ -4,7 +4,7 @@ const debug = require('debug')('dataparty.comms.rest')
 
 const dataparty_crypto = require('@dataparty/crypto')
 
-const WebsocketComms = require('./websocket-comms')
+//const WebsocketComms = require('./old-websocket-comms')
 const AuthError = require('../errors/auth-error')
 
 
@@ -132,8 +132,8 @@ class RestComms extends EventEmitter {
 
     let reply
     try {
-      const str = await RestComms.HttpPost(fullPath, content)
-      reply = JSON.parse(str)
+      reply = await RestComms.HttpPost(fullPath, content)
+      //reply = JSON.parse(str)
 
       // debug('raw reply ->', reply)
     } catch (error) {
@@ -203,7 +203,7 @@ class RestComms extends EventEmitter {
       const serverIdentity = await RestComms.HttpGet(this.uri + `${this.uriPrefix}identity`)
       debug('server identity - ', serverIdentity)
 
-      this.remoteIdentity = dataparty_crypto.Identity.fromString(serverIdentity)
+      this.remoteIdentity = new dataparty_crypto.Identity(serverIdentity)
     }
 
     return this.remoteIdentity
@@ -325,6 +325,7 @@ class RestComms extends EventEmitter {
     }
   }
 
+  /*
   async websocket(reuse = true) {
     if (reuse && this.websocketComm && this.websocketComm.connected) {
       return this.websocketComm
@@ -349,7 +350,7 @@ class RestComms extends EventEmitter {
 
       return comm.authorized()
     })
-  }
+  }*/
 
   static async HttpRequest(verb, url, data) {
 

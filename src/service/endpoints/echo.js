@@ -29,7 +29,7 @@ module.exports = class EchoEndpoint extends IEndpoint {
     }
   }
 
-  static async run(ctx){
+  static async run(ctx, {Package}){
 
     ctx.debug('hello')
     debug('echo')

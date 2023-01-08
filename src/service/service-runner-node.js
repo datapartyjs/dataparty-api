@@ -3,20 +3,18 @@ const Joi = require('@hapi/joi')
 const Hoek = require('@hapi/hoek')
 const {VM, VMScript} = require('vm2')
 const Debug = require('debug')
-const debug = Debug('dataparty.service.runner')
-const MiddlewareRunner = require('./middleware-runner')
+const debug = Debug('dataparty.service.runner-node')
 const EndpointContext = require('./endpoint-context')
-const EndpointRunner = require('./endpoint-runner')
-
 const DeltaTime = require('../utils/delta-time')
 
 const Router = require('origin-router').Router
 
-class ServiceRunner {
-  constructor({service, party, sendFullErrors=false}){
+class ServiceRunnerNode {
+  constructor({service, party, sendFullErrors=false, useNative=true}){
     this.party = party
     this.service = service
     this.sendFullErrors = sendFullErrors
+    this.useNative = useNative
 
     this.middleware = { pre: {}, post: {} }
     this.endpoint = {}
@@ -50,13 +48,21 @@ class ServiceRunner {
     debug('loadEndpoint', name)
 
     let dt = new DeltaTime().start()
-    const build = Hoek.reach(this.service, `compiled.endpoints.${name}`)
-    let endpoint = new EndpointRunner(build.code, build.map)
+    
 
-    debug('getting info')
-    await endpoint.getInfo()
+    "use strict"
+    let endpoint=null
 
-    debug('got info')
+    if(!this.useNative){
+      const build = Hoek.reach(this.service, `compiled.endpoints.${name}`)
+      endpoint = eval(build.code/*, build.map*/)
+    }
+    else{
+      endpoint = this.service.constructors.endpoints[name]
+    }
+
+
+    debug('endpoint info', endpoint.info)
 
     await this.checkEndpointConfig(endpoint)
 
@@ -87,7 +93,7 @@ class ServiceRunner {
 
   async loadMiddleware(name, type='pre'){ 
     if(this.middleware[type][name]){
-      debug('cached',type,'middleware',name)
+      //debug('cached',type,'middleware',name)
       return this.middleware[type][name]
     }
 
@@ -96,22 +102,45 @@ class ServiceRunner {
     let dt = new DeltaTime().start()
     const build = Hoek.reach(this.service, `compiled.middleware.${type}.${name}`)
 
-    if(!build || !build.code){
-      debug(`middleware ${type} [${name}] does not exist`)
-      throw new Error(`middleware ${type} [${name}] does not exist`)
+    if(this.useNative && !this.service.constructors.middleware[type][name]){
+      debug(`native middleware ${type} [${name}] does not exist`)
+      throw new Error(`native middleware ${type} [${name}] does not exist`)
     }
 
-    let runner = new MiddlewareRunner(build.code, build.map)
+    if(!this.useNative && (!build || !build.code) ){
+      debug(`compiled middleware ${type} [${name}] does not exist`)
+      throw new Error(`compiled middleware ${type} [${name}] does not exist`)
+    }
 
-    await runner.getInfo()
-    await runner.start(this.party)
+    let ret = async ()=>{
 
-    this.middleware[type][name] = runner
+      "use strict"
+      let middle=null
+  
+      if(!this.useNative){
+        middle = eval(build.code/*, build.map*/)
+      }
+      else{
+        middle = this.service.constructors.middleware[type][name]
+      }
 
-    dt.end()
-    debug('loaded',type,'middleware',name,'in',dt.deltaMs,'ms')
+      //debug('middleware info', middle.info)
 
-    return runner
+      //await runner.getInfo()
+      //await runner.start(this.party)
+      await middle.start(this.party)
+
+      this.middleware[type][name] = middle
+
+      dt.end()
+      debug('loaded',type,'middleware',name,'in',dt.deltaMs,'ms')
+
+      return middle
+    }
+
+    return await ret()
+
+    
   }
 
   async checkEndpointConfig(endpoint){
@@ -133,7 +162,7 @@ class ServiceRunner {
   async onRequest(req, res){
     debug('onRequest')
 
-    debug('req', req.method, req.url, req.body)
+    debug('req', req.method, req.hostname, req.url, req.ips, req.body)
 
 
 
@@ -167,16 +196,21 @@ class ServiceRunner {
       debug('running', endpoint.info.Name)
 
       const middlewareCfg = Hoek.reach(endpoint, 'info.MiddlewareConfig')
+      let phase = 'pre-middleware'
       
       try{
 
         await this.runMiddleware(middlewareCfg, context, 'pre')
     
+        phase = 'endpoint'
         const result = await endpoint.run(context, {Package: this.service.compiled.package})
 
+        phase = 'output'
         context.setOutput(result)
 
+        phase = 'post-middleware'
         await this.runMiddleware(middlewareCfg, context, 'post')
+        phase = 'send'
 
         context.dt.end()
 
@@ -188,7 +222,13 @@ class ServiceRunner {
 
       }
       catch(err){
-        debug('caught error', err)
+
+        if(this.sendFullErrors){
+          debug('caught error', err)
+        }
+        else{
+          debug('caught error (', err.message, ')')
+        }
 
         context.dt.end()
 
@@ -198,6 +238,7 @@ class ServiceRunner {
           error: {
             code: err.code,
             message: err.message,
+            phase,
             stack: (!context.sendFullErrors ? undefined : err.stack),
             ... (!context.sendFullErrors ? null : err)
           }
@@ -224,7 +265,7 @@ class ServiceRunner {
       const middleware = Hoek.reach(this.middleware, `${type}.${name}`)
 
       const dt = new DeltaTime().start()
-      await middleware.run(ctx, {Config: info})
+      await middleware.run(ctx, {Config:info})
       dt.end()
 
       debug('runMiddleware(',type,name,') in', dt.deltaMs, 'ms')
@@ -232,4 +273,4 @@ class ServiceRunner {
   }
 }
 
-module.exports = ServiceRunner
+module.exports = ServiceRunnerNode

@@ -3,11 +3,10 @@ const debug = require('debug')('dataparty.comms.rtcsocketcomms')
 const SimplePeer = require('simple-peer')
 const PeerComms = require('./peer-comms')
 
-const AUTH_TIMEOUT_MS = 3000
 
 class RTCSocketComms extends PeerComms {
-  constructor({remoteIdentity, host, party, wrtc, trickle = false}){
-    super({remoteIdentity, host, party})
+  constructor({remoteIdentity, host, party, wrtc, trickle = false, ...options}){
+    super({remoteIdentity, host, party, ...options})
 
     this.rtcSettings = {
       wrtc,

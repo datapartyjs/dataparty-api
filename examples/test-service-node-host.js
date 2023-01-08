@@ -25,6 +25,7 @@ class ExampleService extends Dataparty.IService {
 
 async function main(){
 
+  
   //const uri = 'mongodb://localhost:27017/server-party-test'
   //debug('db location', uri)
 
@@ -34,9 +35,8 @@ async function main(){
     path,
     model: BouncerClientModels,
     serverModels: BouncerServerModels,
-    config: new Dataparty.Config.MemoryConfig()
+    config: new Dataparty.Config.JsonFileConfig({basePath: '/data/datparty/'})
   })
-
 
   const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
 
@@ -44,9 +44,9 @@ async function main(){
 
   debug('built', Object.keys(build))
 
-  const runner = new Dataparty.ServiceRunner({
+  const runner = new Dataparty.ServiceRunnerNode({
     party, service,
-    sendFullErrors: true
+    sendFullErrors: false
   })
   
   const host = new Dataparty.ServiceHost({

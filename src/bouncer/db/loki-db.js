@@ -24,6 +24,10 @@ module.exports = class LokiDb extends IDb {
     this.error = null
   }
 
+  static get LokiLocalStorageAdapter(){
+    return Loki.LokiLocalStorageAdapter
+  }
+
 
   async start(){
 

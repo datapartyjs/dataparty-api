@@ -33,7 +33,7 @@ module.exports = class ServiceVersion extends IEndpoint {
     }
   }
 
-  static async run(ctx, static_ctx){
+  static async run(ctx, {Package}){
 
     return {
       ...Package

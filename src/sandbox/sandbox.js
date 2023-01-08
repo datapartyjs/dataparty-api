@@ -40,7 +40,7 @@ class Sandbox {
       })
 
       let fn = vm.run(this.script)
-      const retVal = await fn(context)
+      const retVal = await fn(context, sandbox)
       return retVal
 
     } catch(err) {
