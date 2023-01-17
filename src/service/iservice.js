@@ -21,7 +21,8 @@ module.exports = class IService {
       middleware: {
         pre: {},
         post: {}
-      }
+      },
+      tasks: {}
     }
 
     this.middleware_order = {
@@ -36,7 +37,8 @@ module.exports = class IService {
       middleware: {
         pre: {},
         post: {}
-      }
+      },
+      tasks: {}
     }
 
     this.compiled = {
@@ -55,7 +57,27 @@ module.exports = class IService {
       middleware_order: {
         pre: [],
         post: []
-      }
+      },
+      tasks: {}
+    }
+
+    this.compileSettings = {
+      // provide a custom cache path or disable caching
+      cache: false,
+      // externals to leave as requires of the build
+      externals: ['debug', '@dataparty/crypto', '@dataparty/tasker', '@hapi/joi', '@hapi/hoek'],
+      // directory outside of which never to emit assets
+      //filterAssetBase: process.cwd(), // default
+      minify: false, // default
+      sourceMap: true, // default
+      //sourceMapBasePrefix: '../', // default treats sources as output-relative
+      // when outputting a sourcemap, automatically include
+      // source-map-support in the output file (increases output by 32kB).
+      sourceMapRegister: false, // default
+      watch: false, // default
+      v8cache: false, // default
+      quiet: false, // default
+      debugLog: false // default
     }
    }
 
@@ -112,6 +134,18 @@ module.exports = class IService {
     this.constructors.middleware[type][name] = middleware
   }
 
+  addTask(task_path){
+
+    debug('addTask', task_path)
+
+    const TaskClass = require(task_path)
+
+    const name = TaskClass.Name
+
+    this.sources.tasks[name] = task_path
+    this.constructors.tasks[name] = TaskClass
+  }
+
 
   async compile(outputPath, writeFile=true){
 
@@ -131,10 +165,13 @@ module.exports = class IService {
       this.compileMiddleware('post'),
       this.compileList('documents'),
       this.compileList('endpoints'),
+      this.compileList('tasks'),
       this.compileSchemas()
     ])
 
     this.compiled.middleware_order = this.middleware_order
+
+    this.compiled.compileSettings = this.compileSettings
 
     if(writeFile){
       const buildOutput = outputPath+'/'+ this.compiled.package.name.replace('/', '-') +'.dataparty-service.json'
@@ -179,24 +216,7 @@ module.exports = class IService {
   }
 
   async compileFileTo(input, output){
-    const { code, map, assets } = await NCC(input, {
-      // provide a custom cache path or disable caching
-      cache: false,
-      // externals to leave as requires of the build
-      externals: ['debug', '@dataparty/crypto', '@hapi/joi', '@hapi/hoek'],
-      // directory outside of which never to emit assets
-      //filterAssetBase: process.cwd(), // default
-      minify: true, // default
-      sourceMap: true, // default
-      //sourceMapBasePrefix: '../', // default treats sources as output-relative
-      // when outputting a sourcemap, automatically include
-      // source-map-support in the output file (increases output by 32kB).
-      sourceMapRegister: false, // default
-      watch: false, // default
-      v8cache: false, // default
-      quiet: false, // default
-      debugLog: false // default
-    })
+    const { code, map, assets } = await NCC(input, this.compileSettings)
 
     debug('compileFileTo', input, '->', output)
     debug('\t','code length', Math.round(code.length/1024), 'KB')

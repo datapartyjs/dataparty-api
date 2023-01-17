@@ -59,6 +59,7 @@
   "dependencies": {
     "@dataparty/bouncer-db": "1.0.1",
     "@dataparty/crypto": "datapartyjs/dataparty-crypto#parcel-build",
+    "@dataparty/tasker": "^0.0.2",
     "@hapi/joi": "^17.1.1",
     "@zeit/ncc": "^0.22.3",
     "ajv": "6.9.1",
