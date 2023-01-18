@@ -4,6 +4,10 @@ const tasker = require('@dataparty/tasker')
 
 module.exports = class ITask extends tasker.Task {
 
+  constructor(options){
+    super(options)
+  }
+
   static get Name(){
     throw new Error('not implemented')
   }
@@ -12,10 +16,23 @@ module.exports = class ITask extends tasker.Task {
     throw new Error('not implemented')
   }
 
+  static get Config(){
+    throw new Error('not implemented')
+
+    /**
+     * 
+     * return {
+     *  background: true
+     *  autostart: true
+     * }
+     */
+  }
+
   static get info(){
     return {
       Name: this.Name,
-      Description: this.Description
+      Description: this.Description,
+      Config: this.Config
     }
   }
 }

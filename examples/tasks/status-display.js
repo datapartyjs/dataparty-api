@@ -6,8 +6,8 @@ class StatusDisplayTask extends ITask {
 
   constructor(options){
     super({
-      name: StatusDisplayTask.Name,
-      background: true,
+      name: StatusDisplayTask.name,
+      background: StatusDisplayTask.Config.background,
       ...options
     })
 
@@ -15,6 +15,13 @@ class StatusDisplayTask extends ITask {
 
     this.duration = 5000
     this.timeout = null
+  }
+
+  static get Config(){
+    return {
+      background: true,
+      autostart: true
+    }
   }
  
   async exec(){

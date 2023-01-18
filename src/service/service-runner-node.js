@@ -8,7 +8,6 @@ const EndpointContext = require('./endpoint-context')
 const DeltaTime = require('../utils/delta-time')
 
 const Router = require('origin-router').Router
-
 const Runner = require('@dataparty/tasker').Runner
 
 class ServiceRunnerNode {
@@ -97,9 +96,19 @@ class ServiceRunnerNode {
 
     this.tasks[name] = task
 
-    this.taskRunner.addTask(task)
+    if(TaskClass.Config.autostart){
+      this.taskRunner.addTask(task)
+    }
+
+
     dt.end()
     debug('loaded task',name,'in',dt.deltaMs,'ms')
+  }
+
+  runTask(name){
+    const task = this.tasks[name]
+
+    this.taskRunner.addTask(task)
   }
 
   async loadEndpoint(name){
