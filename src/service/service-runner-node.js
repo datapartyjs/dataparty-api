@@ -8,6 +8,7 @@ const EndpointContext = require('./endpoint-context')
 const DeltaTime = require('../utils/delta-time')
 
 const Router = require('origin-router').Router
+const Runner = require('@dataparty/tasker').Runner
 
 class ServiceRunnerNode {
   constructor({service, party, sendFullErrors=false, useNative=true}){
@@ -18,11 +19,31 @@ class ServiceRunnerNode {
 
     this.middleware = { pre: {}, post: {} }
     this.endpoint = {}
+    this.tasks = {}
 
     this.router = new Router()
+    this.taskRunner = new Runner()
   }
 
   async start(){
+
+    debug('starting tasks')
+
+    const taskMap = Hoek.reach(this.service, 'compiled.tasks')
+    //const endpointsLoading = []
+    for(let name in taskMap){
+      debug('\t',name)
+      await this.loadTask(name)
+    }
+
+    debug('tasks ready:')
+    for(let name in this.tasks){
+      debug('\t', name)
+    }
+
+    await this.taskRunner.start()
+
+
     debug('starting endpoints')
 
     const eps = Hoek.reach(this.service, 'compiled.endpoints')
@@ -38,6 +59,56 @@ class ServiceRunnerNode {
     for(let name in this.endpoint){
       debug('\t', Path.join('/', name))
     }
+  }
+
+  async loadTask(name){
+    if(this.tasks[name]){
+      return
+    }
+
+    debug('loadTask', name)
+
+    let dt = new DeltaTime().start()
+    
+
+    "use strict"
+    let task=null
+
+    let TaskClass = null
+
+    if(!this.useNative){
+      const build = Hoek.reach(this.service, `compiled.tasks.${name}`)
+      TaskClass = eval(build.code/*, build.map*/)
+    }
+    else{
+      TaskClass = this.service.constructors.tasks[name]
+    }
+
+    task = new TaskClass({
+      context:{
+        party: this.party,
+        serviceRunner: this
+      }
+    })
+
+
+    debug('task info', TaskClass.info)
+
+    this.tasks[name] = task
+
+    if(TaskClass.Config.autostart){
+      this.taskRunner.addTask(task)
+    }
+
+
+    dt.end()
+    debug('loaded task',name,'in',dt.deltaMs,'ms')
+  }
+
+  runTask(name){
+    const task = this.tasks[name]
+
+    this.taskRunner.addTask(task)
   }
 
   async loadEndpoint(name){
