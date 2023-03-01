@@ -24,7 +24,9 @@ const AUTH_OP = Joi.object().keys({
 
 const CALL_OP = Joi.object().keys({
   id: ID_SCHEME.required(),
-  op: Joi.string().valid('call').required()
+  op: Joi.string().valid('call').required(),
+  endpoint: Joi.string(),
+  body: Joi.string()
 })
 
 const ADVERTISE_OP = Joi.object().keys({
