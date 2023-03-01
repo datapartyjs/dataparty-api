@@ -1,5 +1,5 @@
 const Hoek = require('@hapi/hoek')
-const debug = require('debug')('roshub.op')
+const debug = require('debug')('dataparty.op.host-op')
 const moment = require('moment')
 const EventEmitter = require('eventemitter3')
 
