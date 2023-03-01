@@ -7,6 +7,7 @@ const OP_HEADER = Joi.object().keys({
   id: ID_SCHEME.required(),
   op: Joi.string().valid([
     'auth',
+    'call',
     'advertise',
     'subscribe',
     'unsubscribe',
@@ -19,6 +20,11 @@ const AUTH_OP = Joi.object().keys({
   id: ID_SCHEME.required(),
   op: Joi.string().valid('auth').required(),
   session: Joi.objectId().required()
+})
+
+const CALL_OP = Joi.object().keys({
+  id: ID_SCHEME.required(),
+  op: Joi.string().valid('call').required()
 })
 
 const ADVERTISE_OP = Joi.object().keys({
