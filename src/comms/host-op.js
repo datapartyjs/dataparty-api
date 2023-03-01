@@ -1,4 +1,4 @@
-const Hoek = require('@hapi/hoek')
+const reach = require('../utils/reach')
 const debug = require('debug')('dataparty.op.host-op')
 const moment = require('moment')
 const EventEmitter = require('eventemitter3')
@@ -37,11 +37,11 @@ class Op extends EventEmitter {
   }
 
   get op(){
-    return Hoek.reach(this.input, 'op')
+    return reach(this.input, 'op')
   }
 
   get id(){
-    return Hoek.reach(this.input, 'id')
+    return reach(this.input, 'id')
   }
 
 
