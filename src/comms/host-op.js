@@ -92,10 +92,6 @@ class Op extends EventEmitter {
     this.level = level
   }
 
-  setStatus(level, message){
-    this.emit('status', )
-  }
-
 }
 
 module.exports = Op
