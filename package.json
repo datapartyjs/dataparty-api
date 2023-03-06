@@ -130,7 +130,7 @@
     "tmp": "^0.2.1",
     "url": "^0.11.0",
     "util": "^0.12.4",
-    "wrtc": "^0.4.7"
+    "wrtc": "npm:@koush/wrtc@^0.5.3"
   },
   "repository": {
     "type": "git",
