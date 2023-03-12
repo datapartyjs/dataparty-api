@@ -19,7 +19,7 @@ module.exports = class LoopbackSocket extends EventEmitter {
 
   start(){
     debug('start')
-    this.channel.post('connected', true)
+    //this.channel.post('connected', true)
     this.ready_local = true
     this.checkConnected()
   }
@@ -30,8 +30,10 @@ module.exports = class LoopbackSocket extends EventEmitter {
       this.closed = false
       this.emit('connect', true)
       debug('checkConnected - connected')
+      this.channel.post('connected', true)
     }
     else if(!this.ready){
+      debug('checkConnected - not ready')
       this.channel.post('connected', true)
     }
   }
@@ -39,6 +41,7 @@ module.exports = class LoopbackSocket extends EventEmitter {
   onconnected(){
     debug('onconnected')
     if(!this.ready_remote){
+      debug('make ready')
       this.ready_remote = true
       this.checkConnected()
     }

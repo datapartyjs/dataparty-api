@@ -214,12 +214,12 @@ class PeerComms extends SocketComms {
     if(this.host){
       debug('host mode comms')
 
-      this.socket.on('connect', this.handleClientConnection.bind(this))
+      this.socket.once('connect', this.handleClientConnection.bind(this))
       this.socket.on('data', this.handleClientCall.bind(this))
     }
     else{
       debug('client mode comms')
-      this.socket.on('connect', this.onopen.bind(this))
+      this.socket.once('connect', this.onopen.bind(this))
       this.socket.on('data', this.handleMessage.bind(this))
     }
 

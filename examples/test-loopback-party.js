@@ -33,7 +33,7 @@ async function main(){
   })
 
 
-  let comms2 = new Dataparty.Comms.LoopbackComms({ channel: loopback.peer2 })
+  let comms2 = new Dataparty.Comms.LoopbackComms({ channel: loopback.peer2, session: 'foobar' })
 
   let peer2 = new Dataparty.PeerParty({
     comms: comms2,
