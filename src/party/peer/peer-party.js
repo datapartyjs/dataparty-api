@@ -12,7 +12,7 @@ const IParty = require('../iparty')
  */
 class PeerParty extends IParty {
 
-  constructor ({comms, hostParty, qbOptions={debounce: 10, find_dedup:true, timeout: 10000}, ...options}) {
+  constructor ({comms, hostParty, hostRunner, qbOptions={debounce: 10, find_dedup:true, timeout: 10000}, ...options}) {
     super(options)
 
     this.comms = comms
@@ -26,9 +26,11 @@ class PeerParty extends IParty {
     })
 
     this.hostParty = null
+    this.hostRunner = null
 
     if(this.comms.host){
       this.hostParty = hostParty
+      this.hostRunner = hostRunner
     }
   }
 

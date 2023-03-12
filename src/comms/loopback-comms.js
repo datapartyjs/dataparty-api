@@ -9,8 +9,8 @@ const LoopbackSocket = require('./loopback-socket')
 const AUTH_TIMEOUT_MS = 3000
 
 class LoopbackComms extends PeerComms {
-  constructor({remoteIdentity, host, party, channel}){
-    super({remoteIdentity, host, party})
+  constructor({remoteIdentity, host, party, channel, ...options}){
+    super({remoteIdentity, host, party, ...options})
 
     this.channel = channel
   }
