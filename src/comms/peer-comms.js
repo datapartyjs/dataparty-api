@@ -114,52 +114,6 @@ class PeerComms extends SocketComms {
       debug('EXCEPTION ->', err)
     }
     this.pending_calls--
-
-
-    return
-
-    let response = null
-    const request = await this.decrypt( {data: message}, this.remoteIdentity )
-    debug('handleHostCall', request)
-
-    if(!this.authed){
-
-
-
-      if(request.op == 'auth'){
-        debug('allowing client')
-        response = {
-          op: 'status',
-          id: request.id,
-          level: 'Info',
-          state: 'Finished_Success'
-        }
-        
-        clearTimeout(this._host_auth_timeout)
-        this._host_auth_timeout = null
-
-        this.authed = true
-        this.emit('open')
-        this.send(response)
-      }
-
-      return
-    }
-
-    if (request.op == 'peer-call') {
-      debug('peer-call')
-      if(request.endpoint == 'api-v2-peer-bouncer'){
-        this.pending_calls++
-        debug('ask->',request.data)
-        this.send({
-          op: 'status',
-          id: request.id,
-          state: 'Finished_Success',
-          ...await this.party.handleCall(request.data)
-        })
-        this.pending_calls--
-      }
-    }
   }
 
   
@@ -314,10 +268,6 @@ class PeerComms extends SocketComms {
         request: req,
         response: res
       }))
-
-      //debug('route via runner router')
-
-      //await this.party.hostRunner.onRequest(req, res)
 
       op.result = {result: res._getData() }
 
