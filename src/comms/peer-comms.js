@@ -1,5 +1,6 @@
 const debug = require('debug')('dataparty.comms.peercomms')
 
+const HttpMocks = require('node-mocks-http')
 
 const SocketOp = require('./op/socket-op')
 const SocketComms = require('./socket-comms')
@@ -200,7 +201,9 @@ class PeerComms extends SocketComms {
 
     debug('running peer-call endpoint =', path, data)
 
-    return await callOp.run()
+    const reply = await callOp.run()
+
+    return reply.result
   }
 
   async start(){
@@ -275,11 +278,58 @@ class PeerComms extends SocketComms {
   }
 
   async handleCallOp(op){
-    debug('peer-call')
-    if(op.input.endpoint == 'api-v2-peer-bouncer'){
+    debug('peer-call', op.input.endpoint)
+
+    if(this.party.hostRunner){
+
+      debug('calling runner')
+
+      if(op.input.endpoint == 'api-v2-peer-bouncer'){
+        debug('ask->',op.input.data)
+        op.result = {result: await this.party.handleCall(op.input.data) }
+
+        op.setState(HostOp.STATES.Finished_Success)
+        return
+      }
+
+      const req = HttpMocks.createRequest({
+        method: 'GET',
+        url: '/'+op.input.endpoint,
+        body: (op.input.data) ? JSON.parse(op.msg.toString()) : undefined
+      })
+
+      const res = HttpMocks.createResponse()
+
+      debug('\tthe request', req)
+
+      debug('req ip type', typeof req.ip)
+
+      const route = this.party.hostRunner.router.get(op.input.endpoint)
+
+      debug('route',route)
+
+      debug('call route', await route._events.route({
+        method: req.method,
+        pathname: req.url,
+        request: req,
+        response: res
+      }))
+
+      //debug('route via runner router')
+
+      //await this.party.hostRunner.onRequest(req, res)
+
+      op.result = {result: res._getData() }
+
+      debug('got result', op.result)
+
+      op.setState(HostOp.STATES.Finished_Success)
+      return
+
+    } else if(op.input.endpoint == 'api-v2-peer-bouncer'){
       
       debug('ask->',op.input.data)
-      op.result = await this.party.handleCall(op.input.data)
+      op.result = {result: await this.party.handleCall(op.input.data) }
 
       op.setState(HostOp.STATES.Finished_Success)
 

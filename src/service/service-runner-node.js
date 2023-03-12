@@ -144,7 +144,7 @@ class ServiceRunnerNode {
 
     this.endpoint[name] = endpoint
 
-    this.router.add(name, this.endpointHandler(endpoint))
+    this.router.add(name, name, this.endpointHandler(endpoint))
     dt.end()
     debug('loaded endpoint',name,'in',dt.deltaMs,'ms')
   }
@@ -233,7 +233,7 @@ class ServiceRunnerNode {
   async onRequest(req, res){
     debug('onRequest')
 
-    debug('req', req.method, req.hostname, req.url, req.ips, req.body)
+    debug('req', req.method, req.hostname,'-', req.url, req.ips, req.body)
 
 
 
