@@ -1,4 +1,4 @@
-const reach = require('../utils/reach')
+const reach = require('../../utils/reach')
 const debug = require('debug')('dataparty.op.host-op')
 const moment = require('moment')
 const EventEmitter = require('eventemitter3')
@@ -34,6 +34,7 @@ class Op extends EventEmitter {
     this.end = undefined
     this.state = Op.STATES.Pending
     this.level = Op.STATUS_LEVELS.Status_Info
+    this.result = null
   }
 
   get op(){

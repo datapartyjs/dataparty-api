@@ -5,28 +5,29 @@ const ID_SCHEME = Joi.alternatives().try(Joi.string(), Joi.number())
 
 const OP_HEADER = Joi.object().keys({
   id: ID_SCHEME.required(),
-  op: Joi.string().valid([
+  op: Joi.string().valid(
     'auth',
-    'call',
+    'peer-call',
     'advertise',
     'subscribe',
     'unsubscribe',
     'publish'
-  ]).required()
+  ).required()
 })
 
 
 const AUTH_OP = Joi.object().keys({
   id: ID_SCHEME.required(),
   op: Joi.string().valid('auth').required(),
-  session: Joi.objectId().required()
+  session: Joi.string().required(), //Joi.objectId().required(),
 })
 
 const CALL_OP = Joi.object().keys({
   id: ID_SCHEME.required(),
-  op: Joi.string().valid('call').required(),
+  op: Joi.string().valid('peer-call').required(),
+  session: Joi.string(), //Joi.objectId(),
   endpoint: Joi.string(),
-  body: Joi.string()
+  data: Joi.object()
 })
 
 const ADVERTISE_OP = Joi.object().keys({
@@ -75,7 +76,8 @@ const ANY_OP = Joi.alternatives().try(
   UNADVERTISE_OP,
   SUBSCRIBE_OP,
   UNSUBSCRIBE_OP,
-  PUBLISH_OP
+  PUBLISH_OP,
+  CALL_OP
 )
 
 module.exports = {
@@ -86,5 +88,6 @@ module.exports = {
   'SUBSCRIBE_OP': SUBSCRIBE_OP,
   'UNSUBSCRIBE_OP': UNSUBSCRIBE_OP,
   'PUBLISH_OP': PUBLISH_OP,
+  'PEER_CALL_OP': CALL_OP,
   'ANY_OP': ANY_OP
 }
