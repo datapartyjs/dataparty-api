@@ -1,6 +1,6 @@
 const debug = require('debug')('dataparty.comms.websocket')
 
-const WebSocket = require('ws')
+const WebSocket = global.WebSocket ? global.WebSocket : require('ws')
 const EventEmitter = require('eventemitter3')
 
 

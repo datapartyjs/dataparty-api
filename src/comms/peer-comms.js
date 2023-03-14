@@ -1,5 +1,5 @@
 const debug = require('debug')('dataparty.comms.peercomms')
-
+const uuidv4 = require('uuid/v4')
 const HttpMocks = require('node-mocks-http')
 
 const SocketOp = require('./op/socket-op')
@@ -22,6 +22,7 @@ class PeerComms extends SocketComms {
   constructor({remoteIdentity, discoverRemoteIdentity, host, party, socket, ...options}){
     super({remoteIdentity, discoverRemoteIdentity, party, ...options})
 
+    this.uuid = uuidv4()
     this.socket = socket || null
 
     this.host = host   //! Is comms host\
@@ -166,7 +167,7 @@ class PeerComms extends SocketComms {
       await this.socketInit()
     }
     
-    this.socket.on('close', this.onclose.bind(this))
+    this.socket.on('close', this.close.bind(this))
 
     if(this.host){
       debug('host mode comms')
@@ -186,12 +187,21 @@ class PeerComms extends SocketComms {
   }
 
   async stop(){
+    debug('stop')
     this.close()
   }
 
-  close(){
+  async close(){
+    debug('close')
+
+    if(this.party.topics){
+      await this.party.topics.destroyNode(this)
+    }
+
     debug('closing connection')
     this.socket.destroy()
+
+    this.onclose()
   }
 
 
@@ -210,7 +220,34 @@ class PeerComms extends SocketComms {
 
       return this.handleCallOp(op)
 
+    } else if (op.op === 'advertise' && this.state === PeerComms.STATES.AUTHED) {
+
+      if(this.party.topics){
+        await this.party.topics.advertise(this, op.topic)
+      }
+
+    } else if (op.op === 'subscribe' && this.state === PeerComms.STATES.AUTHED) {
+
+      if(this.party.topics){
+        await  this.party.topics.subscribe(this, op.topic)
+      }
+
+    } else if (op.op === 'unsubscribe' && this.state === PeerComms.STATES.AUTHED) {
+
+      if(this.party.topics){
+        await this.party.topics.unsubscribe(this, op.topic)
+      }
+
+    } else if (op.op === 'publish' && this.state === PeerComms.STATES.AUTHED) {
+
+      if(this.party.topics){
+        await this.party.topics.publish(this, op.topic, op.msg)
+      }
+
     } else {
+      debug('⚠️ op not implemented ⚠️')
+      debug(op.input)
+
       op.result='not implemented'
       op.setState(HostOp.STATES.Finished_Fail)
     }

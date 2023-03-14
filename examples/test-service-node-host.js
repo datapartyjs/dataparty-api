@@ -31,12 +31,15 @@ async function main(){
 
   const path = '/data/datparty/srv-party'
 
+
   let party = new Dataparty.TingoParty({
     path,
     model: BouncerClientModels,
     serverModels: BouncerServerModels,
     config: new Dataparty.Config.JsonFileConfig({basePath: '/data/datparty/'})
   })
+
+  party.topics = new Dataparty.LocalTopicHost()
 
   const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
 
@@ -46,13 +49,14 @@ async function main(){
 
   const runner = new Dataparty.ServiceRunnerNode({
     party, service,
-    sendFullErrors: false
+    sendFullErrors: false,
+    useNative: false
   })
   
   const host = new Dataparty.ServiceHost({
     runner,
     trust_proxy: true,
-    wsEnabled: true
+    wsEnabled: true,
   })
 
   await party.start()

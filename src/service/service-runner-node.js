@@ -1,7 +1,6 @@
 const Path = require('path')
 const Joi = require('@hapi/joi')
 const Hoek = require('@hapi/hoek')
-const {VM, VMScript} = require('vm2')
 const Debug = require('debug')
 const debug = Debug('dataparty.service.runner-node')
 const EndpointContext = require('./endpoint-context')
@@ -66,7 +65,7 @@ class ServiceRunnerNode {
       return
     }
 
-    debug('loadTask', name)
+    debug('loadTask', name, 'useNative =',this.useNative)
 
     let dt = new DeltaTime().start()
     
@@ -116,7 +115,7 @@ class ServiceRunnerNode {
       return
     }
 
-    debug('loadEndpoint', name)
+    debug('loadEndpoint', name, 'useNative =',this.useNative)
 
     let dt = new DeltaTime().start()
     
@@ -168,7 +167,7 @@ class ServiceRunnerNode {
       return this.middleware[type][name]
     }
 
-    debug('loadMiddleware', type, name)
+    debug('loadMiddleware', type, name, 'useNative =',this.useNative)
 
     let dt = new DeltaTime().start()
     const build = Hoek.reach(this.service, `compiled.middleware.${type}.${name}`)

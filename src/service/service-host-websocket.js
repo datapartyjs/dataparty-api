@@ -102,6 +102,7 @@ class ServiceHostWebsocket{
 
     let peer = new PeerParty({
       hostParty: this.runner.party,
+      hostRunner: this.runner,
       model: this.runner.party.factory.model,
       config: this.runner.party.config,
       comms: new Comms.WebsocketComms({

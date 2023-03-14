@@ -5,6 +5,8 @@ const debug = require('debug')('dataparty.peer-party')
 const Qb = require('../qb')
 const IParty = require('../iparty')
 
+const LocalTopicHost = require('../../topics/local-topic-host')
+
 /**
  * @class 
  * @alias module:dataparty.LocalParty
@@ -29,8 +31,10 @@ class PeerParty extends IParty {
     this.hostRunner = null
 
     if(this.comms.host){
+      debug('host')
       this.hostParty = hostParty
       this.hostRunner = hostRunner
+      this.topics = new LocalTopicHost()
     }
   }
 

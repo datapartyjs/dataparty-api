@@ -1,6 +1,4 @@
 const Joi = require('@hapi/joi')
-const Hoek = require('@hapi/hoek')
-const {Message, Routines} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.endpoint.echo')
 
 const IEndpoint = require('../iendpoint')
