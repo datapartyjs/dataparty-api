@@ -49,7 +49,7 @@ const UNADVERTISE_OP = Joi.object().keys({
 const SUBSCRIBE_OP = Joi.object().keys({
   id: ID_SCHEME.required(),
   op: Joi.string().valid('subscribe').required(),
-  type: Joi.string().required(),
+  type: Joi.string(),//.required(),
   topic: Joi.string().required(),
   compression: Joi.string(),
   queue_length: Joi.number(),

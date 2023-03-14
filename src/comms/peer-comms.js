@@ -57,12 +57,17 @@ class PeerComms extends SocketComms {
     try{
 
       let response = null
-      const request = await this.decrypt( {data: message}, this.remoteIdentity )
+      let request = await this.decrypt( {data: message}, this.remoteIdentity )
       debug('handleHostCall', request)
 
       let inputValidated
 
       if (this.state === PeerComms.STATES.AUTHED) {
+
+        if(typeof request != 'object'){
+          request = JSON.parse(request)
+        }
+
         debug('handling authed call')
         inputValidated = HostProtocolScheme.ANY_OP.validate(request)
       } else if (this.state === PeerComms.STATES.AUTH_REQUIRED) {
@@ -167,7 +172,7 @@ class PeerComms extends SocketComms {
       await this.socketInit()
     }
     
-    this.socket.on('close', this.close.bind(this))
+    this.socket.on('close', this.stop.bind(this))
 
     if(this.host){
       debug('host mode comms')
@@ -192,7 +197,7 @@ class PeerComms extends SocketComms {
   }
 
   async close(){
-    debug('close')
+    debug('close', this.uuid)
 
     if(this.party.topics){
       await this.party.topics.destroyNode(this)
@@ -211,6 +216,8 @@ class PeerComms extends SocketComms {
     
     debug('Here state : ', this.state)
 
+    console.log(op.input)
+
     if (op.op === 'auth' && this.state === PeerComms.STATES.AUTH_REQUIRED) {
     
       debug('handling auth op')
@@ -223,25 +230,25 @@ class PeerComms extends SocketComms {
     } else if (op.op === 'advertise' && this.state === PeerComms.STATES.AUTHED) {
 
       if(this.party.topics){
-        await this.party.topics.advertise(this, op.topic)
+        await this.party.topics.advertise(this, op.input.topic)
       }
 
     } else if (op.op === 'subscribe' && this.state === PeerComms.STATES.AUTHED) {
 
       if(this.party.topics){
-        await  this.party.topics.subscribe(this, op.topic)
+        await  this.party.topics.subscribe.bind(this.party.topics)(this, op.input.topic)
       }
 
     } else if (op.op === 'unsubscribe' && this.state === PeerComms.STATES.AUTHED) {
 
       if(this.party.topics){
-        await this.party.topics.unsubscribe(this, op.topic)
+        await this.party.topics.unsubscribe(this, op.input.topic)
       }
 
     } else if (op.op === 'publish' && this.state === PeerComms.STATES.AUTHED) {
 
       if(this.party.topics){
-        await this.party.topics.publish(this, op.topic, op.msg)
+        await this.party.topics.publish(this, op.input.topic, op.input.msg)
       }
 
     } else {

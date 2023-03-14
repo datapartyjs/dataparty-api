@@ -34,7 +34,7 @@ class PeerParty extends IParty {
       debug('host')
       this.hostParty = hostParty
       this.hostRunner = hostRunner
-      this.topics = new LocalTopicHost()
+      this.topics = hostParty.topics || new LocalTopicHost()
     }
   }
 

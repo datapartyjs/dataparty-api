@@ -13,30 +13,35 @@ class LocalTopicHost {
     this.topicsByPath = new Map()
   }
 
-  async getTopic(path, create=true){
+  getTopic(path, create=true){
     const normalized = Path.normalize(path)
     let topic = this.topicsByPath.get(normalized)
 
+    //debug('get topic', topic, normalized)
+
     if(!topic && create == true){
-      topic = new HostTopic(normalized)
-      this.topicsByPath.add(normalized, topic)
+      //topic = 
+      this.topicsByPath.set(normalized, new HostTopic(normalized))
+
+      //debug('set topic', this.topicsByPath.get(normalized), normalized)
+      return this.topicsByPath.get(normalized)
     }
 
     return topic
   }
 
-  async getNodeByUuid(uuid, peer){
+  getNodeByUuid(uuid, peer){
     let node = this.nodesByUuid.get(uuid)
 
     if(!node && peer){
       node = new PeerNode(peer)
-      this.nodesByUuid.add(uuid, node)
+      this.nodesByUuid.set(uuid, node)
     }
 
     return node
   }
 
-  async getNodeByPeer(peer){
+  getNodeByPeer(peer){
     return this.getNodeByUuid(peer.uuid, peer)
   }
 
@@ -51,6 +56,7 @@ class LocalTopicHost {
   }
 
   async subscribe(peer, path){
+    debug('sub', path)
     const topic = this.getTopic(path)
     const node = this.getNodeByPeer(peer)
 
@@ -100,13 +106,11 @@ class LocalTopicHost {
   async destroyNode(peer){
     const node = this.getNodeByPeer(peer)
 
-    debug('destroying node', node.uuid)
+    debug('destroying node', node.uuid, node)
 
     node.destroy()
 
     this.nodesByUuid.delete(node.uuid)
-
-    node=null
   }
 
   async cleanUpTopics(){

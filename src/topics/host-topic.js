@@ -9,6 +9,8 @@ class HostTopic {
     this.type = type
     this.created = Date.now()
 
+    debug('new topic', path, '(', type, ')')
+
     this.lastMessage = null
     this.lastMessageTime = null
 
@@ -18,7 +20,7 @@ class HostTopic {
 
   subscribe(node){
     if(!this.subscribers.get(node.uuid)){
-      this.subscribers.add(node.uuid, node)
+      this.subscribers.set(node.uuid, node)
     }
   }
 
@@ -30,7 +32,7 @@ class HostTopic {
 
   advertise(node){
     if(!this.advertisers.get(node.uuid)){
-      this.advertisers.add(node.uuid, node)
+      this.advertisers.set(node.uuid, node)
     }
   }
 
@@ -56,6 +58,12 @@ class HostTopic {
     this.lastMessageTime = Date.now()
 
     for(let node of this.subscribers){
+
+      if(node[0] == sender.uuid){
+        debug('publish skip', node[0])
+        continue
+      }
+
       sends.push(node[1].send(this, data, sender))
     }
 

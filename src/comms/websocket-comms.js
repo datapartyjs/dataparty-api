@@ -18,7 +18,7 @@ class WebsocketShim extends EventEmitter {
     
     this.conn.onopen = () => {
       debug('shim open')
-      this.emit('connect')
+      setTimeout(()=>{this.emit('connect')}, 1)
     }
     
     this.conn.onclose = () => {

@@ -1,6 +1,8 @@
 const debug = require('debug')('dataparty.iparty')
 const dataparty_crypto = require('@dataparty/crypto')
 
+const ROSLIB = require('roslib')
+
 const Query = require('./query.js')
 const IDocument = require('./idocument')
 const DocumentFactory = require('./document-factory')

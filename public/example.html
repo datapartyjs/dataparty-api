@@ -12,14 +12,19 @@
 
 async function init(){
 
-  //new Dataparty.Config.MemoryConfig()
-
-  config = new Dataparty.Config.LocalStorageConfig({
+  config = new Dataparty.Config.MemoryConfig({
     basePath:'demo',
     cloud: {
       uri: 'http://172.16.3.1:4001'
     }
   })
+
+  /*config = new Dataparty.Config.LocalStorageConfig({
+    basePath:'demo',
+    cloud: {
+      uri: 'http://172.16.3.1:4001'
+    }
+  })*/
 
 
   const remoteIdentity = await Dataparty.Comms.RestComms.HttpGet( config.read('cloud.uri') + '/identity')
@@ -28,17 +33,31 @@ async function init(){
   console.log('\tremoteIdentity', remoteIdentity)
 
   let party = new Dataparty.PeerParty({
-      comms: new Dataparty.Comms.WebsocketComms({
-        uri:'ws://172.16.3.1:4001/ws',
-        discoverRemoteIdentity: false,
-        remoteIdentity: remoteIdentity,
-        session: Math.random().toString(36).slice(2)
-      }),
-      config: config
-    })
-
+    comms: new Dataparty.Comms.WebsocketComms({
+      uri:'ws://172.16.3.1:4001/ws',
+      discoverRemoteIdentity: false,
+      remoteIdentity: remoteIdentity,
+      session: Math.random().toString(36).slice(2)
+    }),
+    config: config
+  })
 
   window.party = party
+  await party.start()
+
+  await party.comms.authorized()
+
+
+  timeTopic = new party.ROSLIB.Topic({
+    ros : party.comms.ros,
+    name : '/time',
+    messageType: 'number'
+  })
+
+  timeTopic.subscribe((msg)=>{
+    console.log(name, msg)
+  })
+
 }
 
 init()

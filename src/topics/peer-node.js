@@ -31,13 +31,13 @@ class PeerNode {
 
   advertise(topic){
     if(!this.advertisements.get(topic.path)){
-      this.advertisements.add(topic.path, topic)
+      this.advertisements.set(topic.path, topic)
     }
   }
 
   subscribe(topic){
     if(!this.subscriptions.get(topic.path)){
-      this.subscriptions.add(topic.path, topic)
+      this.subscriptions.set(topic.path, topic)
     }
   }
 
