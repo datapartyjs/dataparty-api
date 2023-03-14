@@ -57,6 +57,7 @@ class LocalTopicHost {
 
   async subscribe(peer, path){
     debug('sub', path)
+    const exists = this.getTopic(path, false)
     const topic = this.getTopic(path)
     const node = this.getNodeByPeer(peer)
 
@@ -64,6 +65,31 @@ class LocalTopicHost {
 
     topic.subscribe(node)
     node.subscribe(topic)
+
+    if(topic.path.indexOf('/dataparty/document/') != -1 && !exists){
+      const [arg0, arg1, docType, docId] = topic.path.substr(1).split('/')
+
+      peer.hostParty.db.on(docType+':'+docId, async (event)=>{
+        await this.handleDocChange(topic.path, event)
+      })
+    }
+  }
+
+  async handleDocChange(path, event){
+    const topic = this.getTopic(path,false)
+
+    if(!topic){return}
+
+    const [arg0, arg1, docType, docId] = topic.path.substr(1).split('/')
+
+    if(topic.subscribers.size > 0){
+      await topic.publish({
+        id: event.msg.id,
+        type: event.msg.type,
+        revision: event.msg.revision,
+        operationType: event.change
+      })
+    }
   }
 
   async unadvertise(peer, path){
