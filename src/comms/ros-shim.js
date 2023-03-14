@@ -26,6 +26,9 @@ class RosShim extends ROSLIB.Ros {
 
 
     handleMessage(message) {
+
+      console.log(message)
+
         if (message.op === 'publish') {
           debug('publish op')
           this.emit(message.topic, message.msg);
@@ -34,6 +37,9 @@ class RosShim extends ROSLIB.Ros {
         } else if (message.op === 'call_service') {
             this.emit(message.service, message);
         }*/ else if(message.op === 'status'){
+
+          console.log('status', message)
+
           if(message.id){
             this.emit('status:'+message.id, message);
           } else {

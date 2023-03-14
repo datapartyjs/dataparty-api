@@ -10,6 +10,19 @@
 
 <script>
 
+function makeid(length) {
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < length) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      counter += 1;
+    }
+    return result;
+}
+
+
 async function init(){
 
   config = new Dataparty.Config.MemoryConfig({
@@ -58,6 +71,36 @@ async function init(){
     console.log(name, msg)
   })
 
+
+  let text = makeid(500*1024)
+
+  let first = true
+
+  async function onTimeout(){
+
+    let num = first ? 2:1
+
+    first = false
+
+    let statusId = 'publish:'+timeTopic.name+':'+ (party.comms.ros.idCounter+num)
+
+    console.log(statusId)
+
+    
+    party.comms.once(statusId,(status)=>{
+      console.log('status', status)
+      
+      setTimeout(onTimeout, 0)
+    })
+    
+    await timeTopic.publish({number: Date.now(), text:text})
+    
+
+  }
+
+  window.onTimeout = onTimeout
+
+  //onTimeout()
 }
 
 init()

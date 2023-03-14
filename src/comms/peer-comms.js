@@ -128,7 +128,7 @@ class PeerComms extends SocketComms {
           ...op.result 
         }
 
-        debug(response.id, response.state, response.stats.duration_ms, 'ms')
+        debug('finished', response.id, response.state, response.stats.duration_ms, 'ms')
 
         this.send(response)
       })
