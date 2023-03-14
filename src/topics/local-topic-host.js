@@ -106,7 +106,7 @@ class LocalTopicHost {
   async destroyNode(peer){
     const node = this.getNodeByPeer(peer)
 
-    debug('destroying node', node.uuid, node)
+    debug('destroying node', node.uuid)
 
     node.destroy()
 

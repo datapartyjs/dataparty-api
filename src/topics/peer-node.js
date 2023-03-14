@@ -14,6 +14,9 @@ class PeerNode {
   }
 
   async send(topic, data, sender=null){
+
+    if(!data){return}
+
     if(this.subscriptions.has(topic.path)){
 
       debug(' publish to node', this.uuid)
@@ -25,6 +28,14 @@ class PeerNode {
         sender: { uuid: this.uuid, identity: this.peer.remoteIdentity },
         msg: data
       })
+
+      /*await this.peer.socket.send(JSON.stringify({
+        op: 'publish',
+        id: 'publish:'+this.peer.opId,
+        topic: topic.path,
+        sender: { uuid: this.uuid, identity: this.peer.remoteIdentity },
+        msg: data
+      }))*/
 
     }
   }

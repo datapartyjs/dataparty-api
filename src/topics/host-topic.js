@@ -16,6 +16,9 @@ class HostTopic {
 
     this.subscribers = new Map()
     this.advertisers = new Map()
+
+    this.sending = false
+    this.sendRequest = false
   }
 
   subscribe(node){
@@ -54,22 +57,58 @@ class HostTopic {
       throw new Error('published called before advertise')
     }
 
-    this.lastMessage = data
-    this.lastMessageTime = Date.now()
+    if(!this.sending && this.sendRequest){
+      
+      this.sendRequest=false
+
+    }else  if(this.sending){
+      if(!this.sendRequest){
+        this.sendRequest = true
+      }
+
+      debug('throttle')
+      this.lastMessage = data
+      this.lastMessageTime = Date.now()
+
+      return
+
+    }else if(!this.sendRequest && !this.sending) {
+
+      this.lastMessage = data
+      this.lastMessageTime = Date.now()
+    }
+
+    
 
     for(let node of this.subscribers){
 
-      if(node[0] == sender.uuid){
+      if(sender && node[0] == sender.uuid){
         debug('publish skip', node[0])
         continue
       }
 
-      sends.push(node[1].send(this, data, sender))
+      //await node[1].send(this, this.lastMessage, sender)
+
+      sends.push(node[1].send(this, this.lastMessage, sender))
     }
 
     if(sends.length > 0){
       debug('publishing', this.path)
-      await Promise.all(sends)
+      this.sending = true
+
+      try{
+        await Promise.all(sends)
+        this.sending = false
+
+        if(this.sendRequest){
+          debug('send requested')
+          //setTimeout(this.publish.bind(this),1)
+        }
+      }
+      catch(err){
+        this.sending = false
+        throw err
+      }
     }
   }
 }

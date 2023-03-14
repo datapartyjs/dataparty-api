@@ -18,6 +18,25 @@ const HOST_SESSION_STATES = {
   CLIENT_CLOSED: 'CLIENT_CLOSED'
 }
 
+
+function truncateString(str, num) {
+
+  if(!str){return ''}
+  
+  if(typeof str != 'string'){
+    str = str.toString()
+  }
+
+  let length = str.length
+
+  if (str.length <= num) {
+    return str
+  }
+  return str.slice(0, num) + '...' + (length-num) + 'more bytes'
+}
+
+
+
 class PeerComms extends SocketComms {
   constructor({remoteIdentity, discoverRemoteIdentity, host, party, socket, ...options}){
     super({remoteIdentity, discoverRemoteIdentity, party, ...options})
@@ -58,7 +77,7 @@ class PeerComms extends SocketComms {
 
       let response = null
       let request = await this.decrypt( {data: message}, this.remoteIdentity )
-      debug('handleHostCall', request)
+      debug('handleHostCall', truncateString(request, 1024))
 
       let inputValidated
 
@@ -85,8 +104,8 @@ class PeerComms extends SocketComms {
         throw inputValidated.error
       }
 
-      debug('original input ->', typeof request, request)
-      debug('validated input ->', inputValidated)
+      //debug('original input ->', typeof request, request)
+      //debug('validated input ->', inputValidated)
       const op = new HostOp({ msg: message, input: inputValidated.value })
 
       /*debug('session id : ', op.input.session, this.session)
@@ -108,6 +127,8 @@ class PeerComms extends SocketComms {
           },
           ...op.result 
         }
+
+        debug(response.id, response.state, response.stats.duration_ms, 'ms')
 
         this.send(response)
       })
@@ -133,6 +154,8 @@ class PeerComms extends SocketComms {
     )
   }
 
+
+
   async handleAuthTimeout(){
     clearTimeout(this._host_auth_timeout)
     this._host_auth_timeout = null
@@ -144,7 +167,7 @@ class PeerComms extends SocketComms {
   }
 
   async handleMessage(message){
-    debug('handleMessage', message.toString())
+    debug('handleMessage', truncateString(message.toString(), 1024) )
 
     this.onmessage({data: message})
   }
@@ -159,7 +182,7 @@ class PeerComms extends SocketComms {
 
     let callOp = new SocketOp( 'peer-call', { endpoint: path, data }, this )
 
-    debug('running peer-call endpoint =', path, data)
+    debug('running peer-call endpoint =', path, truncateString(data, 1024))
 
     const reply = await callOp.run()
 
@@ -212,11 +235,11 @@ class PeerComms extends SocketComms {
 
   async authorizeOperation(op) {
 
-    debug('Here\'s op', op)
+    //debug('Here\'s op', op)
     
-    debug('Here state : ', this.state)
+    //debug('state : ', this.state)
 
-    console.log(op.input)
+    //console.log(op.input)
 
     if (op.op === 'auth' && this.state === PeerComms.STATES.AUTH_REQUIRED) {
     
@@ -231,24 +254,40 @@ class PeerComms extends SocketComms {
 
       if(this.party.topics){
         await this.party.topics.advertise(this, op.input.topic)
+        op.setState(HostOp.STATES.Finished_Success)
+      }
+      else{
+        op.setState(HostOp.STATES.Finished_Fail)
       }
 
     } else if (op.op === 'subscribe' && this.state === PeerComms.STATES.AUTHED) {
 
       if(this.party.topics){
         await  this.party.topics.subscribe.bind(this.party.topics)(this, op.input.topic)
+        op.setState(HostOp.STATES.Finished_Success)
+      }
+      else{
+        op.setState(HostOp.STATES.Finished_Fail)
       }
 
     } else if (op.op === 'unsubscribe' && this.state === PeerComms.STATES.AUTHED) {
 
       if(this.party.topics){
         await this.party.topics.unsubscribe(this, op.input.topic)
+        op.setState(HostOp.STATES.Finished_Success)
+      }
+      else{
+        op.setState(HostOp.STATES.Finished_Fail)
       }
 
     } else if (op.op === 'publish' && this.state === PeerComms.STATES.AUTHED) {
 
       if(this.party.topics){
         await this.party.topics.publish(this, op.input.topic, op.input.msg)
+        op.setState(HostOp.STATES.Finished_Success)
+      }
+      else{
+        op.setState(HostOp.STATES.Finished_Fail)
       }
 
     } else {
@@ -283,7 +322,7 @@ class PeerComms extends SocketComms {
       debug('calling runner')
 
       if(op.input.endpoint == 'api-v2-peer-bouncer'){
-        debug('ask->',op.input.data)
+        debug('ask->', truncateString(op.input.data, 1024))
         op.result = {result: await this.party.handleCall(op.input.data) }
 
         op.setState(HostOp.STATES.Finished_Success)
