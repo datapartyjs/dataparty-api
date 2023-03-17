@@ -84,11 +84,8 @@ async function init(){
 
     let statusId = 'publish:'+timeTopic.name+':'+ (party.comms.ros.idCounter+num)
 
-    console.log(statusId)
-
     
     party.comms.once(statusId,(status)=>{
-      console.log('status', status)
       
       setTimeout(onTimeout, 0)
     })

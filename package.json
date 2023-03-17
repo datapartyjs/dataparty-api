@@ -9,6 +9,7 @@
   "alias": {
     "events": "eventemitter3",
     "process": "process/browser.js",
+    "path": "path-browserify",
     "assert": "assert",
     "crypto": "crypto-browserify"
   },

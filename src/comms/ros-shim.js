@@ -38,7 +38,6 @@ class RosShim extends ROSLIB.Ros {
             this.emit(message.service, message);
         }*/ else if(message.op === 'status'){
 
-          console.log('status', message)
 
           if(message.id){
             this.emit('status:'+message.id, message);

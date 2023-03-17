@@ -21,21 +21,21 @@ class PeerNode {
 
       debug(' publish to node', this.uuid)
 
-      await this.peer.send({
+      /*await this.peer.send({
         op: 'publish',
         id: 'publish:'+this.peer.opId,
         topic: topic.path,
         sender: { uuid: this.uuid, identity: this.peer.remoteIdentity },
         msg: data
-      })
+      })*/
 
-      /*await this.peer.socket.send(JSON.stringify({
+      await this.peer.socket.send(JSON.stringify({
         op: 'publish',
         id: 'publish:'+this.peer.opId,
         topic: topic.path,
         sender: { uuid: this.uuid, identity: this.peer.remoteIdentity },
         msg: data
-      }))*/
+      }))
 
     }
   }
