@@ -6,6 +6,7 @@ module.exports = {
   IEndpoint: require('./iendpoint'),
   IMiddleware: require('./imiddleware'),
   ServiceHost: require('./service-host'),
+  RunnerRouter: require('./runner-router'),
   ServiceRunner: require('./service-runner'),
   ServiceRunnerNode: require('./service-runner-node'),
   EndpointRunner: require('./endpoint-runner'),

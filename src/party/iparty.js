@@ -140,7 +140,7 @@ class IParty {
    */
   get identity(){
     if (!this.hasIdentity()){ return undefined }
-    return this._identity.toJSON(false)
+    return dataparty_crypto.Identity.fromString(this._identity.toString())
   }
 
   get privateIdentity(){

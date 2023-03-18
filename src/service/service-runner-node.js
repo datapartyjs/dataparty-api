@@ -10,7 +10,7 @@ const Router = require('origin-router').Router
 const Runner = require('@dataparty/tasker').Runner
 
 class ServiceRunnerNode {
-  constructor({service, party, sendFullErrors=false, useNative=true}){
+  constructor({service, party, sendFullErrors=false, useNative=true, prefix='', router=new Router()}){
     this.party = party
     this.service = service
     this.sendFullErrors = sendFullErrors
@@ -20,7 +20,8 @@ class ServiceRunnerNode {
     this.endpoint = {}
     this.tasks = {}
 
-    this.router = new Router()
+    this.prefix=prefix
+    this.router = router
     this.taskRunner = new Runner()
   }
 
@@ -143,9 +144,11 @@ class ServiceRunnerNode {
 
     this.endpoint[name] = endpoint
 
-    this.router.add(name, name, this.endpointHandler(endpoint))
+    const routablePath = Path.join(this.prefix, Path.normalize(name))
+
+    this.router.add(name, routablePath, this.endpointHandler(endpoint))
     dt.end()
-    debug('loaded endpoint',name,'in',dt.deltaMs,'ms')
+    debug('loaded endpoint', routablePath,'in',dt.deltaMs,'ms')
   }
 
 
@@ -230,10 +233,9 @@ class ServiceRunnerNode {
   }
 
   async onRequest(req, res){
-    debug('onRequest')
+    debug('onRequest', req)
 
     debug('req', req.method, req.hostname,'-', req.url, req.ips, req.body)
-
 
 
     let route = await this.router.route(req, res)

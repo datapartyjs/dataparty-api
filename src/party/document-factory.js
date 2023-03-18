@@ -2,6 +2,8 @@ const Ajv = require('ajv')
 const debug = require('debug')('dataparty.document-factory')
 const IDocument = require('./idocument')
 
+const reach = require('../utils/reach')
+
 const DocumentValidationError = require('../errors/document-validation-error')
 
 
@@ -18,7 +20,8 @@ class DocumentFactory {
     this.validators = {}
 
     if(this.model){
-      for(let schema of this.model.JSONSchema){
+
+      for(let schema of this.model.schemas.JSONSchema){
         const v = this.ajv.compile(schema)
         this.validators[schema.title] = v
         debug(schema.title)
