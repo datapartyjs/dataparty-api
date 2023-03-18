@@ -23,9 +23,14 @@ class ServiceRunner {
 
     this.prefix = prefix
     this.router = router
+    this.started = false
   }
 
   async start(){
+
+    if(this.started){return}
+
+    this.started = true
     debug('starting endpoints')
 
     const eps = Hoek.reach(this.service, 'compiled.endpoints')

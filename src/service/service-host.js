@@ -59,9 +59,15 @@ class ServiceHost {
       })
     }
 
+    this.started = false
+
   }
 
   async start(){
+
+    if(this.started){return}
+
+    this.started = true
 
     debug('starting server', this.apiServerUri.toString())
 

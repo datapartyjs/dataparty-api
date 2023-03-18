@@ -55,27 +55,27 @@ async function main(){
   
   const runner = new Dataparty.ServiceRunnerNode({
     party,
-    prefix: '',
+    //prefix: 'foo',
     service: live,
     sendFullErrors: false,
     useNative: false
   })
+
   
-  await party.start()
-  await runner.start()
-
-
+  
+  
   const runnerRouter = new Dataparty.RunnerRouter(runner)
   
-  //const srvRouter = new ServiceRouter()
-  //srvRouter.addRunner(domain, prefix, runner)
-
+  
   const host = new Dataparty.ServiceHost({
     runner: runnerRouter,
     trust_proxy: true,
     wsEnabled: true,
   })
-
+  
+  debug(runner.party.identity)
+  await party.start()
+  await runnerRouter.start()
   await host.start()
 
   console.log('started')

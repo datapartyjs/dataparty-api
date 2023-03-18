@@ -23,11 +23,16 @@ class ServiceRunnerNode {
     this.prefix=prefix
     this.router = router
     this.taskRunner = new Runner()
+
+    this.started = false
   }
 
   async start(){
 
+    if(this.started){return}
     debug('starting tasks')
+
+    this.started = true
 
     const taskMap = Hoek.reach(this.service, 'compiled.tasks')
     //const endpointsLoading = []

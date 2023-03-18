@@ -12,18 +12,21 @@ class RunnerRouter {
     this.runnersByHost = new Map()
 
     this.started = false
+
   }
-
+  
   async start(){
-
+    
     if(this.started){ return }
-
+    
     debug('start')
-
+    
     this.started = true
+    
+    this.addRunner({runner: this.defaultRunner})
 
     for(let runner of this.runnersByHost){
-      await runner.start()
+      await runner[1].start()
     }
   }
 
@@ -48,12 +51,12 @@ class RunnerRouter {
     const partyId = runner.party.identity.toString()
     debug('addRunner - ', partyId, domain)
 
-    if(!this.runnersByHost.has(party)){
+    if(!this.runnersByHost.has(partyId)){
       this.runnersByHost.set(partyId, runner)
     }
 
     
-    if(domain && !this.runnersByDomain.has(party)){
+    if(domain && !this.runnersByDomain.has(domain)){
       this.runnersByDomain.set(domain, runner)
     }
   }

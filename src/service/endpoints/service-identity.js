@@ -43,8 +43,6 @@ module.exports = class ServiceIdentity extends IEndpoint {
   
     const identity = ctx.party.identity
 
-    return {
-      ...identity
-    }
+    return identity.toJSON()
   }
 }
