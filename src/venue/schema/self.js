@@ -1,0 +1,5 @@
+{
+  identity,
+  domain,
+  service
+}
