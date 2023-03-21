@@ -9,43 +9,58 @@ const PeerComms = require('./peer-comms')
 
 
 class I2pStreamShim extends EventEmitter {
-  constructor(conn){
+  constructor(stream){
     super()
-    this.conn = conn
+    this.stream = stream
 
-    this.conn.onmessage = (evt) => {
-      this.emit('data', evt.data)
-    }
-    
-    this.conn.onopen = () => {
+    this.stream.on('data',data=>{
+      this.emit('data', data)
+    })
+
+    this.stream.on('error',err=>{
+      this.emit('error', err)
+    })
+
+    this.stream.once('close',()=>{
+      this._isConnected = false
+      this.emit('close')
+    })
+
+    this.stream.once('stream',()=>{
+      this._isConnected = true
       debugShim('shim open')
       setTimeout(()=>{this.emit('connect')}, 1)
-    }
-    
-    this.conn.onclose = () => {
-      this.emit('close')
-    }
-    
-    this.conn.onerror = (err) => {
-      this.emit('error', err)
-    }
+    })
 
-    if(this.conn.readyState == WebSocket.OPEN){
+
+    if(this.stream.hasStream){
+      this._isConnected = true
+      debugShim('has stream')
       setTimeout(()=>{this.emit('connect')}, 1)
     }
+  }
 
-    debugShim('connection shim', this.conn.readyState)
+  get isConnected(){
+    return this._isConnected
+  }
+
+  async connect(){
+    debugShim('connecting to ', this.stream.destination)
+    return await this.stream.connect()
   }
 
   close(){
-    this.conn.close()
+    this._closed = true
+    this.stream.close()
   }
 
   destroy(){
-    this.conn.terminate()
+    if(!this._closed){
+      this.close()
+    }
   }
 
-  send(val){ this.conn.send(val) }
+  send(val){ this.stream.send(val) }
 
 }
 
@@ -88,6 +103,12 @@ class I2pSocketComms extends PeerComms {
     }
 
     this.socket = new I2pStreamShim(this.stream)
+
+    if( !this.socket.isConnected ){
+
+      await this.socket.connect()
+
+    }
   }
 }
 
