@@ -134,23 +134,25 @@ class ServiceHost {
     this.apiServer.on('error', this.handleServerError.bind(this))
 
     debug('server listening')
-    debug('address', this.apiServer.address())
+    debug('\t', 'address', this.apiServer.address())
 
     if(this.wsServer && this.apiServer){
       debug('starting websocket')
       this.wsServer.start(this.apiServer)
     }
 
-    if(this.i2pEnabled){
+    if(this.i2pEnabled && this.i2p == null){
       debug('starting i2p forward')
       const SAM = require('@diva.exchange/i2p-sam')
 
-      this.i2p = await i2p.createForward(this.i2pSettings)
+      this.i2p = await SAM.createForward(this.i2pSettings)
       this.i2pUri = this.i2p.getPublicKeys()
       this.i2pSettings.privateKey = null  // clear no longer needed
 
+      this.i2p.on('error', this.reportI2pError.bind(this))
 
-      debug('i2p address - ', this.i2pUri)
+      debug('i2p started')
+      debug('\t','address', this.i2pUri)
     }
   }
 
@@ -167,6 +169,10 @@ class ServiceHost {
     await (Pify(this.apiServer.close)())
 
     debug('stopped server')
+  }
+
+  reportI2pError(error){
+    debug('WARN - I2P ERROR -', JSON.stringify(error), error.toString())
   }
 
   handleServerError(error){
