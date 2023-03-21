@@ -13,7 +13,7 @@ const DeltaTime = require('../utils/delta-time')
 const Router = require('origin-router').Router
 
 class ServiceRunner {
-  constructor({service, party, sendFullErrors=false}){
+  constructor({service, party, sendFullErrors=false, prefix='', router=new Router()}){
     this.party = party
     this.service = service
     this.sendFullErrors = sendFullErrors
@@ -21,10 +21,16 @@ class ServiceRunner {
     this.middleware = { pre: {}, post: {} }
     this.endpoint = {}
 
-    this.router = new Router()
+    this.prefix = prefix
+    this.router = router
+    this.started = false
   }
 
   async start(){
+
+    if(this.started){return}
+
+    this.started = true
     debug('starting endpoints')
 
     const eps = Hoek.reach(this.service, 'compiled.endpoints')
@@ -67,9 +73,11 @@ class ServiceRunner {
 
     this.endpoint[name] = endpoint
 
-    this.router.add(name, this.endpointHandler(endpoint))
+    const routablePath = Path.join(this.prefix, Path.normalize(name))
+
+    this.router.add(name, routablePath, this.endpointHandler(endpoint))
     dt.end()
-    debug('loaded endpoint',name,'in',dt.deltaMs,'ms')
+    debug('loaded endpoint', routablePath,'in',dt.deltaMs,'ms')
   }
 
 

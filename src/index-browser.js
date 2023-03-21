@@ -1,5 +1,6 @@
 const Comms = require('./comms')
 const Party = require('./party/index-browser')
+const Topics = require('./topics')
 
 const MemoryConfig = require('./config/memory')
 const LocalStorageConfig = require('./config/local-storage')
@@ -13,7 +14,8 @@ const Config = {
 let lib = {
   Comms,
   Config,
-  ...Party
+  ...Party,
+  ...Topics
 }
 
 

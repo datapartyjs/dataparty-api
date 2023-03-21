@@ -1,6 +1,8 @@
 'use strict';
 
 const fs = require('fs')
+const Path = require('path')
+const mkdirp = require('mkdirp')
 const deepSet = require('deep-set')
 const reach = require('../utils/reach')
 const logger = require('debug')('dataparty.config.json-file');
@@ -12,7 +14,8 @@ const logger = require('debug')('dataparty.config.json-file');
 class JsonFileConfig {
 
   constructor(defaults={}){
-    this.path = reach(defaults, 'basePath') +'/config.json'
+    this.basePath = reach(defaults, 'basePath')
+    this.path = this.basePath +'/config.json'
     this.defaults = defaults || {}
     this.content = Object.assign({}, this.defaults)
   }
@@ -40,6 +43,7 @@ class JsonFileConfig {
   }
 
   async start () {
+    await this.touchDir('')
     await this.load()
     logger('started')
   }
@@ -71,6 +75,23 @@ class JsonFileConfig {
 
   async save(){
     fs.writeFileSync(this.path, JSON.stringify(this.content, null, 2))
+  }
+
+  async touchDir (path) {
+    return new Promise((resolve, reject) => {
+      const basedPath = Path.join(this.basePath, path)
+      logger('touching', basedPath)
+      mkdirp(basedPath, (error) => {
+        if (error) {
+          logger(`failed to mkdirp '${basedPath}':`, error)
+          return reject(error)
+        }
+
+        logger('touched', basedPath)
+        // resolve to adjusted path on success
+        resolve(basedPath)
+      })
+    })
   }
 }
 

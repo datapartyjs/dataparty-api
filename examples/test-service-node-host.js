@@ -1,9 +1,7 @@
 const Path = require('path')
 const debug = require('debug')('test.server-db')
 const Dataparty = require('../src')
-
-const BouncerServerModels = require('@dataparty/bouncer-model')
-const BouncerClientModels = require('@dataparty/bouncer-model/dist/bouncer-model.json')
+const dataparty_crypto = require('@dataparty/crypto')
 
 class ExampleService extends Dataparty.IService {
   constructor(opts){
@@ -19,6 +17,8 @@ class ExampleService extends Dataparty.IService {
     this.addEndpoint(Dataparty.endpoint_paths.secureecho)
     this.addEndpoint(Dataparty.endpoint_paths.identity)
     this.addEndpoint(Dataparty.endpoint_paths.version)
+
+    this.addSchema(Path.join(__dirname, './party/schema/basic_types.js'))
   }
 
 }
@@ -29,34 +29,53 @@ async function main(){
   //const uri = 'mongodb://localhost:27017/server-party-test'
   //debug('db location', uri)
 
-  const path = '/data/datparty/srv-party'
+  
+  const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
+  const build = await service.compile(Path.join(__dirname,'/dataparty'), true)
+  
+  const serviceName = build.package.name
+  const basePath = '/data/datparty/'
+  const servicePath = Path.join(basePath, serviceName.replace('/','-'))
+
+  let config = new Dataparty.Config.JsonFileConfig({ basePath: servicePath })
+  config.touchDir('/tingo')
+
+  const dbPath = Path.join(servicePath, '/tingo')
 
   let party = new Dataparty.TingoParty({
-    path,
-    model: BouncerClientModels,
-    serverModels: BouncerServerModels,
-    config: new Dataparty.Config.JsonFileConfig({basePath: '/data/datparty/'})
+    config,
+    path: dbPath,
+    model: build
   })
 
-  const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
+  party.topics = new Dataparty.LocalTopicHost()
 
-  const build = await service.compile(Path.join(__dirname,'/dataparty'), true)
+  const live = new Dataparty.IService(build.package, build)
 
-  debug('built', Object.keys(build))
-
+  
   const runner = new Dataparty.ServiceRunnerNode({
-    party, service,
-    sendFullErrors: false
+    party,
+    //prefix: 'foo',
+    service: live,
+    sendFullErrors: false,
+    useNative: false
   })
+
+  
+  
+  
+  const runnerRouter = new Dataparty.RunnerRouter(runner)
+  
   
   const host = new Dataparty.ServiceHost({
-    runner,
+    runner: runnerRouter,
     trust_proxy: true,
-    wsEnabled: true
+    wsEnabled: true,
   })
-
+  
+  debug(runner.party.identity)
   await party.start()
-  await runner.start()
+  await runnerRouter.start()
   await host.start()
 
   console.log('started')

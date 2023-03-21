@@ -9,6 +9,7 @@
   "alias": {
     "events": "eventemitter3",
     "process": "process/browser.js",
+    "path": "path-browserify",
     "assert": "assert",
     "crypto": "crypto-browserify"
   },
@@ -123,7 +124,9 @@
     "minami": "^1.2.3",
     "mongodb-client-encryption": "^2.2.1",
     "parcel": "^2.3.1",
+    "path-browserify": "^1.0.1",
     "process": "^0.11.10",
+    "punycode": "2.3.0",
     "querystring-es3": "^0.2.1",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",

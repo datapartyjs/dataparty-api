@@ -100,10 +100,15 @@ class ServiceHostWebsocket{
 
     debug('creating peer party')
 
+    
+    let hostRunner = this.runner.party ? this.runner : this.runner.getRunnerByDomain(req.hostname)
+    let hostParty = hostRunner.party
+
     let peer = new PeerParty({
-      hostParty: this.runner.party,
-      model: this.runner.party.factory.model,
-      config: this.runner.party.config,
+      hostParty,
+      hostRunner,
+      model: hostParty.factory.model,
+      config: hostParty.config,
       comms: new Comms.WebsocketComms({
         host: true,
         connection: conn,

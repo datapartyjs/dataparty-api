@@ -1,6 +1,6 @@
 const debug = require('debug')('dataparty.comms.websocket')
 
-const WebSocket = require('ws')
+const WebSocket = global.WebSocket ? global.WebSocket : require('ws')
 const EventEmitter = require('eventemitter3')
 
 
@@ -18,7 +18,7 @@ class WebsocketShim extends EventEmitter {
     
     this.conn.onopen = () => {
       debug('shim open')
-      this.emit('connect')
+      setTimeout(()=>{this.emit('connect')}, 1)
     }
     
     this.conn.onclose = () => {

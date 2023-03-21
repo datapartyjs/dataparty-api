@@ -4,7 +4,6 @@ const {Message, Routines} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.endpoint.create-service')
 
 const IEndpoint = require('../../service/iendpoint')
-const { exist } = require('@hapi/joi')
 
 module.exports = class CreateSrvEndpoint extends IEndpoint {
 

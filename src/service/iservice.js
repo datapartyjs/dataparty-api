@@ -12,7 +12,7 @@ const debug = require('debug')('dataparty.service.IService')
 module.exports = class IService {
   constructor({
     name, version, githash='', branch=''
-  }){
+  }, build){
 
     this.constructors = {
       schemas: {},
@@ -78,6 +78,10 @@ module.exports = class IService {
       v8cache: false, // default
       quiet: false, // default
       debugLog: false // default
+    }
+
+    if(build){
+      this.importBuild(build)
     }
    }
 

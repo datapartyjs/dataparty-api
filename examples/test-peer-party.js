@@ -42,6 +42,8 @@ async function main(){
   await peer1.loadIdentity()
   await peer2.loadIdentity()
 
+  console.log('peer identity', peer1.identity)
+
   //peer1.comms.remoteIdentity = peer2.identity
   peer2.comms.remoteIdentity = peer1.identity
 

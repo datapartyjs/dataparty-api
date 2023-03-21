@@ -1,7 +1,6 @@
 const Path = require('path')
 const Joi = require('@hapi/joi')
 const Hoek = require('@hapi/hoek')
-const {VM, VMScript} = require('vm2')
 const Debug = require('debug')
 const debug = Debug('dataparty.service.runner-node')
 const EndpointContext = require('./endpoint-context')
@@ -11,7 +10,7 @@ const Router = require('origin-router').Router
 const Runner = require('@dataparty/tasker').Runner
 
 class ServiceRunnerNode {
-  constructor({service, party, sendFullErrors=false, useNative=true}){
+  constructor({service, party, sendFullErrors=false, useNative=true, prefix='', router=new Router()}){
     this.party = party
     this.service = service
     this.sendFullErrors = sendFullErrors
@@ -21,13 +20,19 @@ class ServiceRunnerNode {
     this.endpoint = {}
     this.tasks = {}
 
-    this.router = new Router()
+    this.prefix=prefix
+    this.router = router
     this.taskRunner = new Runner()
+
+    this.started = false
   }
 
   async start(){
 
+    if(this.started){return}
     debug('starting tasks')
+
+    this.started = true
 
     const taskMap = Hoek.reach(this.service, 'compiled.tasks')
     //const endpointsLoading = []
@@ -66,7 +71,7 @@ class ServiceRunnerNode {
       return
     }
 
-    debug('loadTask', name)
+    debug('loadTask', name, 'useNative =',this.useNative)
 
     let dt = new DeltaTime().start()
     
@@ -116,7 +121,7 @@ class ServiceRunnerNode {
       return
     }
 
-    debug('loadEndpoint', name)
+    debug('loadEndpoint', name, 'useNative =',this.useNative)
 
     let dt = new DeltaTime().start()
     
@@ -144,9 +149,11 @@ class ServiceRunnerNode {
 
     this.endpoint[name] = endpoint
 
-    this.router.add(name, name, this.endpointHandler(endpoint))
+    const routablePath = Path.join(this.prefix, Path.normalize(name))
+
+    this.router.add(name, routablePath, this.endpointHandler(endpoint))
     dt.end()
-    debug('loaded endpoint',name,'in',dt.deltaMs,'ms')
+    debug('loaded endpoint', routablePath,'in',dt.deltaMs,'ms')
   }
 
 
@@ -168,7 +175,7 @@ class ServiceRunnerNode {
       return this.middleware[type][name]
     }
 
-    debug('loadMiddleware', type, name)
+    debug('loadMiddleware', type, name, 'useNative =',this.useNative)
 
     let dt = new DeltaTime().start()
     const build = Hoek.reach(this.service, `compiled.middleware.${type}.${name}`)
@@ -231,10 +238,9 @@ class ServiceRunnerNode {
   }
 
   async onRequest(req, res){
-    debug('onRequest')
+    debug('onRequest', req)
 
     debug('req', req.method, req.hostname,'-', req.url, req.ips, req.body)
-
 
 
     let route = await this.router.route(req, res)

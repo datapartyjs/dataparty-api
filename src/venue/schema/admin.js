@@ -1,0 +1,5 @@
+
+{
+  created: Date,
+  user: User
+}
