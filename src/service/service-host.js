@@ -1,6 +1,5 @@
 const CORS = require('cors')
 const {URL} = require('url')
-const net = require('net')
 const http = require('http')
 const https = require('https')
 const morgan = require('morgan')
@@ -24,8 +23,13 @@ class ServiceHost {
     cors = {},
     trust_proxy = false,
     listenUri = 'http://0.0.0.0:4001',
+    i2pEnabled = false,
+    i2pSamHost = '127.0.0.1',
+    i2pSamPort = 4444,
+    i2pKey = null,
     wsEnabled = true,
     wsPort = null,
+    wsUpgradePath = '/ws',
     runner
   }={}){
     this.apiApp = express()
@@ -55,12 +59,30 @@ class ServiceHost {
       this.wsServer = new ServiceHostWebsocket({
         trust_proxy,
         port: wsPort,
+        upgradePath: wsUpgradePath,
         runner: this.runner
       })
     }
 
-    this.started = false
+    if(i2pEnabled){
+      this.i2pEnabled = true
 
+      this.i2p = null
+      this.i2pSettings = {
+        sam: {
+          host: i2pSamHost,
+          portTCP: i2pSamPort,
+          publicKey: reach(i2pKey, 'publicKey'),
+          privateKey: reach(i2pKey, 'privateKey')
+        },
+        forward: {
+          host: this.apiServerUri.host,
+          port: this.apiServerUri.port
+        }
+      }
+    }
+
+    this.started = false
   }
 
   async start(){
@@ -117,6 +139,18 @@ class ServiceHost {
     if(this.wsServer && this.apiServer){
       debug('starting websocket')
       this.wsServer.start(this.apiServer)
+    }
+
+    if(this.i2pEnabled){
+      debug('starting i2p forward')
+      const SAM = require('@diva.exchange/i2p-sam')
+
+      this.i2p = await i2p.createForward(this.i2pSettings)
+      this.i2pUri = this.i2p.getPublicKeys()
+      this.i2pSettings.privateKey = null  // clear no longer needed
+
+
+      debug('i2p address - ', this.i2pUri)
     }
   }
 

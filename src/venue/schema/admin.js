@@ -1,5 +1,5 @@
 
 {
   created: Date,
-  user: User
+  identity
 }

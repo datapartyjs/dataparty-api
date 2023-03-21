@@ -4,16 +4,16 @@ const debug = require('debug')('dataparty.service.host-websocket')
 const ws = require('ws')
 const WebSocketServer = ws.WebSocketServer
 
-const WATCHDOG_INTERVAL = 30000
+const WATCHDOG_INTERVAL = 5*60*1000
 
 const Comms = require('../comms')
 const PeerParty = require('../party/peer/peer-party')
 
 class ServiceHostWebsocket{
 
-  constructor({trust_proxy, port, path, runner, wsSettings}){
+  constructor({trust_proxy, port, upgradePath, runner, wsSettings}){
     this.port = port
-    this.path = path || '/ws'
+    this.upgradePath = upgradePath
     this.runner = runner
     this.trust_proxy = trust_proxy
     this.wsSettings = wsSettings || {}
@@ -49,7 +49,7 @@ class ServiceHostWebsocket{
 
     debug('handleUpgrade', request.headers.host, request.url)
 
-    if(request.url == this.path){
+    if(request.url == this.upgradePath){
       this.doUpgrade(request, socket, head)
     } else {
       socket.destroy()
@@ -96,6 +96,7 @@ class ServiceHostWebsocket{
 
     conn.on('close',()=>{
       debug('connection closed', conn.ip)
+      conn.isAlive = false
     })
 
     debug('creating peer party')

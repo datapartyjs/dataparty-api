@@ -1,14 +1,14 @@
 const Joi = require('@hapi/joi')
 const Hoek = require('@hapi/hoek')
 const {Message, Routines} = require('@dataparty/crypto')
-const debug = require('debug')('dataparty.middleware.pre.decrypt')
+const debug = require('debug')('venue.middleware.pre.decrypt')
 
-const IMiddleware = require('../../imiddleware')
+const IMiddleware = require('../../../service/imiddleware')
 
-module.exports = class Decrypt extends IMiddleware {
+module.exports = class DecryptNaCl extends IMiddleware {
 
   static get Name(){
-    return 'decrypt'
+    return 'decrypt-nacl'
   }
 
   static get Type(){
@@ -55,7 +55,7 @@ module.exports = class Decrypt extends IMiddleware {
       public: publicKeys
     })
 
-    context.setInputSession(Hoek.reach(jsonContent, 'session'))
+    //context.setInputSession(Hoek.reach(jsonContent, 'session'))
     context.setInput(Hoek.reach(jsonContent, 'data'))
   }
 }

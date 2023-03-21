@@ -4,11 +4,8 @@
   target: {
     id: String,
     type: String,
-    hash: {
-      value: String,
-      order: String[]
-    }
-    host: Identity, `Index`
+    hash: String
+    host: String //! Host identity hash
   }
 
 }
