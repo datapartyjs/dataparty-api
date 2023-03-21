@@ -1,4 +1,5 @@
 const debug = require('debug')('dataparty.comms.i2psocket')
+const debugShim = require('debug')('dataparty.comms.i2psocket-shim')
 
 const SAM = require('@diva.exchange/i2p-sam')
 const EventEmitter = require('eventemitter3')
@@ -17,7 +18,7 @@ class I2pStreamShim extends EventEmitter {
     }
     
     this.conn.onopen = () => {
-      debug('shim open')
+      debugShim('shim open')
       setTimeout(()=>{this.emit('connect')}, 1)
     }
     
@@ -33,7 +34,7 @@ class I2pStreamShim extends EventEmitter {
       setTimeout(()=>{this.emit('connect')}, 1)
     }
 
-    debug('connection shim', this.conn.readyState)
+    debugShim('connection shim', this.conn.readyState)
   }
 
   close(){
