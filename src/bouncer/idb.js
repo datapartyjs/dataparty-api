@@ -24,7 +24,7 @@ module.exports = class IDb extends EventEmitter {
     for(const collectionName of this.factory.getValidators()){
       debug('creating collection', collectionName)
 
-      const indexSettings = reach(this.factory, 'model.schemas.IndexSettings.'+collectionName)
+      const indexSettings = reach(this.factory, 'schemas.IndexSettings.'+collectionName)
       await this.createCollection(collectionName, indexSettings)
     }
   }

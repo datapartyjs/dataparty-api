@@ -89,7 +89,7 @@ class I2pSocketComms extends PeerComms {
     debug('init')
     
     if(!this.host && !this.stream){
-      debug('opening client connection to -',this.destination, ' via SAM', JSON.stringify({this.samHost,null,2}))
+      debug('opening client connection to -',this.destination, ' via SAM', JSON.stringify(this.samHost,null,2))
 
       this.stream = await SAM.createStream({
         sam: this.samHost,

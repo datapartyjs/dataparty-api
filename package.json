@@ -10,7 +10,6 @@
     "events": "eventemitter3",
     "process": "process/browser.js",
     "path": "path-browserify",
-    "assert": "assert",
     "crypto": "crypto-browserify"
   },
   "targets": {
@@ -59,7 +58,7 @@
   },
   "dependencies": {
     "@dataparty/bouncer-db": "1.0.1",
-    "@dataparty/crypto": "datapartyjs/dataparty-crypto#parcel-build",
+    "@dataparty/crypto": "datapartyjs/dataparty-crypto#seed-phrase",
     "@dataparty/tasker": "^0.0.2",
     "@diva.exchange/i2p-sam": "^4.1.8",
     "@hapi/joi": "^17.1.1",
@@ -114,7 +113,6 @@
     "@dataparty/bouncer-model": "1.4.3",
     "@hapi/code": "^9.0.1",
     "@hapi/lab": "^25.0.1",
-    "assert": "^2.0.0",
     "better-docs": "^1.1.6",
     "browserify-zlib": "^0.2.0",
     "crypto-browserify": "^3.12.0",
@@ -127,7 +125,7 @@
     "parcel": "^2.3.1",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
-    "punycode": "2.3.0",
+    "punycode": "^1.4.1",
     "querystring-es3": "^0.2.1",
     "stream-browserify": "^3.0.0",
     "stream-http": "^3.2.0",
