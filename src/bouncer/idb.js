@@ -3,7 +3,7 @@ const reach = require('../utils/reach')
 const debug = require('debug')('bouncer.idb')
 const EventEmitter = require('eventemitter3')
 
-module.exports = class IDb extends EventEmitter {
+class IDb extends EventEmitter {
 
   /**
    * 
@@ -97,3 +97,5 @@ module.exports = class IDb extends EventEmitter {
   async findAndRemove(collectionName, msg){ throw new Error('not implemented') }
 
 }
+
+module.exports = IDb

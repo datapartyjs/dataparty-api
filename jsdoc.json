@@ -1,27 +1,61 @@
 {
-    "tags": {
-        "allowUnknownTags": true,
-        "dictionaries": ["jsdoc"]
-    },
-    "source": {
-        "include": ["src", "package.json", "README.md"],
-        "includePattern": ".js$",
-        "excludePattern": "(node_modules/|docs)"
-    },
-    "plugins": [
-        "plugins/markdown"
-    ],
-    "templates": {
-        "cleverLinks": false,
-        "monospaceLinks": true,
-        "useLongnameInNav": false,
-        "showInheritedInNav": true
-    },
-    "opts": {
-        "destination": "./docs/",
-        "encoding": "utf8",
-        "private": true,
-        "recurse": true,
-        "template": "../../node_modules/docdash"
+  "source": {
+      "include": ["src", "package.json", "README.md"],
+      "includePattern": ".(js)$",
+      "excludePattern": "(node_modules/|docs)"
+  },
+
+  "plugins": ["plugins/markdown"],
+
+  "opts": {
+    "encoding": "utf8",
+    "readme": "./README.md",
+    "tutorials": "tutorials",
+    "destination": "docs/",
+    "recurse": true,
+    "verbose": true,
+    "template": "./node_modules/clean-jsdoc-theme",
+    "theme_opts": {
+      "homepageTitle": "@dataparty/api - cloud services for the Web3.0 generation",
+      "title": "@dataparty/api",
+      "sections": ["Classes", "Global", "Tutorials"],
+        "default_theme": "dark",
+        "displayModuleHeader": true,
+        "menu": [
+          {
+              "title": "Github",
+              "id": "github",
+              "link": "https://github.com/datapartyjs/api"
+          },
+          {
+              "title": "npm",
+              "id": "npm",
+              "link": "https://www.npmjs.com/package/@dataparty/api"
+          }
+      ],
+      "meta": [
+        {
+            "name": "Author",
+            "content": "dataparty"
+        },
+        {
+            "name": "Description",
+            "content": "dependency solving task runner for javascript"
+        }
+      ],
+      "codepen": {
+        "enable_for": ["tutorials"],
+        "options": {
+          "js_pre_processor": "babel"
+        }
+      },
+      "footer": "<div style='margin-bottom: 0.5rem;'>@dataparty/api</div> Fork: <a href='https://github.com/datapartyjs/dataparty-api'>https://github.com/datapartyjs/dataparty-api</a><br>Built by <a href='https://www.dataparty.xyz'>dataparty</a> with 🖤"
     }
+  },
+
+  
+  "markdown": {
+      "hardwrap": false,
+      "idInHeadings": true
+  }
 }

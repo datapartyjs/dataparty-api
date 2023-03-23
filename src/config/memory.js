@@ -4,11 +4,12 @@ const deepSet = require('deep-set')
 const reach = require('../utils/reach')
 const logger = require('debug')('dataparty.config.memory');
 
+const IConfig = require('./iconfig')
 /**
  * @class
- * @implements {Config}
+ * @implements {IConfig}
  */
-class MemoryConfig {
+class MemoryConfig extends IConfig {
 
   constructor(defaults){
     defaults = defaults || {}
