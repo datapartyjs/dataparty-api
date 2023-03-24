@@ -66,7 +66,7 @@ class IDocument extends EventEmitter {
 
   /**
    * @typedef {Object} IdObj
-   * @property {string} id    <mongo-id>
+   * @property {string} id    mongo-id or UUID
    * @property {string} type  Document type
    */
 

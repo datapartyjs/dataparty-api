@@ -5,13 +5,19 @@ const Path = require('path')
 const mkdirp = require('mkdirp')
 const deepSet = require('deep-set')
 const reach = require('../utils/reach')
-const logger = require('debug')('dataparty.config.json-file');
+const logger = require('debug')('dataparty.config.json-file')
+
+const IConfig = require('./iconfig')
+
+/**
+ * @module Config
+ */
 
 /**
  * @class
- * @implements {Config}
+ * @implements {IConfig}
  */
-class JsonFileConfig {
+class JsonFileConfig extends IConfig {
 
   constructor(defaults={}){
     this.basePath = reach(defaults, 'basePath')

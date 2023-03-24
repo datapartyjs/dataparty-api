@@ -8,15 +8,17 @@ const touch = require('touch')
 const mkdirp = require('mkdirp')
 const sanitize = require('sanitize-filename')
 
-const logger = require('debug')('dataparty.config.nconf');
+const logger = require('debug')('dataparty.config.nconf')
+
+const IConfig = require('./iconfig')
 
 var BASE_PATH = process.env.SNAP_COMMON || ((process.env.HOME) ? (process.env.HOME + '/.dataparty-api') : '.' )
 
 /**
  * @class
- * @implements {Config}
+ * @implements {IConfig}
  */
-class NconfConfig {
+class NconfConfig extends IConfig {
 
   constructor(defaults, whitelist){
     this.whitelist = whitelist || []

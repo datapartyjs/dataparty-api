@@ -55,7 +55,8 @@
     "clean": "rm -rf node_modules; rm package-lock.json; npm i",
     "build-test": "node ./examples/party/example-build.js",
     "watch-test": "DEBUG=* nodemon --ignore service test/test-service-compile.js",
-    "build-docs": "npx jsdoc -c jsdoc.json"
+    "build-docs": "./scripts/build-docs.sh",
+    "generate-docs": "npx jsdoc --configure jsdoc.json --verbose"
   },
   "dependencies": {
     "@dataparty/bouncer-db": "1.0.1",
@@ -114,8 +115,8 @@
     "@hapi/code": "^9.0.1",
     "@hapi/lab": "^25.0.1",
     "assert": "^2.0.0",
-    "better-docs": "^1.1.6",
     "browserify-zlib": "^0.2.0",
+    "clean-jsdoc-theme": "^4.2.6",
     "crypto-browserify": "^3.12.0",
     "docdash": "^1.1.1",
     "fake-indexeddb": "^4.0.0",

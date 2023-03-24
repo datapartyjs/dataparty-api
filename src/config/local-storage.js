@@ -4,11 +4,12 @@ const deepSet = require('deep-set')
 const reach = require('../utils/reach')
 const logger = require('debug')('dataparty.config.local-storage');
 
+const IConfig = require('./iconfig')
 /**
  * @class
- * @implements {Config}
+ * @implements {IConfig}
  */
-class LocalStorageConfig {
+class LocalStorageConfig extends IConfig {
 
   constructor(defaults, whitelist){
     this.whitelist = whitelist || []
