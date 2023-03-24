@@ -10,9 +10,12 @@ const logger = require('debug')('dataparty.config.json-file')
 const IConfig = require('./iconfig')
 
 /**
- * @class Config.JsonFileConfig
+ * @module Config
+ */
+
+/**
+ * @class
  * @implements {IConfig}
- * @namespace Config
  */
 class JsonFileConfig extends IConfig {
 
