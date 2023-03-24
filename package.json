@@ -115,7 +115,6 @@
     "@hapi/code": "^9.0.1",
     "@hapi/lab": "^25.0.1",
     "assert": "^2.0.0",
-    "better-docs": "^1.1.6",
     "browserify-zlib": "^0.2.0",
     "clean-jsdoc-theme": "^4.2.6",
     "crypto-browserify": "^3.12.0",
