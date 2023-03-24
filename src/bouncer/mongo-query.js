@@ -4,13 +4,13 @@ const ObjectId = require('bson-objectid')
 const debug = require('debug')('bouncer.mongo-query')
 
 // mongoose adapter for data party query specification
-module.exports = class MongoQuery {
+class MongoQuery {
 
   /**
-   * generates a mongodb query doc from a roshub query spec
+   * generates a mongodb query doc from a dataparty query spec
    *
    * @constructor
-   * @param spec - roshub query spec (wire format for data party queries)
+   * @param spec - dataparty query spec (wire format for data party queries)
    */
   constructor (spec) {
     this.spec = Object.assign({}, spec)
@@ -191,3 +191,5 @@ const buildQueryDoc = (node, cursor) => {
   }
   throw new Error(`unrecognized query op: ${node.op}`)
 }
+
+module.exports = MongoQuery

@@ -29,7 +29,7 @@ class IParty {
     this.started = false
 
     /**
-     * @member factory 
+     * @member 
      * @type {DocumentFactory} */
     this.factory = new DocumentFactory({party: this, model, factories, documentClass})
   }
