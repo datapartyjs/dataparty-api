@@ -1,31 +1,24 @@
 const debug = require('debug')('dataparty.comms.loopback-channel')
 const EventEmitter = require("eventemitter3")
 
-class PeerNode {
-  constructor(peer, name){
-    this.name = name
-    this.events = new EventEmitter
-    this.peer = peer
-  }
 
-  post(ns, msg){
-    debug('post('+this.name+')', ns, msg)
-    this.events.emit(ns, msg)
-  }
+const LoopbackChannelPort = require('./loopback-channel-port')
 
-  on(ns, func){
-    debug('on('+this.name+')', ns)
-    this.peer.events.on(ns, func)
-  }
-}
-
+/**
+ * @class module:Comms.LoopbackChannel
+ * @implements {module:Comms.ISocketComms}
+ * @extends {module:Comms.ISocketComms}
+ * @link module:Comms
+ */
 module.exports = class LoopbackChannel {
   constructor(){
-    //
 
-    this.peer1 = new PeerNode(undefined, '1')
-    this.peer2 = new PeerNode(this.peer1, '2')
+    //! The first channel peer
+    this.port1 = new LoopbackChannelPort(undefined, '1')
 
-    this.peer1.peer = this.peer2
+    //! The second channel peer
+    this.peer2 = new LoopbackChannelPort(this.port1, '2')
+
+    this.port1.peer = this.port2
   }
 }

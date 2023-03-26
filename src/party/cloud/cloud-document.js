@@ -8,7 +8,6 @@ const IDocument = require('../idocument')
  * Represents a cloud document with cloud change notifications, multi-tenant ownership and ganular access controls
  * @class
  * @interface
- * @alias module:dataparty.DataParty.CloudDocument
  * @param {object}    options
  * @param {DataParty} options.party
  * @param {string}    options.id

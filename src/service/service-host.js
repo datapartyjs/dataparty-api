@@ -1,6 +1,5 @@
 const CORS = require('cors')
 const {URL} = require('url')
-const net = require('net')
 const http = require('http')
 const https = require('https')
 const morgan = require('morgan')
@@ -17,15 +16,19 @@ const Pify = async (p)=>{
 
 /**
  * @class
- * @alias module:dataparty.ServiceHost
  */
 class ServiceHost {
   constructor({
     cors = {},
     trust_proxy = false,
     listenUri = 'http://0.0.0.0:4001',
+    i2pEnabled = false,
+    i2pSamHost = '127.0.0.1',
+    i2pSamPort = 4444,
+    i2pKey = null,
     wsEnabled = true,
     wsPort = null,
+    wsUpgradePath = '/ws',
     runner
   }={}){
     this.apiApp = express()
@@ -55,12 +58,30 @@ class ServiceHost {
       this.wsServer = new ServiceHostWebsocket({
         trust_proxy,
         port: wsPort,
+        upgradePath: wsUpgradePath,
         runner: this.runner
       })
     }
 
-    this.started = false
+    if(i2pEnabled){
+      this.i2pEnabled = true
 
+      this.i2p = null
+      this.i2pSettings = {
+        sam: {
+          host: i2pSamHost,
+          portTCP: i2pSamPort,
+          publicKey: reach(i2pKey, 'publicKey'),
+          privateKey: reach(i2pKey, 'privateKey')
+        },
+        forward: {
+          host: this.apiServerUri.host,
+          port: this.apiServerUri.port
+        }
+      }
+    }
+
+    this.started = false
   }
 
   async start(){
@@ -112,11 +133,25 @@ class ServiceHost {
     this.apiServer.on('error', this.handleServerError.bind(this))
 
     debug('server listening')
-    debug('address', this.apiServer.address())
+    debug('\t', 'address', this.apiServer.address())
 
     if(this.wsServer && this.apiServer){
       debug('starting websocket')
       this.wsServer.start(this.apiServer)
+    }
+
+    if(this.i2pEnabled && this.i2p == null){
+      debug('starting i2p forward')
+      const SAM = require('@diva.exchange/i2p-sam')
+
+      this.i2p = await SAM.createForward(this.i2pSettings)
+      this.i2pUri = this.i2p.getPublicKeys()
+      this.i2pSettings.privateKey = null  // clear no longer needed
+
+      this.i2p.on('error', this.reportI2pError.bind(this))
+
+      debug('i2p started')
+      debug('\t','address', this.i2pUri)
     }
   }
 
@@ -133,6 +168,10 @@ class ServiceHost {
     await (Pify(this.apiServer.close)())
 
     debug('stopped server')
+  }
+
+  reportI2pError(error){
+    debug('WARN - I2P ERROR -', JSON.stringify(error), error.toString())
   }
 
   handleServerError(error){

@@ -10,7 +10,11 @@ const AuthError = require('../errors/auth-error')
 
 const DEFAULT_REST_TIMEOUT = 30000
 
-
+/**
+ * @class module:Comms.RestComms
+ * @link module:Comms
+ * @extends EventEmitter
+ */
 class RestComms extends EventEmitter {
   constructor({ remoteIdentity, config, party }) {
     super()

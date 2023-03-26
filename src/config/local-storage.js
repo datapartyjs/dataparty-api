@@ -5,9 +5,12 @@ const reach = require('../utils/reach')
 const logger = require('debug')('dataparty.config.local-storage');
 
 const IConfig = require('./iconfig')
+
+
 /**
- * @class
- * @implements {IConfig}
+ * @class  module:Config.LocalStorageConfig
+ * @implements {module:Config.IConfig}
+ * @link module.Config
  */
 class LocalStorageConfig extends IConfig {
 

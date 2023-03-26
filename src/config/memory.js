@@ -5,9 +5,13 @@ const reach = require('../utils/reach')
 const logger = require('debug')('dataparty.config.memory');
 
 const IConfig = require('./iconfig')
+
+
+
 /**
- * @class
- * @implements {IConfig}
+ * @class module:Config.MemoryConfig
+ * @implements {module:IConfig}
+ * @link module.Config
  */
 class MemoryConfig extends IConfig {
 

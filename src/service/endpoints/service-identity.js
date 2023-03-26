@@ -26,7 +26,10 @@ module.exports = class ServiceIdentity extends IEndpoint {
         validate: Joi.object().keys({
           id: Joi.string(),
           key: {
-            type: Joi.string().valid('ecdsa'),
+            type: Joi.alternatives().try(
+              Joi.string().valid('ecdsa'),
+              Joi.string().valid('nacl')
+            ),
             public: Joi.object().keys({
               box: Joi.string(),
               sign: Joi.string()

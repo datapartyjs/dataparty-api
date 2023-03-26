@@ -7,6 +7,17 @@ const BLEMessage = require('./ble/BLEMessage')
 const BLEOp = require('./ble/BLEOp')
 // const bluetooth = (navigator) navigator.bluetooth
 
+/**
+ * A simple BLE socket
+ * ⚠️ Warning: This class maybe significantly refactored in future releases
+ * 
+ * @class module:Comms.BLEPeerClient
+ * @extends EventEmitter
+ * @link module:Comms
+ * @see https://webbluetoothcg.github.io/web-bluetooth
+ * @param {BleDevice} bleDevice A connected BLE device. See BLEPeerClient.requestDevice()
+ */
+
 class BLEPeerClient extends EventEmitter {
   constructor(bleDevice){
     super()

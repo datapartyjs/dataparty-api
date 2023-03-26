@@ -1,16 +1,10 @@
-const NconfConfig = require('./nconf')
-const MemoryConfig = require('./memory')
-const JsonFileConfig = require('./json-file')
-const LocalStorageConfig = require('./local-storage')
+
 
 /**
- * @module Config
- */
-const Config = {
-  NconfConfig,
-  MemoryConfig,
-  JsonFileConfig,
-  LocalStorageConfig
-}
+* @module Config
+*/
 
-module.exports = Config
+exports.NconfConfig = require('./nconf')
+exports.MemoryConfig = require('./memory')
+exports.JsonFileConfig = require('./json-file')
+exports.LocalStorageConfig = require('./local-storage')

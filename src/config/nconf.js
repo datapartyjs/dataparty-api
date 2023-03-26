@@ -14,9 +14,11 @@ const IConfig = require('./iconfig')
 
 var BASE_PATH = process.env.SNAP_COMMON || ((process.env.HOME) ? (process.env.HOME + '/.dataparty-api') : '.' )
 
+
 /**
- * @class
- * @implements {IConfig}
+ * @class module:Config.NconfConfig
+ * @implements {module:Config.IConfig}
+ * @link {module.Config}
  */
 class NconfConfig extends IConfig {
 

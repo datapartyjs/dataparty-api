@@ -9,12 +9,24 @@ const AdminCrufler = require('../../bouncer/crufler-admin')
 const Qb = require('../qb')
 
 
+
 /**
- * @class 
- * @alias module:dataparty.LokiParty
- * @interface
- */
+ * A local party based on LokiJS.
+ * @see https://github.com/techfort/LokiJS
+ * 
+ * @class  module:Party.LokiParty
+ * @extends {module:Party.IParty}
+ * @link module.Party
+ * @param {string} path Path on filesystem to lokijs db file
+ * @param {LokiAdapater} dbAdapter Lokijs db adapter, see: http://techfort.github.io/LokiJS/tutorial-Persistence%20Adapters.html
+ * @param {Object} lokiOptions Options to pass to lokijs see: http://techfort.github.io/LokiJS/Loki.html
+*/
 class LokiParty extends IParty {
+
+  /**
+   * 
+   * @param {*} param0 
+   */
 
   constructor ({path, dbAdapter, qbOptions, lokiOptions, ...options}) {
     super(options)

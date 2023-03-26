@@ -1,11 +1,13 @@
-module.exports = {
-  //IBouncer: require('./ibouncer'),
-  ICrufler: require('./icrufler'),
-  IDb: require('./idb'),
-  ISchema: require('./ischema'),
-  MongoQuery: require('./mongo-query'),
+/**
+ * @module Db
+ */
 
-  LokiDb: require('./db/loki-db'),
-  TingoDb: require('./db/tingo-db'),
-  ZangoDb: require('./db/zango-db')
-}
+exports.ICrufler= require('./icrufler')
+exports.IDb= require('./idb')
+exports.ISchema= require('./ischema')
+exports.MongoQuery= require('./mongo-query')
+exports.LokiDb= require('./db/loki-db')
+exports.TingoDb= require('./db/tingo-db')
+exports.ZangoDb= require('./db/zango-db')
+
+

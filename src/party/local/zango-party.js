@@ -10,10 +10,15 @@ const AdminCrufler = require('../../bouncer/crufler-admin')
 const Qb = require('../qb')
 
 
+
 /**
- * @class
- * @alias module:dataparty.ZangoParty
- * @interface
+ * A local party implementation based on IndexedDb via ZangoDB
+ * @see https://erikolson186.github.io/zangodb/
+ * 
+ * @class  module:Party.ZangoParty
+ * @extends {module:Party.IParty}
+ * @link module.Party
+ * @param string dbName
  */
 class ZangoParty extends IParty {
 

@@ -8,9 +8,9 @@ const IParty = require('../iparty')
 const LocalTopicHost = require('../../topics/local-topic-host')
 
 /**
- * @class 
- * @alias module:dataparty.LocalParty
- * @interface
+ * @class  module:Party.PeerParty
+ * @implements {module:Party.IParty}
+ * @link module.Party
  */
 class PeerParty extends IParty {
 

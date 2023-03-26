@@ -9,10 +9,17 @@ const AdminCrufler = require('../../bouncer/crufler-admin')
 const Qb = require('../qb')
 
 
+
 /**
- * @class 
- * @alias module:dataparty.TingoParty
- * @interface
+ * A local party implementation based on TingoDB
+ * @see http://www.tingodb.com/
+ * 
+ * @class  module:Party.TingoParty
+ * @implements {module:Party.IParty}
+ * @link module.Party
+ * @see http://www.tingodb.com/
+ * @param string path  Path to a directory on the file system to store tingo db
+ * @param {Object} tingoOptions O ptions to pass to tingodb. Defaults to `{nativeObjectID: true}`. See: https://github.com/sergeyksv/tingodb#requiretingodboptions
  */
 class TingoParty extends IParty {
 

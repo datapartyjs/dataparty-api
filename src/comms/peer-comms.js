@@ -3,7 +3,7 @@ const uuidv4 = require('uuid/v4')
 const HttpMocks = require('node-mocks-http')
 
 const SocketOp = require('./op/socket-op')
-const SocketComms = require('./socket-comms')
+const ISocketComms = require('./isocket-comms')
 
 const Joi = require('@hapi/joi')
 const HostOp = require('./host/host-op')
@@ -36,8 +36,14 @@ function truncateString(str, num) {
 }
 
 
-
-class PeerComms extends SocketComms {
+/**
+ * @class module:Comms.PeerComms
+ * @implements {module:Comms.ISocketComms}
+ * @extends {module:Comms.ISocketComms}
+ * @link module:Comms
+ * 
+ */
+class PeerComms extends ISocketComms {
   constructor({remoteIdentity, discoverRemoteIdentity, host, party, socket, ...options}){
     super({remoteIdentity, discoverRemoteIdentity, party, ...options})
 

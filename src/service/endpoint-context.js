@@ -44,7 +44,7 @@ class EndpointContext {
 
   setSession(session){
     this.session = session
-    this.debug('session.id' + session.id)
+    this.debug('session' + session)
   }
 
   setOauthCloud(oauth_cloud){

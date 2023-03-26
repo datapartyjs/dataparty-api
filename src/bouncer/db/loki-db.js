@@ -12,6 +12,15 @@ const { promisfy } = require('promisfy')
 const debug = require('debug')('bouncer.db.loki-db')
 
 
+
+/**
+ * A db implementation based on LokiJS.
+ * @see https://github.com/techfort/LokiJS
+ * 
+ * @class  module:Db.LokiDb
+ * @extends {module:Db.IDb}
+ * @link module:Db
+ */
 module.exports = class LokiDb extends IDb {
 
   constructor ({path, factory, dbAdapter, lokiOptions}) {

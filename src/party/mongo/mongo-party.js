@@ -7,10 +7,14 @@ const IParty = require('../iparty')
 const Qb = require('../qb')
 
 
+
 /**
- * @class 
- * @alias module:dataparty.MongoParty
- * @interface
+ * A party implementation based on Mongodb and mongoose
+ * @see https://mongoosejs.com/
+ * 
+ * @class  module:Party.MongoParty
+ * @implements {module:Party.IParty}
+ * @link module.Party
  */
 class MongoParty extends IParty {
 

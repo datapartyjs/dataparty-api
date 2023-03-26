@@ -6,8 +6,10 @@ const EventEmitter = require('eventemitter3')
 class IDb extends EventEmitter {
 
   /**
+   * @interface module:Db.IDb
+   * @link module:Db
    * 
-   * @param {DocumentFactory} factory 
+   * @param {module:Party.ocumentFactory} factory 
    * @param {string} prefix Prefix collection names
    */
   constructor(factory, prefix='api_'){
@@ -24,7 +26,7 @@ class IDb extends EventEmitter {
     for(const collectionName of this.factory.getValidators()){
       debug('creating collection', collectionName)
 
-      const indexSettings = reach(this.factory, 'model.schemas.IndexSettings.'+collectionName)
+      const indexSettings = reach(this.factory, 'schemas.IndexSettings.'+collectionName)
       await this.createCollection(collectionName, indexSettings)
     }
   }

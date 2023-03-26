@@ -1,8 +1,6 @@
 {
   created: Date,
 
-  uuid: String,
-
   rootOfTrust: {
 
     nacl: NaClIdentityObject[],
@@ -16,3 +14,4 @@
     pgp: String[]*/
   }
 }
+
