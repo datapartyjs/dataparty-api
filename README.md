@@ -1,7 +1,9 @@
 # @dataparty/api
 [![experimental](http://badges.github.io/stability-badges/dist/experimental.svg)](http://github.com/badges/stability-badges)[![license](https://img.shields.io/github/license/datapartyjs/api)](https://github.com/datapartyjs/dataparty-api/blob/master/LICENSE)
 
-ad-hoc cloud for the Web3.0 generation
+decentralized cloud framework for the Web3.0 generation.
+
+Dataparty allows the app maker to decide how centralized or distributed they app should be and implement that vision rapidly.
 
  * Documentation - [datapartyjs.github.io/dataparty-api](https://datapartyjs.github.io/dataparty-api)
  * NPM - [npmjs.com/package/@dataparty/api](https://www.npmjs.com/package/@dataparty/api)
@@ -12,18 +14,16 @@ ad-hoc cloud for the Web3.0 generation
 
 The primary goal of `@dataparty/api` is to enable secure microservices development across all architectual domains with a single code base. This covers traditional clouds, peer-to-peer apps(with or without cloud backing), and hybrid clouds. Dataparty services are able to be run on servers, edge devices, or even directly in the browser or app. This means users of dataparty based apps can frequently run their own backend from with an app.
 
-Dataparty allows the app maker to decide how centralized or distributed they app should be and implement that vision rapidly.
-
 
 ## Features
 
-A [`IParty`](https://datapartyjs.github.io/dataparty-api/IParty.html) typically consists of these parts:
+A dataparty app/service typically consists of these parts:
 
- * Identity
- * Comms
- * Config
- * DBs
- * Services
+ * [Comms](https://datapartyjs.github.io/dataparty-api/module-Comms.html)
+ * [Config](https://datapartyjs.github.io/dataparty-api/module-Config.html)
+ * [Db](https://datapartyjs.github.io/dataparty-api/module-Db.html)
+ * [Party](https://datapartyjs.github.io/dataparty-api/module-Party.html)
+ * [Service](https://datapartyjs.github.io/dataparty-api/module-Service.html)
 
 
 ## Roadmap
