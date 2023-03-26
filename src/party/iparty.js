@@ -9,9 +9,8 @@ const DocumentFactory = require('./document-factory')
 const LokiCache = require('./loki-cache.js') // insert | populate cache
 
 /**
- * @class 
- * @alias module:dataparty.IParty
- * @interface
+ * @interface module:Party.IParty
+ * @link module.Party
  */
 class IParty {
   constructor({config, cache, noCache=false, comms, model, factories, documentClass, qb=null}){

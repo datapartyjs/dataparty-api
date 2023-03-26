@@ -1,6 +1,8 @@
 
+
 /**
- * @interface
+ * @interface module:Config.IConfig
+ * @link module.Config
  */
 class IConfig {
     async start(){ throw 'not implemented' }

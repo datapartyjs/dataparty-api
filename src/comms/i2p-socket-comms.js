@@ -64,6 +64,17 @@ class I2pStreamShim extends EventEmitter {
 
 }
 
+/**
+ * A peer comms based on i2p using the SAM module from diva.exchange
+ * 
+ * @class module:Comms.I2pSocketComms
+ * @implements {module:Comms.PeerComms}
+ * @link module:Comms
+ * @see https://geti2p.net/en/
+ * @param {string} destination An i2p destination uri
+ * @param {SAM.I2pSamStream} stream Optional, already connected SAM.I2pSamStream
+ */
+
 class I2pSocketComms extends PeerComms {
   constructor({destination, stream, samHost, remoteIdentity, host, party, ...options}){
     super({remoteIdentity, host, party, ...options})

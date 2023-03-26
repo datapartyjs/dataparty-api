@@ -10,6 +10,11 @@ const {promisfy} = require('promisfy')
 const debug = require('debug')('bouncer.db.tingo-db')
 
 
+/**
+ * @class  module:Db.TingoDb
+ * @extends {module:Db.IDb}
+ * @link module:Db
+ */
 module.exports = class TingoDb extends IDb {
 
   constructor ({path, factory, tingoOptions, prefix}) {

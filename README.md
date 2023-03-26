@@ -10,8 +10,20 @@ ad-hoc cloud for the Web3.0 generation
 
 ## Goals
 
-The primary goal of `@dataparty/api` is to enable secure microservices development across all architectual domains with a single code base. This covers traditional clouds, peer-to-peer apps(with or without cloud backing), and hybrid clouds.
+The primary goal of `@dataparty/api` is to enable secure microservices development across all architectual domains with a single code base. This covers traditional clouds, peer-to-peer apps(with or without cloud backing), and hybrid clouds. Dataparty services are able to be run on servers, edge devices, or even directly in the browser or app. This means users of dataparty based apps can frequently run their own backend from with an app.
 
+Dataparty allows the app maker to decide how centralized or distributed they app should be and implement that vision rapidly.
+
+
+## Features
+
+A [`IParty`](https://datapartyjs.github.io/dataparty-api/IParty.html) typically consists of these parts:
+
+ * Identity
+ * Comms
+ * Config
+ * DBs
+ * Services
 
 
 ## Roadmap

@@ -1,28 +1,19 @@
-const BLEMessage = require('./ble/BLEMessage')
-const BLEOp = require('./ble/BLEOp')
-const AuthOp = require('./op/auth-op')
-const AuthError = require('../errors/auth-error')
 
-const RestComms = require('./rest-comms')
-const SocketComms = require('./socket-comms')
-
-const LoopbackComms = require('./loopback-comms')
-const LoopbackChannel = require('./loopback-channel')
-
-const PeerComms = require('./peer-comms')
-const WebsocketComms = require('./websocket-comms')
-const RTCSocketComms = require('./rtc-socket-comms')
-const I2pSocketComms = require('./i2p-socket-comms')
-
-const SocketOp = require('./socket-comms')
-const WebsocketOp = require('./websocket-op')
-
-
-
-module.exports = {
-  RestComms, SocketComms, PeerComms, 
-  LoopbackComms, LoopbackChannel,
-  WebsocketComms, RTCSocketComms, I2pSocketComms,
-  SocketOp, WebsocketOp, BLEMessage, BLEOp,
-  AuthOp, AuthError
-}
+/**
+ *  @module Comms 
+ */
+exports.BLEMessage = require('./ble/BLEMessage')
+exports.BLEOp = require('./ble/BLEOp')
+exports.AuthOp = require('./op/auth-op')
+exports.AuthError = require('../errors/auth-error')
+exports.RestComms = require('./rest-comms')
+exports.ISocketComms = require('./isocket-comms')
+exports.LoopbackComms = require('./loopback-comms')
+exports.LoopbackChannel = require('./loopback-channel')
+exports.LoopbackChannelPort = require('./loopback-channel-port')
+exports.PeerComms = require('./peer-comms')
+exports.WebsocketComms = require('./websocket-comms')
+exports.RTCSocketComms = require('./rtc-socket-comms')
+exports.I2pSocketComms = require('./i2p-socket-comms')
+exports.SocketOp = require('./isocket-comms')
+exports.WebsocketOp = require('./websocket-op')

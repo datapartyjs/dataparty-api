@@ -1,8 +1,9 @@
 {
   "source": {
-      "include": ["src", "package.json", "README.md"],
-      "includePattern": ".(js)$",
-      "excludePattern": "(node_modules/|docs)"
+    "include": ["src/", "package.json", "README.md"],
+    "includePattern": ".(js)$",
+    "exclude": ["src/index-browser.js"],
+      "excludePattern": "(node_modules/|docs/|dist/|src/index-browser.js)"
   },
 
   "plugins": ["plugins/markdown"],
@@ -18,7 +19,7 @@
     "theme_opts": {
       "homepageTitle": "@dataparty/api - cloud services for the Web3.0 generation",
       "title": "@dataparty/api",
-      "sections": ["Classes", "Global", "Tutorials"],
+      "sections": ["Modules", "Tutorials"],
         "default_theme": "dark",
         "displayModuleHeader": true,
         "menu": [

@@ -10,7 +10,11 @@ const MongoQuery = require('../mongo-query')
 const { promisfy } = require('promisfy')
 const debug = require('debug')('bouncer.db.zango-db')
 
-
+/**
+* @class  module:Db.ZangoDb
+* @extends {module:Db.IDb}
+* @link module:Db
+*/
 module.exports = class ZangoDb extends IDb {
 
   constructor ({dbname, factory}) {

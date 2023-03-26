@@ -1,53 +1,18 @@
 const debug = require('debug')('dataparty.comms.websocket')
 
 const WebSocket = global.WebSocket ? global.WebSocket : require('ws')
-const EventEmitter = require('eventemitter3')
-
 
 const PeerComms = require('./peer-comms')
 
+const WebsocketShim = require('./websocket-shim')
 
-class WebsocketShim extends EventEmitter {
-  constructor(conn){
-    super()
-    this.conn = conn
-
-    this.conn.onmessage = (evt) => {
-      this.emit('data', evt.data)
-    }
-    
-    this.conn.onopen = () => {
-      debug('shim open')
-      setTimeout(()=>{this.emit('connect')}, 1)
-    }
-    
-    this.conn.onclose = () => {
-      this.emit('close')
-    }
-    
-    this.conn.onerror = (err) => {
-      this.emit('error', err)
-    }
-
-    if(this.conn.readyState == WebSocket.OPEN){
-      setTimeout(()=>{this.emit('connect')}, 1)
-    }
-
-    debug('connection shim', this.conn.readyState)
-  }
-
-  close(){
-    this.conn.close()
-  }
-
-  destroy(){
-    this.conn.terminate()
-  }
-
-  send(val){ this.conn.send(val) }
-
-}
-
+/**
+ * @class module:Comms.WebsocketComms
+ * @implements {module:Comms.ISocketComms}
+ * @extends {module:Comms.PeerComms}
+ * @link module:Comms
+ * @see https://en.wikipedia.org/wiki/WebSocket
+ */
 class WebsocketComms extends PeerComms {
   constructor({uri, connection, remoteIdentity, host, party, ...options}){
     super({remoteIdentity, host, party, ...options})

@@ -16,7 +16,6 @@ const Pify = async (p)=>{
 
 /**
  * @class
- * @alias module:dataparty.ServiceHost
  */
 class ServiceHost {
   constructor({

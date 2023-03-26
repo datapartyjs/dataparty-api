@@ -5,7 +5,10 @@ const Loki = require('lokijs')
 const EventEmitter = require('eventemitter3')
 const debug = require('debug')('dataparty.loki-cache')
 
-
+/**
+ * @class module:Party.LokiCache
+ * @link module.Party
+ */
 module.exports = class LokiCache extends EventEmitter {
 
   constructor () {

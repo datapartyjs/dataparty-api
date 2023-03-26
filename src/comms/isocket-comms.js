@@ -9,7 +9,13 @@ const AuthOp = require('./op/auth-op')
 const RosShim = require('./ros-shim')
 
 
-class SocketComms extends EventEmitter {
+/**
+ * @interface module:Comms.ISocketComms
+ * @link module:Comms
+ * @extends EventEmitter
+ */
+
+class ISocketComms extends EventEmitter {
     constructor({session, uri, party, remoteIdentity, discoverRemoteIdentity}){
         super()
         this.uri = uri
@@ -150,4 +156,4 @@ class SocketComms extends EventEmitter {
     }
 }
 
-module.exports = SocketComms
+module.exports = ISocketComms

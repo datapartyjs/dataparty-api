@@ -7,8 +7,9 @@ const EventEmitter = require('eventemitter3')
 /**
  * Represents a document with caching and local+remote change notifications
  * @class
- * @interface
- * @alias module:dataparty.DataParty.Document
+ * @interface module:Party.IDocument
+ * @extends EventEmitter
+ * @link module.Party
  * @param {object}    options
  * @param {DataParty} options.party
  * @param {string}    options.id

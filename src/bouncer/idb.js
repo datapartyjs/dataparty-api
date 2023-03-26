@@ -6,8 +6,10 @@ const EventEmitter = require('eventemitter3')
 class IDb extends EventEmitter {
 
   /**
+   * @interface module:Db.IDb
+   * @link module:Db
    * 
-   * @param {DocumentFactory} factory 
+   * @param {module:Party.ocumentFactory} factory 
    * @param {string} prefix Prefix collection names
    */
   constructor(factory, prefix='api_'){

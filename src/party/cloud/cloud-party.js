@@ -5,9 +5,11 @@ const Query = require('../query')
 const IParty = require('../iparty')
 const RestComms = require('../../comms/rest-comms')
 
+
 /**
- * @class
- * @implements module:dataparty.CloudParty
+ * @class  module:Party.CloudParty
+ * @implements {module:Party.IParty}
+ * @link module.Party
  */
 class CloudParty extends IParty {
 

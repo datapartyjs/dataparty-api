@@ -46,6 +46,11 @@ const Clerk = require('./clerk.js')
 //     { op: 'all', param: ['other', 'list'], values: [p, q, r] },
 //   ],
 // }
+
+/**
+ * @class  module:Party.Query
+ * @link module.Party
+ */
 module.exports = class Query {
 
   constructor (qb, model) {
