@@ -11,9 +11,12 @@ const debug = require('debug')('bouncer.db.tingo-db')
 
 
 /**
+ * Ideal for extremely large datasets with frequent document additions.  Has a very efficient append-only file system driver which is ideal for embedded platforms. All database indexes must fit into RAM and are re-computed at db load time.
+ * 
  * @class  module:Db.TingoDb
  * @extends {module:Db.IDb}
  * @link module:Db
+ * @see module:Party.TingoParty
  */
 module.exports = class TingoDb extends IDb {
 

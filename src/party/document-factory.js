@@ -7,10 +7,14 @@ const reach = require('../utils/reach')
 const DocumentValidationError = require('../errors/document-validation-error')
 
 
-/**
- * @class
- */
+
 class DocumentFactory {
+  /**
+ * Represents document schemas mapped to contructor claasses which extend IDocument
+ * @class module:Party.DocumentFactory
+ * @extends EventEmitter
+ * @link module.Party
+ */
   constructor({model, factories, party, documentClass}){
     this.factories = factories || {}
     this.party = party || null
@@ -32,7 +36,8 @@ class DocumentFactory {
   }
 
   /**
-   * 
+   * @async
+   * @method module:Party.DocumentFactory.hydrate
    * @param {*} found 
    */
   async hydrate(found){
@@ -50,7 +55,8 @@ class DocumentFactory {
 
 
   /**
-   * 
+   * @method module:Party.DocumentFactory.addFactory
+   *
    * @param {*} type 
    * @param {*} factory 
    */
@@ -59,6 +65,7 @@ class DocumentFactory {
   }
 
   /**
+   @method module:Party.DocumentFactory.getFactory
    * 
    * @param {*} type 
    */
@@ -71,7 +78,7 @@ class DocumentFactory {
   }
 
   /**
-   * @method
+   * @method module:Party.DocumentFactory.getTypes
    */
   getTypes(){
     let types = ['document']
@@ -79,7 +86,7 @@ class DocumentFactory {
   }
 
   /**
-   * @method
+   * @method module:Party.DocumentFactory.getValidators
    */
   getValidators(){
     return Object.keys(this.validators)
@@ -87,7 +94,7 @@ class DocumentFactory {
 
 
   /**
-   * @method
+   * @method module:Party.DocumentFactory.getFactories
    */
   getFactories(){
     let factories = { document: this.documentClass }
@@ -100,10 +107,12 @@ class DocumentFactory {
   }
 
   /**
+   * @method module:Party.DocumentFactory.getDocument
    * 
-   * @param {*} type 
-   * @param {*} id 
-   * @param {*} data 
+   * @param {string} type 
+   * @param {string} id 
+   * @param {Object} data 
+   * @returns {module:Party.IDocument}
    */
   getDocument(type, id, data){
     let TypeFactory = this.getFactory(type)
@@ -114,6 +123,8 @@ class DocumentFactory {
 
 
   /**
+   * @async
+   * @method module:Party.DocumentFactory.validate
    * 
    * @param {*} type 
    * @param {*} data 
@@ -140,7 +151,9 @@ class DocumentFactory {
     })
   }
 
-  /** @type {IDocument} */
+  /**
+   * @member module:Party.IDocument.Document
+   * @type {IDocument} */
   get Document(){
     return this.documentClass
   }

@@ -3,36 +3,49 @@
 
 decentralized cloud framework for the Web3.0 generation.
 
-Dataparty allows the app maker to decide how centralized or distributed they app should be and implement that vision rapidly.
-
  * Documentation - [datapartyjs.github.io/dataparty-api](https://datapartyjs.github.io/dataparty-api)
  * NPM - [npmjs.com/package/@dataparty/api](https://www.npmjs.com/package/@dataparty/api)
  * Code - [github.com/datapartyjs/dataparty-api](https://github.com/datapartyjs/dataparty-api)
  * Support - [ko-fi/dataparty](https://ko-fi.com/dataparty)
 
-## Goals
+## Design Goal
 
-The primary goal of `@dataparty/api` is to enable secure microservices development across all architectual domains with a single code base. This covers traditional clouds, peer-to-peer apps(with or without cloud backing), and hybrid clouds. Dataparty services are able to be run on servers, edge devices, or even directly in the browser or app. This means users of dataparty based apps can frequently run their own backend from with an app.
+Dataparty services are able to run on servers, edge devices, or even directly in the browser or app. This means users of dataparty based apps can frequently run their own backend from within an app. By building this peer-to-peer functionality directly into the database ORM, `dataparty/api`, saves significant effort for app makers.
+
+### Plugable
+For many domains the exact performance characteristics of the database, communications, and security matter a lot. All major systems are fairly pluggable so that additional drivers(db, comms etc) can be developed.
 
 
 ## Features
 
-A dataparty app/service typically consists of these parts:
-
- * [Comms](https://datapartyjs.github.io/dataparty-api/module-Comms.html)
- * [Config](https://datapartyjs.github.io/dataparty-api/module-Config.html)
- * [Db](https://datapartyjs.github.io/dataparty-api/module-Db.html)
- * [Party](https://datapartyjs.github.io/dataparty-api/module-Party.html)
- * [Service](https://datapartyjs.github.io/dataparty-api/module-Service.html)
-
-
-## Roadmap
-
-Currently this project is considered `Experimental`, throughout 2023 we'll be working towards our first stable releases.
-
 ![Feature Roadmap 2023](images/dataparty-overivew-full.svg)
 
 
+A dataparty app/service typically consists of these parts:
+
+ * [Comms](https://datapartyjs.github.io/dataparty-api/module-Comms.html)
+   * We support everything from WebRTC, Websockets, HTTP to BLE and i2p/tor.
+ * [Config](https://datapartyjs.github.io/dataparty-api/module-Config.html)
+   * Persist configuration in a number of ways.
+ * [Db](https://datapartyjs.github.io/dataparty-api/module-Db.html)
+   * Select the database that makes sense for you, see [database selection](#database-selection)
+ * [Party](https://datapartyjs.github.io/dataparty-api/module-Party.html)
+   * The primary query interface. Abstracts the DBs into a common realtime-db interface. Partys can interact with local, remote and even peer-to-peer hosted DBs. Select the type of party that makes sense for you. See [party selection](#party-selection)
+ * [Service](https://datapartyjs.github.io/dataparty-api/module-Service.html)
+
+
+### Database Selection
+
+
+Database | Browser | Cordova | Electron | Embedded Linux | Node 
+-----|----|-|--|-|-
+[Lokijs](https://datapartyjs.github.io/dataparty-api/module-Db.LokiDb.html) | y | y | y | NR* | NR*
+[Zangodb](https://datapartyjs.github.io/dataparty-api/module-ZangoDb) | y | y | y | n | n
+[Tingo](https://datapartyjs.github.io/dataparty-api/module-TingoDb) | n | P* | y | y | y 
+[Mongo](https://datapartyjs.github.io/dataparty-api/module-MongoDb) | n | P* | y | y | y
+
+*NR - Not Recommended
+*P - Possibly. We're looking into it.
 
 ## Example
 

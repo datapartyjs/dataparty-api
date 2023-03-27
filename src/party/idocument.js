@@ -4,10 +4,11 @@ const reach = require('../utils/reach')
 const debug = require('debug')('dataparty.idocument')
 const EventEmitter = require('eventemitter3')
 
+class IDocument extends EventEmitter {
+
 /**
  * Represents a document with caching and local+remote change notifications
- * @class
- * @interface module:Party.IDocument
+ * @class module:Party.IDocument
  * @extends EventEmitter
  * @link module.Party
  * @param {object}    options
@@ -15,8 +16,8 @@ const EventEmitter = require('eventemitter3')
  * @param {string}    options.id
  * @param {string}    options.type
  * @param {object}    options.data
+ * @param {boolean}   options.followcache
  */
-class IDocument extends EventEmitter {
   constructor({party, type, id, data, followcache}){
     super()
     this.party = party
@@ -45,18 +46,21 @@ class IDocument extends EventEmitter {
 
   /**
    * Document mongo-id
+   * @member module:Party.IDocument.id
    * @type {string}
    */
   get id(){ return reach(this._data, '$meta.id') }
 
   /**
    * Document type string
+   * @member module:Party.IDocument.type
    * @type {string}
    */
   get type(){ return reach(this._data, '$meta.type') }
 
   /**
    * Document revision string
+   * @member module:Party.IDocument.revision
    * @type {string}
    */
   get revision(){ return reach(this._data, '$meta.revision') }
@@ -73,6 +77,7 @@ class IDocument extends EventEmitter {
 
   /**
    * Document id object
+   * @member module:Party.IDocument.idObj
    * @type {IdObj}  
    */
   get idObj(){
@@ -84,23 +89,26 @@ class IDocument extends EventEmitter {
 
   /**
    * Document id string in format `<type>:<mongo-id>`
+   * @member module:Party.IDocument.idString
    * @type {sting}
    */
   get idString() { return this.type + ':' + this.id }
 
   /**
-   * @method
+   * @method module:Party.IDocument.getData
    */
   getData(){ return this._data }
 
   /**
    * entire document
+   * @member module:Party.IDocument.data
    * @type {object}
    */
   get data(){ return this._data }
 
   /**
    * document data with no library added fields
+   * @member module:Party.IDocument.cleanData
    * @type {object}
    */
   get cleanData(){
@@ -109,8 +117,9 @@ class IDocument extends EventEmitter {
   }
 
   /**
+   * @async
    * Merge fields into document
-   * @method
+   * @method module:Party.IDocument.mergeData
    * @param {object}  input
    * @returns {object}
    */
@@ -119,8 +128,9 @@ class IDocument extends EventEmitter {
   }
 
   /**
+   * @async
    * Set entire document
-   * @method
+   * @method module:Party.IDocument.setData
    * @param {object}  input
    * @returns {object}
    */
@@ -132,8 +142,9 @@ class IDocument extends EventEmitter {
   }
 
   /**
+   * @async
    * Saves document changes to remote party
-   * @method
+   * @method module:Party.IDocument.save
    */
   async save(){
     const value = Object.assign({}, this.data)
@@ -151,6 +162,14 @@ class IDocument extends EventEmitter {
   }
 
 
+  /**
+   * @async
+   * @method module:Party.IDocument.create
+   * 
+   * @param {moddule:Party.IParty} party 
+   * @param {*} document
+   * @returns 
+   */
   static async create(party, {type, id, data}){
 
     debug('creating document ', type, id)
@@ -168,6 +187,11 @@ class IDocument extends EventEmitter {
     return docs[0]*/
   }
 
+  /**
+   * @async
+   * @method module:Party.IDocument.remove
+   * 
+   */
   async remove(){
     debug('removing document ', this.data.type, this.data.id)
 
@@ -175,8 +199,9 @@ class IDocument extends EventEmitter {
   }
 
   /**
+   * @async
    * Download document changes from party
-   * @method
+   * @method module:Party.IDocument.pull
    * @param {boolean} flushcache  Update local cache as well
    */
   async pull (flushcache) {
@@ -212,12 +237,13 @@ class IDocument extends EventEmitter {
 
 
   /**
-   * Watches document for remote changes. 
-   * @method
+   * @async
+   * Watches document for remote changes.
+   * @method module:Party.IDocument.watch
    * @param {boolean} autopull 
    * @param {boolean} flushcache 
    * @param {function=}  cb    Optional Change event callback function
-   * @fires module:dataparty.DataParty.Document#change
+   * @fires module:Party.IDocument#change
    */
   async watch(autopull, flushcache, cb){
 
@@ -250,6 +276,7 @@ class IDocument extends EventEmitter {
 
   /**
    * Stop watching for remote document changes
+   * @method module:Party.IDocument.unwatch
    * @param {function=}  cb    Optional Change event callback function
    */
   async unwatch(cb){
@@ -267,11 +294,12 @@ class IDocument extends EventEmitter {
   /**
    * Watch a field for changes. If `value` is supplied watches
    * for field and `value` to match.
+   * @method module:Party.IDocument.watchField
    * 
    * @param {string}  field   Field path to watch for changes
    * @param {*=}      value   Match value
    * @param {function}  cb    Callback function
-   * @fires module:dataparty.DataParty.Document#field
+   * @fires module:Party.IDocument#field
    */
   async watchField(field, value, cb){
     this.watchedFields[field] = (value == undefined) ? true : {'$eq': value}
@@ -296,7 +324,7 @@ class IDocument extends EventEmitter {
     /**
      * Document change Event - This is event is triggered when a document has been
      * modified on the `CloudParty` service
-     * @event module:dataparty.DataParty.Document#change
+     * @event module:Party.IDocument#change
      * @type {object}
      */
     this.emit('change', message)
@@ -322,7 +350,7 @@ class IDocument extends EventEmitter {
            * Document value Event - This event is triggered after a change has been 
            * applied to the backing cache of `Document.data`. Only fired when `Document.followcache` 
            * is true.
-           * @event module:dataparty.DataParty.Document#value
+           * @event module:Party.IDocument#value
            * @type {Document}
            */
           this.emit('value', this)
@@ -333,9 +361,9 @@ class IDocument extends EventEmitter {
          * applied to the backing cache of `Document.data`. If `Document.followcache` 
          * is true the document `doc` has also accepted the change.
          * 
-         * @event module:dataparty.DataParty.Document#remove
-         * @event module:dataparty.DataParty.Document#update
-         * @event module:dataparty.DataParty.Document#create
+         * @event module:Party.IDocument#remove
+         * @event module:Party.IDocument#update
+         * @event module:Party.IDocument#create
          * @type {object}
          * @property  {module:dataparty.DataParty.Document}  doc the changed document
          * @property  {object}  new the new document data
@@ -363,7 +391,7 @@ class IDocument extends EventEmitter {
 
               /**
                * Field change event. This is emitted as `field.[FIELD_PATH]`
-               * @event module:dataparty.DataParty.Document#field
+               * @event module:Party.IDocument#field
                * @type  {object}
                * @property  doc   The changed document
                * @property  field The changed FIELDPATH 

@@ -47,11 +47,15 @@ const Clerk = require('./clerk.js')
 //   ],
 // }
 
-/**
+
+module.exports = class Query {
+
+  /**
  * @class  module:Party.Query
  * @link module.Party
+ * @param {module:Party.qb} qb
+ * @param {module:Party.DocumentFactory} model
  */
-module.exports = class Query {
 
   constructor (qb, model) {
     this.qb = qb
@@ -68,11 +72,23 @@ module.exports = class Query {
     this.matchStack = []
   }
 
+  /**
+   * @method module:Party.Query.toJSON
+   * @returns {Object}
+   */
   toJSON(){
     return this.spec
   }
 
-  // return a promise resolving to result of query
+  /**
+   *  return a promise resolving to result of query
+   * 
+   * @async
+   * 
+   * @method module:Party.Query.exec
+   * @param {boolean} hydrate
+   * @return 
+   */
   async exec (hydrate = true) {
 
     if(!(typeof this.spec.type === 'string' && this.spec.type.length > 0)){
@@ -93,46 +109,83 @@ module.exports = class Query {
   //   -> not sensitive to position in chain
   //   -> last call in chain overwrites earlier calls
 
-  // restrict query to msgs of given type
+  /**
+   * restrict query to msgs of given type
+   * 
+   * @method module:Party.Query.type
+   * @param {string} type Type name
+   * @returns {module:Party.Query}
+   */
   type (type) {
     delete this.spec.types // mutually exclusive
     this.spec.type = type
     return this // enable chaining
   }
 
-  // restrict query to msgs of given types
-  // *not compatible with type*
+  /**
+   * restrict query to msgs of given types
+   * not compatible with type
+   * 
+   * @method module:Party.Query.types
+   * 
+   * @param  {...string} types 
+   * @returns 
+   */
   types (...types) {
     delete this.spec.type // mutually exclusive
     this.spec.types = types.slice() // copy array to avoid side effects
     return this // enable chaining
   }
 
-  // query for single msg by given id
-  // prereq -> type (*not* types)
-  // *all other query ops (except type) will be ignored*
+  /** query for single msg by given id
+   * prereq -> type (*not* types)
+   * all other query ops (except type) will be ignored
+   * 
+   * @method module:Party.Query.id
+   * @param {string} id
+   */
   id (id) {
     delete this.spec.ids // mutually exclusive
     this.spec.id = id
     return this // enable chaining
   }
 
-  // query for a list of msgs by given ids
-  // prereq -> type (*not* types)
-  // *all other query ops (except type) will be ignored*
+  /**
+   * query for a list of msgs by given ids
+   * prereq -> type (*not* types)
+   *  *all other query ops (except type) will be ignored*
+   *  
+   * @method module:Party.Query.ids
+   * @param  {...any} ids 
+   * @returns 
+   */
   ids (...ids) {
     delete this.spec.id // mutually exclusive
     this.spec.ids = ids.slice() // copy array to avoid side effects
     return this // enable chaining
   }
 
-  // restrict query to msgs with owner matching given type, id pair
+  /**
+   * restrict query to msgs with owner matching given type, id pair
+   * @method module:Party.Query.owner
+   * @param {*} type 
+   * @param {*} id 
+   * @returns 
+   */
   owner (type, id) {
     this.spec.owner = { type, id }
     return this // enable chaining
   }
 
-  // sort returned msgs on given param path (leading '-' reverses sort)
+
+  /**
+   * sort returned msgs on given param path (leading '-' reverses sort)
+   * @method module:Party.Query.sort
+   * 
+   * @param {*} param 
+   * @param {*} direction 
+   * @returns 
+   */
   sort (param, direction) {
     let cleanDirection = direction || 1
     let cleanParam = param
@@ -144,13 +197,23 @@ module.exports = class Query {
     return this // enable chaining
   }
 
-  // limit # of msgs returned by query to a maximum of count
+  /**
+   * limit # of msgs returned by query to a maximum of count
+   * @method module:Party.Query.limit
+   * @param {*} count 
+   * @returns 
+   */
   limit (count) {
     this.spec.limit = count
     return this // enable chaining
   }
 
-  // filter fields from parameters of returned msgs
+  /**
+   * filter fields from parameters of returned msgs
+   * @method module:Party.Query.seelct
+   * @param {*} filter 
+   * @returns 
+   */
   select (filter) {
     this.spec.select = Clerk.splitFilter(filter)
     return this // enable chaining
@@ -158,13 +221,22 @@ module.exports = class Query {
 
   // *** match tree nodes ***
 
-  // sets context for following operations to given param path
+  /**
+   * sets context for following operations to given param path
+   * @method module:Party.Query.where
+   * @param {string} param Path to field
+   */
   where (param) {
     this.currentWhere = Query.splitParam(param)
     return this // enable chaining
   }
 
-  // following path segments will be anded (default behavior)
+  /**
+   * following path segments will be anded (default behavior)
+   * 
+   * @method module:Party.Query.and
+   * @returns 
+   */
   and () {
     const op = { op: 'and', match: [] }
     this.currentMatch.push(op)
@@ -179,7 +251,11 @@ module.exports = class Query {
     return this // enable chaining
   }
 
-  // closes scope of most recent and
+  /**
+   * Closes scope of most recent `and`
+   * @method module:Party.Query.dna
+   * @returns 
+   */
   dna () {
 
     // pop scope stack & validate that current scope is 'and'
@@ -204,6 +280,11 @@ module.exports = class Query {
   }
 
   // following path segments will be ored
+  /**
+   * The following path segments will be or'ed
+   * @method module:Party.Query.or
+   * @returns 
+   */
   or () {
     const op = { op: 'or', match: [] }
     this.currentMatch.push(op)
@@ -218,7 +299,11 @@ module.exports = class Query {
     return this // enable chaining
   }
 
-  // closes scope of most recent or
+  /**
+   * Close scope of most recent `or`
+   * @method module:Party.Query.ro
+   * @returns 
+   */
   ro () {
 
     // pop scope stack & validate that current scope is 'or'
@@ -242,24 +327,48 @@ module.exports = class Query {
     return this // enable chaining
   }
 
+  /**
+   * Check if field equals value
+   * @method module:Party.Query.equals
+   * @param {*} value 
+   * @returns 
+   */
   equals (value) { // @leaf `{$eq: a}`
     const op = { op: 'equals', param: this.cloneWhere(), value: value }
     this.currentMatch.push(op)
     return this // enable chaining
   }
 
+  /**
+   * Check if field contains value
+   * @method module:Party.Query.contains
+   * @param {*} value 
+   * @returns 
+   */
   contains (value) { // @leaf `{$contains: a}`
     const op = { op: 'contains', param: this.cloneWhere(), value: value }
     this.currentMatch.push(op)
     return this // enable chaining
   }
 
+  /**
+   * Check if field is matched by regex
+   * @method module:Party.Query.regex
+   * @param {*} value 
+   * @returns 
+   */
   regex (value) { // @leaf `{$regex: a}`
     const op = { op: 'regex', param: this.cloneWhere(), value: value }
     this.currentMatch.push(op)
     return this // enable chaining
   }
 
+  /**
+   * Check if field exists
+   * @method module:Party.Query.exists
+   * @param {*} flag 
+   * @returns 
+   */
   exists (flag) { // @leaf `{$eq: a}`
     const does = flag === true || flag === undefined // defaults to true
     const op = { op: 'exists', param: this.cloneWhere(), value: does }
@@ -267,31 +376,51 @@ module.exports = class Query {
     return this // enable chaining
   }
 
+  /**
+   * Check if field is in list of values
+   * @method module:Party.Query.in
+   * @param  {...any} values 
+   * @returns 
+   */
   in (...values) { // @leaf `{$in: [one, two, five]}`
     const op = { op: 'in', param: this.cloneWhere(), values: values }
     this.currentMatch.push(op)
     return this // enable chaining
   }
 
+  /**
+   * Check if field is greater than value
+   * @method module:Party.Query.gt
+   * @param {*} value 
+   * @returns 
+   */
   gt (value) { // @leaf `{$gt: a}`
     const op = { op: 'gt', param: this.cloneWhere(), value: value }
     this.currentMatch.push(op)
     return this // enable chaining
   }
 
+  /**
+   * Check if field is less than value
+   * @method module:Party.Query.lt
+   * @param {*} value 
+   * @returns 
+   */
   lt (value) { // @leaf `{$lt: a}`
     const op = { op: 'lt', param: this.cloneWhere(), value: value }
     this.currentMatch.push(op)
     return this // enable chaining
   }
 
-  // *** list operators ***
-  //   -> subtype of match tree nodes
-  //   -> most recent .where('param') path must be list for these to match
-
-  // searches for a single element of list matching *all* following conditions
-  // between elem .. mele nodes where('path') calls are relative to
-  // param path scope at opening of element match
+  /** list operators
+  *   -> subtype of match tree nodes
+  *   -> most recent .where('param') path must be list for these to match
+  * searches for a single element of list matching *all* following conditions
+  * between elem .. mele nodes where('path') calls are relative to
+  * param path scope at opening of element match
+  * 
+  * @method module:Party.Query.elem
+  */
   elem () {
     const op = { op: 'elem', param: this.cloneWhere(), match: [] }
     this.currentMatch.push(op)
@@ -310,6 +439,11 @@ module.exports = class Query {
     return this // enable chaining
   }
 
+  /**
+   * Close `elem` function stack
+   * @method module:Party.Query.mele
+   * 
+   */
   mele () {
 
     // pop scope stack & validate that current scope is 'elem'
@@ -336,14 +470,24 @@ module.exports = class Query {
     return this // enable chaining
   }
 
-  // matches a list that is a superset of given list
+  /**
+   * matches a list that is a superset of given list
+   * @method module:Party.Query.all
+   * 
+   * @param {...[any]} values
+   *
+   */
   all (...values) { // @leaf `{$all: [one, two, five]}`
     const op = { op: 'all', param: this.cloneWhere(), values: values }
     this.currentMatch.push(op)
     return this // enable chaining
   }
 
-  // matches list with *exactly* count items
+  /**
+   * matches list with *exactly* count items
+   * @method module:Party.Query.size
+   * @param {Integer} count
+   */
   size (count) { // @leaf `{$size: a}`
     const op = { op: 'size', param: this.cloneWhere(), value: count }
     this.currentMatch.push(op)

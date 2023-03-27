@@ -8,11 +8,21 @@ const IDocument = require('./idocument')
 const DocumentFactory = require('./document-factory')
 const LokiCache = require('./loki-cache.js') // insert | populate cache
 
-/**
- * @interface module:Party.IParty
- * @link module.Party
- */
+
 class IParty {
+/**
+ * @class module:Party.IParty
+ * @link module.Party
+ *
+ * @param {module:Config.IConfig}   options.config
+ * @param {module:Party.LokiCache}  options.cache
+ * @param {boolean}                 options.noCache
+ * @param {module:Comms.ISocketComms} options.comms
+ * @param {Object}                  options.model
+ * @param {Object}                  options.factories
+ * @param {module:Party.IDocument}  options.documentClass
+ * @param {module:Party.Qb}         options.qb
+ */
   constructor({config, cache, noCache=false, comms, model, factories, documentClass, qb=null}){
     this.config = config
     this.qb = qb
@@ -28,12 +38,14 @@ class IParty {
     this.started = false
 
     /**
-     * @member 
+     * @member module:Party.IParty.factory
      * @type {DocumentFactory} */
     this.factory = new DocumentFactory({party: this, model, factories, documentClass})
   }
 
-  /** @method */
+  /**
+   * @async
+   *  @method module:Party.IParty.start */
   async start(){
     
     if(this.started){ return }
@@ -59,7 +71,8 @@ class IParty {
   }
 
   /**
-   * @method
+   * @async
+   * @method module:Party.IParty.createDocument
    */
   async createDocument(type, data, id){
     let Type = this.factory.getFactory(type)
@@ -68,7 +81,8 @@ class IParty {
   }
 
   /**
-   * @method
+   * @async
+   * @method module:Party.IParty.create
    */
   async create (type, ...msgs) {
     return await this.qb.create(type, msgs)
@@ -76,7 +90,8 @@ class IParty {
 
 
   /**
-   * @method
+   * @async
+   * @method module:Party.IParty.remove
    */
   async remove (...msgs) {
     return this.qb.modify(msgs, 'remove')
@@ -85,14 +100,17 @@ class IParty {
   // takes modified json msgs & writes to backend, resolves to new stamps
   // requires type & id
   /**
-   * @method
+   * @async
+   * @method module:Party.IParty.update
    */
   async update (...msgs) {
     return this.qb.modify(msgs, 'update')
   }
 
   /**
-   * @method
+   * Starts a query
+   * @method module:Party.IParty.find
+   * @returns {module:Party.Query}
    */
   find () {
     return new Query(this.qb, this.factory)
@@ -101,7 +119,8 @@ class IParty {
  
 
   /**
-   * @method
+   * @async
+   * @method module:Party.IParty.call
    */
   async call(msg){
     throw new Error('Not Implemented')
@@ -116,25 +135,30 @@ class IParty {
 
   
 
-  /** @type {ROSLIB} */
+  /**
+   * @member module:Party.IParty.ROSLIB
+   *  @type {ROSLIB} */
   get ROSLIB(){
     return ROSLIB
   }
 
 
-  /** @type {IDocument} */
+  /**
+   * @member module:Party.IParty.Document
+   *  @type {IDocument} */
   get Document(){
     return this.factory.Document
   }
 
   /**
-   * @method
+   * @member module:Party.IParty.types
    */
   get types(){
     return this.factory.getFactories()
   }
 
   /**
+   * @member module:Party.IParty.identity
    * @type {module:dataparty/Types.Identity}
    */
   get identity(){
@@ -142,12 +166,18 @@ class IParty {
     return dataparty_crypto.Identity.fromString(this._identity.toString())
   }
 
+  /**
+   * @member module:Party.IParty.privateIdentity
+   * @type {module:dataparty/Types.Identity}
+   */
   get privateIdentity(){
     if (!this.hasIdentity()){ return undefined }
     return this._identity
   }
 
-  /** @type {IdObj} */
+  /**
+   *  @member module:Party.IParty.actor 
+   * @type {IdObj} */
   get actor(){
     if (this.actors && this.actors[0]){
 
@@ -162,7 +192,9 @@ class IParty {
     return undefined
   }
 
-  /** @type {IdObj[]} */
+  /**
+   *  @member module:Party.IParty.actors 
+   * @type {IdObj[]} */
   get actors(){
     return this._actors
   }
@@ -184,14 +216,14 @@ class IParty {
   }
 
   /**
-   * @method
+   * @method module:Party.IParty.hasIdentity
    */
   hasIdentity(){
     return this._identity != undefined
   }
 
   /**
-   * @method
+   * @method module:Party.IParty.hasActor
    */
   hasActor(){
     return this.actor != undefined
@@ -199,8 +231,9 @@ class IParty {
 
 
 
-    /**
-   * @method
+  /**
+   * @async
+   * @method module:Party.IParty.loadIdentity
    */
   async loadIdentity(){
     const path = 'identity'
@@ -216,6 +249,10 @@ class IParty {
     }
   }
 
+  /**
+   * @async
+   * @method module:Party.IParty.resetIdentity
+   */
   async resetIdentity(){
     const path = 'identity'
     await this.config.write(path, null)
@@ -227,7 +264,8 @@ class IParty {
   }
 
   /**
-   * @method
+   * @async
+   * @method module:Party.IParty.loadActor
    */
   async loadActor(){
     const path = 'actor'
@@ -242,7 +280,11 @@ class IParty {
   }
 
     /**
-   * @method
+   * @async
+   * @method module:Party.IParty.encrypt
+   * @param {any} data
+   * @param {dataparty_crypto.Identity} to
+   * @returns {dataparty_crypto.Message}
    */
   async encrypt(data, to){
     const msg = new dataparty_crypto.Message({msg: data})
@@ -252,7 +294,11 @@ class IParty {
   }
 
   /**
-   * @method
+   * @async
+   * @method module:Party.IParty.decrypt
+   * @param {dataparty_crypto.Message} reply
+   * @param {dataparty_crypto.Identity} expectedSender
+   * @param {boolean} expectClearTextReply
    */
   async decrypt(reply, expectedSender, expectClearTextReply = false){
     // if reply has ciphertext & sig attempt to decrypt

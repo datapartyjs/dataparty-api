@@ -10,6 +10,16 @@ const { build } = require('@hapi/joi')
 const debug = require('debug')('dataparty.service.IService')
 
 module.exports = class IService {
+  /**
+   * @class module:Service.IService
+   * @link module:Service
+   * 
+   * @param {*} options.name
+   * @param {*} options.version
+   * @param {*} options.githash
+   * @param {*} options.branch
+   * @param {*} build 
+   */
   constructor({
     name, version, githash='', branch=''
   }, build){
@@ -90,8 +100,8 @@ module.exports = class IService {
   }
 
   /**
-   * 
-   * @param {dataparty.bouncer.ISchema} schema_path 
+   * @method module:Db.ISchema.addSchema
+   * @param {module:Db.ISchema} schema_path 
    */
   addSchema(schema_path){
     debug('addSchema', schema_path)
@@ -102,6 +112,10 @@ module.exports = class IService {
     this.constructors.schemas[name] = schema
   }
 
+  /**
+   * @method module:Db.ISchema.addDocument
+   * @param {*} document_path 
+   */
   addDocument(document_path){
     debug('addDocument', document_path)
     const document = require(document_path)
@@ -111,6 +125,10 @@ module.exports = class IService {
     this.constructors.documents[name] = document
   }
 
+  /**
+   * @method module:Db.ISchema.addEndpoint
+   * @param {*} endpoint_path 
+   */
   addEndpoint(endpoint_path){
     debug('addEndpoint', endpoint_path)
     const endpoint = require(endpoint_path)
