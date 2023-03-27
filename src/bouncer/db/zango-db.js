@@ -11,9 +11,12 @@ const { promisfy } = require('promisfy')
 const debug = require('debug')('bouncer.db.zango-db')
 
 /**
+ * Ideal for frontend apps with large datasets (larger then total RAM). This is an IndexedDb based driver so it span to nearly 1/3 of total system storage spave available to the browser/app.
+ * 
 * @class  module:Db.ZangoDb
 * @extends {module:Db.IDb}
 * @link module:Db
+* @see module:Party.ZangoParty
 */
 module.exports = class ZangoDb extends IDb {
 

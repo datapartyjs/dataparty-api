@@ -2,8 +2,18 @@ const debug = require('debug')('bouncer.ISchema')
 const MgoUtils = require('../utils/mongoose-scheme-utils')
 
 module.exports = class ISchema {
+
+  /**
+   * @interface module:Db.ISchema
+   * @link module.Db
+   */
   constructor(){ }
 
+  /**
+   * @method module:Db.ISchema.install
+   * @param {*} mongoose 
+   * @returns 
+   */
   static install(mongoose){
     debug('install - ', this.Type)
 
@@ -21,6 +31,11 @@ module.exports = class ISchema {
     return { schema, model }
   }
 
+  /**
+   * @method module:Db.ISchema.setupSchema
+   * @param {*} schema 
+   * @returns 
+   */
   static setupSchema(schema){
     return schema
   }
@@ -43,6 +58,7 @@ module.exports = class ISchema {
 
   /**
    * Collection level read/new/change permissions
+   * @method module:Db.ISchema.permissions
    * @param {*} context 
    */
   static async permissions(context){

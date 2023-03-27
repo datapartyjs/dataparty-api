@@ -17,9 +17,9 @@
     "verbose": true,
     "template": "./node_modules/clean-jsdoc-theme",
     "theme_opts": {
-      "homepageTitle": "@dataparty/api - cloud services for the Web3.0 generation",
+      "homepageTitle": "decentralized cloud framework for the web 3.0 generation",
       "title": "@dataparty/api",
-      "sections": ["Modules", "Tutorials"],
+      "sections": ["Modules", "Tutorials", "Classes"],
         "default_theme": "dark",
         "displayModuleHeader": true,
         "menu": [
@@ -41,7 +41,7 @@
         },
         {
             "name": "Description",
-            "content": "dependency solving task runner for javascript"
+            "content": "decentralized cloud framework for the web3.0 generation"
         }
       ],
       "codepen": {

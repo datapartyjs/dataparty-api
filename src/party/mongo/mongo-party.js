@@ -9,7 +9,9 @@ const Qb = require('../qb')
 
 
 /**
- * A party implementation based on Mongodb and mongoose
+ * A party implementation based on Mongodb and mongoose.
+ * 
+ *  The humongouse database we all know all love. If you need a multi-region HA database, this is the one.
  * @see https://mongoosejs.com/
  * 
  * @class  module:Party.MongoParty

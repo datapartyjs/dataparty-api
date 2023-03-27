@@ -10,9 +10,12 @@ const AdminCrufler = require('../../bouncer/crufler-admin')
 const Qb = require('../qb')
 
 
+class ZangoParty extends IParty {
 
 /**
  * A local party implementation based on IndexedDb via ZangoDB
+ * 
+ * Ideal for frontend apps with large datasets (larger then total RAM). This is an IndexedDb based driver so it span to nearly 1/3 of total system storage spave available to the browser/app.
  * @see https://erikolson186.github.io/zangodb/
  * 
  * @class  module:Party.ZangoParty
@@ -20,7 +23,6 @@ const Qb = require('../qb')
  * @link module.Party
  * @param string dbName
  */
-class ZangoParty extends IParty {
 
   constructor ({dbname, qbOptions, ...options}) {
     super(options)
@@ -41,12 +43,20 @@ class ZangoParty extends IParty {
     })
   }
 
+  /**
+   * @method  module:Party.ZangoParty.start
+   */
   async start(){
     await super.start()
     await this.db.start()
   }
 
 
+  /**
+   * @method  module:Party.ZangoParty.handleCall
+   * @param {Object} ask 
+   * @returns 
+   */
   async handleCall(ask){
     return await this.crufler.handleCall(ask)
   }

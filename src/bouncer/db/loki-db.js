@@ -15,11 +15,14 @@ const debug = require('debug')('bouncer.db.loki-db')
 
 /**
  * A db implementation based on LokiJS.
+ * 
+ * Ideal for frontend apps with small datasets (smaller than total RAM). This is an in-memory db so it trades RAM efficiency for access speed.
  * @see https://github.com/techfort/LokiJS
  * 
  * @class  module:Db.LokiDb
  * @extends {module:Db.IDb}
  * @link module:Db
+ * @see module:Party.LokiParty
  */
 module.exports = class LokiDb extends IDb {
 

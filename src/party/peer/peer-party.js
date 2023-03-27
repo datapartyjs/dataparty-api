@@ -7,13 +7,21 @@ const IParty = require('../iparty')
 
 const LocalTopicHost = require('../../topics/local-topic-host')
 
-/**
- * @class  module:Party.PeerParty
- * @implements {module:Party.IParty}
- * @link module.Party
- */
+
 class PeerParty extends IParty {
 
+  /**
+ * @class  module:Party.PeerParty
+ * @extends {module:Party.IParty}
+ * @link module.Party
+ * 
+ * @param {module:Comms.ISocketComms}   options.comms
+ * @param {boolean}                     options.hostParty Is this instance the host of the peer connection?
+ * @param {module:Service.HostRunner}   options.hostRunner
+ * @param {Integer}                     options.qbOptions.debounce    Amount of milliseconds to wait before sending a query. More than one query can be sent to the server in a single exchange. This defaults to 10ms.
+ * @param {boolean}                     options.qbOptions.find_dedup  Set if duplicate queries should be merged into a single network request. Defaults to `true`
+ * @param {Integer}                     options.qbOptions.timeout     Time in milliseconds before a query is considered timedout. Defaults to 10seconds
+ */
   constructor ({comms, hostParty, hostRunner, qbOptions={debounce: 10, find_dedup:true, timeout: 10000}, ...options}) {
     super(options)
 
