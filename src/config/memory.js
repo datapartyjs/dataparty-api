@@ -16,6 +16,7 @@ const IConfig = require('./iconfig')
 class MemoryConfig extends IConfig {
 
   constructor(defaults){
+    super()
     defaults = defaults || {}
     this.content = Object.assign({}, defaults)
   }

@@ -17,6 +17,7 @@ const IConfig = require('./iconfig')
 class JsonFileConfig extends IConfig {
 
   constructor(defaults={}){
+    super()
     this.basePath = reach(defaults, 'basePath')
     this.path = this.basePath +'/config.json'
     this.defaults = defaults || {}

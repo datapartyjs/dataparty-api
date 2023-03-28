@@ -14,10 +14,24 @@ const Pify = async (p)=>{
   return await p
 }
 
-/**
- * @class
- */
 class ServiceHost {
+
+  /**
+   * @class module:Service.ServiceHost
+   * @link module:Service
+   * @param {Object} options.cors           Cors to be passed to express via the `cors` package
+   * @param {boolean} options.trust_proxy   When true, the server will parse forwarding headers. This should be set when running behind a load-balancer for accurate error messages and logging
+   * @param {string} options.listenUri      The uri of the host interface to tell express to listen on. Defaults to `http://0.0.0.0:4001
+   * @param {boolean} options.i2pEnabled    When true, this server will be available over i2p
+   * @param {string} options.i2pSamHost     The hostname of the i2p SAM control API. Defaults to `127.0.0.1`
+   * @param {Integer} options.i2pSamPort    The port of the i2p SAM control API. Defaults to `4444`
+   * @param {string} options.i2pKey         When set this i2p key will be used to host the service. If not set a new i2p key will be generated. Defaults to `null`
+   * @param {boolean} options.wsEnabled     When true the server will host a dataparty websocket service. Defaults to `true`
+   * @param {Integer} options.wsPort        Port for the websocket service to listen on. Defaults to `null`, using the same port as the http server.
+   * @param {string} options.wsUpgradePath  The path within the http server to host an upgradeable websocket. Defaults to `/ws`
+   * @param {module:Service.ServiceRunner} options.runner   A pre-configured runner
+   */
+
   constructor({
     cors = {},
     trust_proxy = false,
@@ -31,8 +45,26 @@ class ServiceHost {
     wsUpgradePath = '/ws',
     runner
   }={}){
+
+    /**
+   * Express app
+   * @member module:Service.ServiceHost.apiApp
+   * @type {Express}
+   */
     this.apiApp = express()
+
+    /**
+     * Dataparty service runner
+     * @member module:Service.ServiceHost.runner
+     * @type {module:Service.ServiceRunner}
+     */
     this.runner = runner
+
+    /**
+     * The router
+     * @member module:Service.ServiceHost.router
+     * @type {Router}
+     */
     this.router = express.Router()
 
     if(cors){
@@ -84,6 +116,11 @@ class ServiceHost {
     this.started = false
   }
 
+  /**
+   * Start hosting services
+   * @method module:Service.ServiceHost.start
+   * @async
+   */
   async start(){
 
     if(this.started){return}
@@ -155,6 +192,11 @@ class ServiceHost {
     }
   }
 
+  /**
+   * Stop hosting services
+   * @method module:Service.ServiceHost.stop
+   * @async
+   */
   async stop(){
     debug('stopping server')
 

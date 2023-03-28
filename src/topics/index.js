@@ -1,3 +1,2 @@
-module.exports = {
-  LocalTopicHost: require('./local-topic-host')
-}
+/** @module Topics */
+exports.LocalTopicHost = require('./local-topic-host')

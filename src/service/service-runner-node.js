@@ -10,6 +10,21 @@ const Router = require('origin-router').Router
 const Runner = require('@dataparty/tasker').Runner
 
 class ServiceRunnerNode {
+
+  /**
+   * Unsafe service runner. This service runner uses `eval` to run services, endpoints and tasks.
+   * This provides only simple context seperation and does not do effective context isolation.
+   * This should only be used where the service is knwon trustworthy. When the `useNative` option 
+   * is set to true the service will run in the same context as this class with no isolation at all.
+   * @class module:Service.ServiceRunnerNode
+   * @link module:Service
+   * @param {module:Service.IService} options.service         The service to load endpoints from
+   * @param {module:Party.IParty} options.party           The party to pass to the endpoints
+   * @param {boolean} options.sendFullErrors  If true send full stack traces to clients. Defaults to false
+   * @param {string} options.prefix          A prefix to apply to all endpoint paths
+   * @param {Router} options.router          Router, defaults to `origin-router`
+   * @param {boolean} options.useNative
+   */
   constructor({service, party, sendFullErrors=false, useNative=true, prefix='', router=new Router()}){
     this.party = party
     this.service = service
@@ -110,6 +125,11 @@ class ServiceRunnerNode {
     debug('loaded task',name,'in',dt.deltaMs,'ms')
   }
 
+  /**
+   * Add a named task to the run queue
+   * @see https://github.com/datapartyjs/tasker
+   * @param {string} name 
+   */
   runTask(name){
     const task = this.tasks[name]
 
@@ -237,6 +257,13 @@ class ServiceRunnerNode {
     return await middleware.info.ConfigSchema.validateAsync(middlewareCfg)
   }
 
+  /**
+   * Expressjs style way of calling an endpoint. The req will be passed to the router to select the appropritate endpoint
+   * @method module:Service.ServiceRunnerNode.onRequest
+   * @param {Express.Request} req 
+   * @param {Express.Response} res 
+   * @returns 
+   */
   async onRequest(req, res){
     debug('onRequest', req)
 

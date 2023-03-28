@@ -13,6 +13,19 @@ const DeltaTime = require('../utils/delta-time')
 const Router = require('origin-router').Router
 
 class ServiceRunner {
+
+
+  /**
+   * Sandboxed service runner. This runner uses the `vm2` package to run end points in a fully isolated context.
+   * Endpoints, pre-middleware and post-middleware all run as independant precompiled `VMScript`s.
+   * @class module:Service.ServiceRunner
+   * @link module:Service
+   * @param {module:Service.IService} options.service         The service to load endpoints from
+   * @param {module:Party.IParty} options.party           The party to pass to the endpoints
+   * @param {boolean} options.sendFullErrors  If true send full stack traces to clients. Defaults to false
+   * @param {string} options.prefix          A prefix to apply to all endpoint paths
+   * @param {Router} options.router          Router, defaults to `origin-router`
+   */
   constructor({service, party, sendFullErrors=false, prefix='', router=new Router()}){
     this.party = party
     this.service = service
@@ -138,6 +151,13 @@ class ServiceRunner {
     return await middleware.info.ConfigSchema.validateAsync(middlewareCfg)
   }
 
+  /**
+   * Expressjs style way of calling an endpoint. The req will be passed to the router to select the appropritate endpoint
+   * @method module:Service.ServiceRunner.onRequest
+   * @param {Express.Request} req 
+   * @param {Express.Response} res 
+   * @returns 
+   */
   async onRequest(req, res){
     debug('onRequest')
 

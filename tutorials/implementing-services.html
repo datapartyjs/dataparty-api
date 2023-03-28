@@ -1,0 +1,277 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Example restful service implementation</title>
+</head>
+<body>
+
+
+<h3>File: ./example-service.js</h3>
+
+<pre><code>
+const Dataparty = require('@dataparty/api')
+const debug = require('debug')('example.service')
+
+const Path = require('path')
+
+class ExampleService extends Dataparty.IService {
+    constructor(opts){
+    super(opts)
+
+    //! add our custom schemas
+    this.addSchema(Path.join(__dirname, './schema/basic_types.js'))
+    this.addSchema(Path.join(__dirname, './schema/user.js'))
+    
+    //! add our custom endpoint
+    this.addEndpoint(Path.join(__dirname, './endpoints/hellow-world.js'))
+
+    //! add some typical pre middleware
+    this.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
+    this.addMiddleware(Dataparty.middleware_paths.pre.validate)
+
+    //! add some typical post middleware
+    this.addMiddleware(Dataparty.middleware_paths.post.validate)
+    this.addMiddleware(Dataparty.middleware_paths.post.encrypt)
+
+    //! add some typical debug endpoints
+    this.addEndpoint(Dataparty.endpoint_paths.echo)
+    this.addEndpoint(Dataparty.endpoint_paths.secureecho)
+    this.addEndpoint(Dataparty.endpoint_paths.identity)
+    this.addEndpoint(Dataparty.endpoint_paths.version)
+
+    }
+
+}
+
+module.exports = ExampleService
+</code></pre>
+
+<h3>File: ./example-host.js</h3>
+
+<pre><code>
+const Path = require('path')
+const debug = require('debug')('example.service')
+const Dataparty = require('@dataparty/api')
+const dataparty_crypto = require('@dataparty/crypto')
+
+const ExampleService = require('./example-service')
+
+
+async function main(){
+
+
+    const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
+    const build = await service.compile(Path.join(__dirname,'/dataparty'), true)
+    
+    const serviceName = build.package.name
+    const basePath = '/data/datparty/'
+    const servicePath = Path.join(basePath, serviceName.replace('/','-'))
+
+    let config = new Dataparty.Config.JsonFileConfig({ basePath: servicePath })
+    config.touchDir('/tingo')
+
+    const dbPath = Path.join(servicePath, '/tingo')
+
+    let party = new Dataparty.TingoParty({
+        config,
+        path: dbPath,
+        model: build
+    })
+
+    party.topics = new Dataparty.LocalTopicHost()
+
+    const live = new Dataparty.IService(build.package, build)
+
+    
+    const runner = new Dataparty.ServiceRunnerNode({
+        party,
+        //prefix: 'foo',
+        service: live,
+        sendFullErrors: false,
+        useNative: false
+    })
+
+    
+    
+    
+    const runnerRouter = new Dataparty.RunnerRouter(runner)
+    
+    
+    const host = new Dataparty.ServiceHost({
+        runner: runnerRouter,
+        trust_proxy: true,
+        wsEnabled: true,
+    })
+    
+    debug(runner.party.identity)
+    await party.start()
+    await runnerRouter.start()
+    await host.start()
+
+    console.log('started')
+    
+    //process.exit()
+}
+
+
+
+main().catch(err=>{
+    console.error(err)
+})
+
+</code></pre>
+
+
+<h3>File: ./schema/user.js</h3>
+<pre><code>
+'use strict'
+
+const ISchema = require('@dataparty/api').Bouncer.ISchema
+
+const Utils = ISchema.Utils
+
+class User extends ISchema {
+
+    static get Type () { return 'user' }
+
+    static get Schema(){
+        return {
+            name: { type: String, maxlength: 50, minlength: 3, unique: true },
+            photo: { type: String, maxlength: 500, description: 'user photo url' },
+            created: Utils.created,
+            enabled: Boolean,
+            profile: Object,
+            tutorial: {
+            done: Boolean
+            }
+        }
+    }
+
+    static setupSchema(schema){
+        return schema
+    }
+
+    static permissions (context) {
+        return {
+            read: true,
+            new: true,
+            change: true
+        }
+    }
+}
+
+
+module.exports = User
+    
+</code></pre>
+
+<h3>File: ./schema/basic_types.js</h3>
+
+<pre>
+<code>
+'use strict'
+
+const ISchema = require('@dataparty/api').Bouncer.ISchema
+
+class BasicTypes extends ISchema {
+
+  static get Type () { return 'basic_types' }
+
+  static get Schema(){
+    return {
+      number: {type: Number, index: true},
+      string: {type: String, index: true},
+      time: {type: Date, index: true},
+      bool: Boolean,
+    }
+  }
+
+  static setupSchema(schema){
+    return schema
+  }
+
+  static permissions (context) {
+    return {
+      read: true,
+      new: true,
+      change: true
+    }
+  }
+}
+
+
+module.exports = BasicTypes
+</code>
+</pre>
+
+<h3>File: ./endpoints/hello-world</h3>
+<pre><code>
+const Joi = require('@hapi/joi')
+const debug = require('debug')('example.endpoint.hello-world')
+
+const IEndpoint = require('@dataparty/api').Service.IEndpoint
+
+module.exports = class EchoEndpoint extends IEndpoint {
+
+    static get Name(){
+    return 'hello-world'
+    }
+
+
+    static get Description(){
+    return 'Echo hello world'
+    }
+
+    static get MiddlewareConfig(){
+    return {
+        pre: {
+        decrypt: false,
+        validate: Joi.object().keys(null).description('any input allowed'),
+        },
+        post: {
+        encrypt: false,
+        validate: Joi.object().keys(null).description('any output allowed')
+        }
+    }
+    }
+
+    static async run(ctx, {Package}){
+
+    ctx.debug('ctx.input', ctx.input)
+
+    return 'hello world!'
+    }
+}
+</code></pre>
+
+<h3>File: ./example-build.js</h3>
+
+<pre><code>
+const Path = require('path')
+const debug = require('debug')('example.build')
+
+const Pkg = require('@dataparty/api')
+const ExampleService = require('./example-service')
+
+async function main(){
+  const service = new ExampleService({ name: Pkg.name, version: Pkg.version })
+
+
+  const build = await service.compile(Path.join(__dirname,'/dataparty'), true)
+
+  debug('compiled')
+}
+
+main().catch(err=>{
+  console.error('CRASH')
+  console.error(err)
+})
+</code></pre>
+
+
+
+
+</body>
+</html>

@@ -2,6 +2,18 @@ const Debug = require('debug')
 const debug = Debug('dataparty.service.runner-router')
 
 class RunnerRouter {
+
+  /**
+   * A multi-domain drop in replacement for anywhere we use `origin-router.Router`.
+   * By creating multiple dataparty `ServiceRunner`s you can manage multiple parties
+   * and multiple services and merge them into either a single combined service. Or
+   * host them as multiple seperate domains. Essentially, this allows the `ServiceHost`
+   * to be multi-tenant.
+   * 
+   * @class module:Service.RunnerRouter
+   * @link module:Service
+   * @param {module:Service.ServiceRunner} defaultRunner The default runner to use if no others match. **Required**
+   */
   constructor(defaultRunner){
     debug('constructor')
     this.defaultRunner = defaultRunner
@@ -15,6 +27,11 @@ class RunnerRouter {
 
   }
   
+  /**
+   * @async
+   * @method module:Service.RunnerRouter.start
+   * @returns 
+   */
   async start(){
     
     if(this.started){ return }
@@ -30,6 +47,11 @@ class RunnerRouter {
     }
   }
 
+  /**
+   * @method module:Service.RunnerRouter.getRunnerByDomain
+   * @param {string} domain 
+   * @returns {module:Service.ServiceRunner}
+   */
   getRunnerByDomain(domain){
     debug('getRunnerByDomain -', domain)
     const runner = this.runnersByDomain.get(domain)
@@ -38,6 +60,11 @@ class RunnerRouter {
     }
   }
 
+  /**
+   * @method module:Service.RunnerRouter.getRunnerByHostIdentity
+   * @param {dataparty_crypto.Identity} identity 
+   * @returns {module:Service.ServiceRunner}
+   */
   getRunnerByHostIdentity(identity){
     const partyId = identity.toString()
     debug('getRunnerByHostIdentity -', partyId)
@@ -46,6 +73,11 @@ class RunnerRouter {
     return runner
   }
 
+  /**
+   * @method module:Service.RunnerRouter.addRunner
+   * @param {string} options.domain
+   * @param {module:Service.ServiceRunner} options.runner
+   */
   addRunner({domain, runner}){
 
     const partyId = runner.party.identity.toString()
@@ -61,7 +93,13 @@ class RunnerRouter {
     }
   }
 
-
+/**
+   * Expressjs style way of calling an endpoint. The req will be passed to the router to select the appropritate endpoint
+   * @method module:Service.RouterRunner.onRequest
+   * @param {Express.Request} req 
+   * @param {Express.Response} res 
+   * @returns 
+   */
   onRequest(req, res){
     const runner = this.getRunnerByDomain(req.hostname)
 

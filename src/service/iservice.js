@@ -11,6 +11,10 @@ const debug = require('debug')('dataparty.service.IService')
 
 module.exports = class IService {
   /**
+   *  A service with schema, documents, endpoints, middleware and tasks.
+   * Provide either paths to source files for compilation or provided a 
+   * pre-built service to import.
+   *
    * @class module:Service.IService
    * @link module:Service
    * 
@@ -95,13 +99,19 @@ module.exports = class IService {
     }
    }
 
+   /**
+    * Import a pre-build service
+    * @method module:Service.IService.importBuild
+    * @param {Object} buildOutput 
+    */
   importBuild(buildOutput){
     this.compiled = buildOutput
   }
 
   /**
-   * @method module:Db.ISchema.addSchema
-   * @param {module:Db.ISchema} schema_path 
+   * Add a dataparty schema implementation to the service
+   * @method module:Service.IService.addSchema
+   * @param {module:Service.IService} schema_path 
    */
   addSchema(schema_path){
     debug('addSchema', schema_path)
@@ -113,8 +123,9 @@ module.exports = class IService {
   }
 
   /**
-   * @method module:Db.ISchema.addDocument
-   * @param {*} document_path 
+   * Add a document class implementation to the service
+   * @method module:Service.IService.addDocument
+   * @param {string} document_path 
    */
   addDocument(document_path){
     debug('addDocument', document_path)
@@ -126,8 +137,9 @@ module.exports = class IService {
   }
 
   /**
-   * @method module:Db.ISchema.addEndpoint
-   * @param {*} endpoint_path 
+   * Add a dataparty endpoint to the service by pather
+   * @method module:Service.IService.addEndpoint
+   * @param {string} endpoint_path 
    */
   addEndpoint(endpoint_path){
     debug('addEndpoint', endpoint_path)
@@ -138,6 +150,11 @@ module.exports = class IService {
     this.constructors.endpoints[name] = endpoint
   }
 
+  /**
+   * Add a middleware to this service
+   * @method module:Service.IService.addEndpoint
+   * @param {string} middleware_path 
+   */
   addMiddleware(middleware_path){
 
     debug('addMiddleware',middleware_path)
@@ -156,6 +173,12 @@ module.exports = class IService {
     this.constructors.middleware[type][name] = middleware
   }
 
+  /**
+   * Add a `tasker` task implementation to the service
+   * @method module:Service.IService.addTask
+   * @see https://github.com/datapartyjs/tasker
+   * @param {string} task_path 
+   */
   addTask(task_path){
 
     debug('addTask', task_path)
@@ -169,6 +192,15 @@ module.exports = class IService {
   }
 
 
+  /**
+   * Compile a service. This will build two output files, one for host usage `-service.json`
+   * and another for client usage `-schema.json`.
+   * @async
+   * @method module:Service.IService.compile
+   * @param {string} outputPath   Path where the built service should be written
+   * @param {boolean} writeFile   When true, files will be written. Defaults to `true`
+   * @returns 
+   */
   async compile(outputPath, writeFile=true){
 
     if(!outputPath){
@@ -209,6 +241,7 @@ module.exports = class IService {
     return this.compiled
 
   }
+
 
   async compileList(field, outputPath){
     // Build file list

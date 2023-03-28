@@ -23,6 +23,7 @@ var BASE_PATH = process.env.SNAP_COMMON || ((process.env.HOME) ? (process.env.HO
 class NconfConfig extends IConfig {
 
   constructor(defaults, whitelist){
+    super()
     this.whitelist = whitelist || []
     this.basePath = defaults.basePath || BASE_PATH
     this.defaults = defaults || {}

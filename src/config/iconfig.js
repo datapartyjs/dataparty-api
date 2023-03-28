@@ -5,6 +5,7 @@
  * @link module.Config
  */
 class IConfig {
+    constructor(){}
     async start(){ throw 'not implemented' }
     async clear(){ throw 'not implemented' }
     readAll(){ throw 'not implemented' }

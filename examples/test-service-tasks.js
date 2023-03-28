@@ -2,9 +2,6 @@ const Path = require('path')
 const debug = require('debug')('test.server-db')
 const Dataparty = require('../src')
 
-const BouncerServerModels = require('@dataparty/bouncer-model')
-const BouncerClientModels = require('@dataparty/bouncer-model/dist/bouncer-model.json')
-
 class ExampleTaskService extends Dataparty.IService {
   constructor(opts){
     super(opts)
@@ -17,23 +14,20 @@ class ExampleTaskService extends Dataparty.IService {
 async function main(){
 
   
-  //const uri = 'mongodb://localhost:27017/server-party-test'
-  //debug('db location', uri)
-
-  const path = '/data/datparty/srv-party'
-
-  let party = new Dataparty.TingoParty({
-    path,
-    model: BouncerClientModels,
-    serverModels: BouncerServerModels,
-    config: new Dataparty.Config.JsonFileConfig({basePath: '/data/datparty/'})
-  })
-
   const service = new ExampleTaskService({ name: '@dataparty/task-example', version: '0.0.1' })
 
   const build = await service.compile(Path.join(__dirname,'/dataparty'), true)
 
   debug('built', Object.keys(build))
+
+  const path = '/data/datparty/srv-party'
+
+  let party = new Dataparty.TingoParty({
+    path,
+    model: build,
+    config: new Dataparty.Config.JsonFileConfig({basePath: '/data/datparty/'})
+  })
+
 
   const runner = new Dataparty.ServiceRunnerNode({
     party, service,
@@ -54,7 +48,6 @@ async function main(){
 
   console.log('started')
   
-  //process.exit()
 }
 
 
