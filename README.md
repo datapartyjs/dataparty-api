@@ -45,11 +45,11 @@ A dataparty app/service typically consists of these parts:
 Database | Browser | Cordova | Electron | Embedded Linux | Node 
 -----|----|-|--|-|-
 [Lokijs](https://datapartyjs.github.io/dataparty-api/module-Db.LokiDb.html) | y | y | y | NR* | NR*
-[Zangodb](https://datapartyjs.github.io/dataparty-api/module-ZangoDb) | y | y | y | n | n
+[Zangodb](https://datapartyjs.github.io/dataparty-api/module-ZangoDb) | y | y | y | P* | P*
 [Tingo](https://datapartyjs.github.io/dataparty-api/module-TingoDb) | n | P* | y | y | y 
 [Mongo](https://datapartyjs.github.io/dataparty-api/module-MongoDb) | n | P* | y | y | y
 
-*NR - Not Recommended
+*NR - Not Recommended, but supported
 *P - Possibly. We're looking into it.
 
 ## Example

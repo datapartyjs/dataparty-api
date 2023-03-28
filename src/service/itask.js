@@ -11,6 +11,7 @@ module.exports = class ITask extends tasker.Task {
    * 
    * @interface module:Service.ITask
    * @link module:Service
+   * @see https://github.com/datapartyjs/tasker
    * @extends {tasker.Task}
    * @param {Object} options Options to pass to `tasker.Task(options)`
    */
