@@ -1,0 +1,174 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple peer-to-peer service</title>
+</head>
+<body>
+
+
+<h3>File: ./example-service.js</h3>
+
+<pre><code>
+const Dataparty = require('@dataparty/api')
+const debug = require('debug')('example.service')
+
+const Path = require('path')
+
+class ExampleService extends Dataparty.IService {
+    constructor(opts){
+    super(opts)
+
+    //! add our custom schemas
+    this.addSchema(Path.join(__dirname, './schema/basic_types.js'))
+    this.addSchema(Path.join(__dirname, './schema/user.js'))
+    
+    //! add our custom endpoint
+    this.addEndpoint(Path.join(__dirname, './endpoints/hellow-world.js'))
+
+    //! add some typical pre middleware
+    this.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
+    this.addMiddleware(Dataparty.middleware_paths.pre.validate)
+
+    //! add some typical post middleware
+    this.addMiddleware(Dataparty.middleware_paths.post.validate)
+    this.addMiddleware(Dataparty.middleware_paths.post.encrypt)
+
+    //! add some typical debug endpoints
+    this.addEndpoint(Dataparty.endpoint_paths.echo)
+    this.addEndpoint(Dataparty.endpoint_paths.secureecho)
+    this.addEndpoint(Dataparty.endpoint_paths.identity)
+    this.addEndpoint(Dataparty.endpoint_paths.version)
+
+    }
+
+}
+
+module.exports = ExampleService
+</code></pre>
+
+<h3>File: example-peer-to-peer.js</h3>
+<pre><code>
+const debug = require('debug')('example.peer-party-service')
+const WRTC = require('wrtc')
+const Path = require('path')
+const Dataparty = require('@dataparty/api')
+
+const ExampleService = require('./example-service')
+
+
+async function main(){
+  
+
+
+    const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
+  
+    const build = await service.compile(Path.join(__dirname,'/dataparty'), true)
+  
+    debug('built', Object.keys(build))
+  
+    const dbPath = '/tmp/local-peer-party-service'
+  
+    debug('db location', dbPath)
+  
+    let hostLocal = new Dataparty.TingoParty({
+      path: dbPath,
+      model: build,
+      config: new Dataparty.Config.JsonFileConfig({basePath: dbPath})
+    })
+  
+    const runner = new Dataparty.ServiceRunnerNode({
+      party: hostLocal, service,
+      sendFullErrors: false
+    })
+  
+  
+    let peer1 = new Dataparty.PeerParty({
+      comms: new Dataparty.Comms.RTCSocketComms({
+        host: true,
+        wrtc: WRTC,
+        trickle: true,
+        discoverRemoteIdentity: true
+      }),
+      hostParty: hostLocal,
+      hostRunner: runner,
+      model: build,
+      config: new Dataparty.Config.MemoryConfig()
+    })
+  
+  
+    let peer2 = new Dataparty.PeerParty({
+      comms: new Dataparty.Comms.RTCSocketComms({
+        wrtc: WRTC,
+        trickle: true,
+        session: 'foobar'
+      }),
+      model: build,
+      config: new Dataparty.Config.MemoryConfig()
+    })
+  
+  
+  
+    await peer1.loadIdentity()
+    await peer2.loadIdentity()
+  
+    //peer1.comms.remoteIdentity = peer2.identity
+    peer2.comms.remoteIdentity = peer1.identity
+  
+    await peer1.start()
+    await runner.start()
+  
+    await peer2.start()
+  
+    peer1.comms.socket.on('signal', data=>{
+      debug('p1 to p2', data)
+      peer2.comms.socket.signal(data)
+    })
+  
+    peer2.comms.socket.on('signal', data=>{
+      debug('p1 from p2', data)
+      peer1.comms.socket.signal(data)
+    })
+  
+    debug('waiting for auth')
+    await Promise.all([
+      peer1.comms.authorized(),
+      peer2.comms.authorized()
+    ])
+    
+    debug('authed')
+  
+    const remoteVersion = await peer2.comms.call('version')
+    const remoteId = await peer2.comms.call('identity')
+  
+    
+  
+    let user = (await peer2.find()
+      .type('user')
+      .where('name').equals('tester')
+      .exec())[0]
+  
+    
+    if(!user){
+      debug('creating document')
+      user = await peer2.createDocument('user', {name: 'tester', created: (new Date()).toISOString() })
+    }
+    else{
+      debug('loaded document')
+    }
+  
+  
+    console.log(remoteId)
+    console.log(remoteVersion)
+    
+    console.log(user.data)
+    process.exit()
+  }
+  
+  
+  main().catch(err=>{
+    console.error(err)
+  })
+</code></pre>
+</body>

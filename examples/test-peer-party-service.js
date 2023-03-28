@@ -1,10 +1,8 @@
 const debug = require('debug')('test.peer-party-service')
 const WRTC = require('wrtc')
 const Path = require('path')
-const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
 const Dataparty = require('../src')
 
-const BouncerServerModels = require('@dataparty/bouncer-model')
 
 class ExampleService extends Dataparty.IService {
   constructor(opts){
@@ -24,17 +22,10 @@ class ExampleService extends Dataparty.IService {
 
 }
 
+
 async function main(){
-  const dbPath = '/tmp/local-peer-party-service'
+  
 
-  debug('db location', dbPath)
-
-  let hostLocal = new Dataparty.TingoParty({
-    path: dbPath,
-    model: BouncerModel,
-    serverModels: BouncerServerModels,
-    config: new Dataparty.Config.JsonFileConfig({basePath: dbPath})
-  })
 
   const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
 
@@ -42,16 +33,21 @@ async function main(){
 
   debug('built', Object.keys(build))
 
+  const dbPath = '/tmp/local-peer-party-service'
+
+  debug('db location', dbPath)
+
+  let hostLocal = new Dataparty.TingoParty({
+    path: dbPath,
+    model: build,
+    config: new Dataparty.Config.JsonFileConfig({basePath: dbPath})
+  })
+
   const runner = new Dataparty.ServiceRunnerNode({
     party: hostLocal, service,
     sendFullErrors: false
   })
 
-  /*let hostLocal = new Dataparty.LokiParty({
-    path: dbPath,
-    model: BouncerModel,
-    config: new Dataparty.Config.MemoryConfig()
-  })*/
 
   let peer1 = new Dataparty.PeerParty({
     comms: new Dataparty.Comms.RTCSocketComms({
@@ -62,7 +58,7 @@ async function main(){
     }),
     hostParty: hostLocal,
     hostRunner: runner,
-    model: BouncerModel,
+    model: build,
     config: new Dataparty.Config.MemoryConfig()
   })
 
@@ -73,7 +69,7 @@ async function main(){
       trickle: true,
       session: 'foobar'
     }),
-    model: BouncerModel,
+    model: build,
     config: new Dataparty.Config.MemoryConfig()
   })
 

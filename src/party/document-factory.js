@@ -25,7 +25,7 @@ class DocumentFactory {
 
     if(model){
 
-      this.schemas = reach(this.model, 'schemas', model)
+      this.schemas = reach(model, 'schemas', model)
 
       for(let schema of this.schemas.JSONSchema){
         const v = this.ajv.compile(schema)

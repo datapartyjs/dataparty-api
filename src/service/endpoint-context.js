@@ -5,7 +5,7 @@ const DeltaTime = require('../utils/delta-time')
 class EndpointContext {
 
   /**
-   * @class module:Service.EndPointContext
+   * @class module:Service.EndpointContext
    * @link module:Service
    * @param {module:Party.IParty} options.party           The party handling the request
    * @param {module:Service.IEndpoint} options.endpoint        The endpoint being executed

@@ -1,10 +1,10 @@
 const Hoek = require('@hapi/hoek')
-const debug = require('debug')('dataparty.irunner')
+const debug = require('debug')('dataparty.ISandboxRunner')
 
-class IRunner {
+class ISandboxRunner {
 
   /**
-   * @class module:Service.IRunner
+   * @class module:Service.ISandboxRunner
    * @link module:Service
    * @param {*} options.info
    * @param {*} options.exec
@@ -18,7 +18,7 @@ class IRunner {
   }
 
   /**
-   * @member module:Service.IRunner.start
+   * @member module:Service.ISandboxRunner.start
    */
   get info(){
     return Hoek.reach(this.sandboxes, 'info.info')
@@ -26,7 +26,7 @@ class IRunner {
 
   /**
    * @async
-   * @method module:Service.IRunner.getInfo
+   * @method module:Service.ISandboxRunner.getInfo
    * @returns 
    */
   async getInfo(){
@@ -39,7 +39,7 @@ class IRunner {
 
   /**
    * @async
-   * @method module:Service.IRunner.start
+   * @method module:Service.ISandboxRunner.start
    * @param {*} serviceContext 
    * @returns 
    */
@@ -50,7 +50,7 @@ class IRunner {
 
   /**
    * @async
-   * @method module:Service.IRunner.run
+   * @method module:Service.ISandboxRunner.run
    * 
    * @param {*} context 
    * @param {*} static_ctx 
@@ -63,13 +63,13 @@ class IRunner {
 
   /**
    * @async
-   * @method module:Service.IRunner.self
+   * @method module:Service.ISandboxRunner.self
    * 
-   * @returns module:Serivce.IRunner
+   * @returns module:Serivce.ISandboxRunner
    */
   self(){
     return this
   }
 }
 
-module.exports = IRunner
+module.exports = ISandboxRunner

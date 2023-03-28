@@ -19,7 +19,7 @@
     "theme_opts": {
       "homepageTitle": "decentralized cloud framework for the web 3.0 generation",
       "title": "@dataparty/api",
-      "sections": ["Modules", "Tutorials", "Classes"],
+      "sections": ["Modules", "Tutorials"],
         "default_theme": "dark",
         "displayModuleHeader": true,
         "menu": [

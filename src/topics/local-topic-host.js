@@ -7,6 +7,15 @@ const HostTopic = require('./host-topic')
 const PeerNode = require('./peer-node')
 
 class LocalTopicHost {
+
+  /**
+   * Implementation of ROS style pub/sub topics. This runs on a
+   * single thread/peer and can be shared to other peers. However,
+   * this is a centralized implementation. So if the hosting node
+   * stops all topic traffic will halt as well.
+   * @class module:Topics.LocalTopicHost
+   * @link module:Topics
+   */
   constructor(){
     debug('constructor')
     this.nodesByUuid = new Map()

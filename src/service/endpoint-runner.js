@@ -1,9 +1,9 @@
-const IRunner = require('./irunner')
+const ISandboxRunner = require('./isandbox-runner')
 
 const EndpointInfoSandbox = require('../sandbox/endpoint-info-sandbox')
 const MiddlewareExecSandbox = require('../sandbox/middleware-exec-sandbox')
 
-class EndpointRunner extends IRunner {
+class EndpointRunner extends ISandboxRunner {
   constructor(code, map){
     super({
       info: new EndpointInfoSandbox(code, map),

@@ -15,6 +15,7 @@ const IConfig = require('./iconfig')
 class LocalStorageConfig extends IConfig {
 
   constructor(defaults, whitelist){
+    super()
     this.whitelist = whitelist || []
     defaults = defaults || {}
     this.basePath = defaults.basePath || 'dataparty-api'

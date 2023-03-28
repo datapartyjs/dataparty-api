@@ -10,7 +10,7 @@ decentralized cloud framework for the Web3.0 generation.
 
 ## Design Goal
 
-Dataparty services are able to run on servers, edge devices, or even directly in the browser or app. This means users of dataparty based apps can frequently run their own backend from within an app. By building this peer-to-peer functionality directly into the database ORM, `dataparty/api`, saves significant effort for app makers.
+Dataparty services are able to run on servers, edge devices, or even directly in the browser or app. This means users of dataparty based apps can frequently run their own backend from within an app. By building this peer-to-peer functionality directly into the database ORM, `dataparty/api` saves significant effort for app makers.
 
 ### Plugable
 For many domains the exact performance characteristics of the database, communications, and security matter a lot. All major systems are fairly pluggable so that additional drivers(db, comms etc) can be developed.
@@ -29,9 +29,14 @@ A dataparty app/service typically consists of these parts:
    * Persist configuration in a number of ways.
  * [Db](https://datapartyjs.github.io/dataparty-api/module-Db.html)
    * Select the database that makes sense for you, see [database selection](#database-selection)
+   * Use one scheme across all db's
  * [Party](https://datapartyjs.github.io/dataparty-api/module-Party.html)
    * The primary query interface. Abstracts the DBs into a common realtime-db interface. Partys can interact with local, remote and even peer-to-peer hosted DBs. Select the type of party that makes sense for you. See [party selection](#party-selection)
  * [Service](https://datapartyjs.github.io/dataparty-api/module-Service.html)
+   * RESTful endpoints and middleware, code once run everywhere. Expressjs style interface. Each endpoint can be run in its own sandbox, various types of isolation are supported and more are planned.
+ * [Topics](https://datapartyjs.github.io/dataparty-api/module-Topics.html)
+   * Streaming pub/sub that runs everywhere. Compatible with the ROS `rosbridge 2.0` protocol.
+
 
 
 ### Database Selection
