@@ -323,7 +323,7 @@ class IDocument extends EventEmitter {
 
     /**
      * Document change Event - This is event is triggered when a document has been
-     * modified on the `CloudParty` service
+     * modified on the remote service
      * @event module:Party.IDocument#change
      * @type {object}
      */
@@ -357,17 +357,37 @@ class IDocument extends EventEmitter {
         }
 
         /**
-         * Document modified Event - This event is triggered after a change has been 
+         * @typedef {module:Party.IDocumentEvent}
+         * @property  {module:Party.IDocument}  doc the changed document
+         * @property  {object}  new the new document data
+         * @property  {object}  old the old document data
+         */
+
+        /**
+         * Document create Event - This event is triggered after a document has been created and
+         * applied to the backing cache of `Document.data`. If `Document.followcache` 
+         * is true the document `doc` has also accepted the change.
+         * 
+         * @event module:Party.IDocument#create
+         * @type {module:Party.IDocument.Event}
+         */
+
+        /**
+         * Document update Event - This event is triggered after a change has been 
+         * applied to the backing cache of `Document.data`. If `Document.followcache` 
+         * is true the document `doc` has also accepted the change.
+         * 
+         * @event module:Party.IDocument#update
+         * @type {module:Party.IDocument.Event}
+         */
+    
+        /**
+         * Document remove Event - This event is triggered after a document has been removed and
          * applied to the backing cache of `Document.data`. If `Document.followcache` 
          * is true the document `doc` has also accepted the change.
          * 
          * @event module:Party.IDocument#remove
-         * @event module:Party.IDocument#update
-         * @event module:Party.IDocument#create
-         * @type {object}
-         * @property  {module:dataparty.DataParty.Document}  doc the changed document
-         * @property  {object}  new the new document data
-         * @property  {object}  old the old document data
+         * @type {module:Party.IDocument.Event}
          */
         this.emit(event.event, {new: newMsg, old: oldMsg, doc: this})
 

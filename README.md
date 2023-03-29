@@ -95,6 +95,9 @@ async function main(){
   console.log(user.data)
 
 
+  user.on('update', (evt)=>{ console.log('update') })
+  user.on('value', (evt)=>{ console.log('value') })
+
   user.data.name = 'renamed-tester'
 
   await user.save()

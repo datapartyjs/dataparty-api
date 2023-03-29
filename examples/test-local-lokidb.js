@@ -41,22 +41,24 @@ async function main(){
 
   console.log(user.data)
 
+  user.on('update', (obj)=>{ console.log('update') })
+  user.on('value', (obj)=>{ console.log('value') })
 
   user.data.name = 'renamed-tester'
-  //user.data.invalideField = true
   await user.save()
 
   console.log(user.data)
 
   let userFind = await getUser('renamed-tester')
 
-  console.log(userFind)
+  console.log(userFind.data)
 
 
   console.log(dbPath)
 
 
-  await user.remove()
+  await userFind.remove()
+
 
   console.log(await getUser('renamed-tester'))
 
