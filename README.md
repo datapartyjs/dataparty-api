@@ -1,5 +1,5 @@
 # @dataparty/api
-[![experimental](http://badges.github.io/stability-badges/dist/experimental.svg)](http://github.com/badges/stability-badges)[![license](https://img.shields.io/github/license/datapartyjs/api)](https://github.com/datapartyjs/dataparty-api/blob/master/LICENSE)
+[![experimental](http://badges.github.io/stability-badges/dist/experimental.svg)](http://github.com/badges/stability-badges)[![license](https://img.shields.io/github/license/datapartyjs/dataparty-api)](https://github.com/datapartyjs/dataparty-api/blob/master/LICENSE)
 
 decentralized cloud framework for the Web3.0 generation.
 
@@ -13,7 +13,7 @@ decentralized cloud framework for the Web3.0 generation.
 Dataparty services are able to run on servers, edge devices, or even directly in the browser or app. This means users of dataparty based apps can frequently run their own backend from within an app. By building this peer-to-peer functionality directly into the database ORM, `dataparty/api` saves significant effort for app makers.
 
 ### Plugable
-For many domains the exact performance characteristics of the database, communications, and security matter a lot. All major systems are fairly pluggable so that additional drivers(db, comms etc) can be developed.
+For many domains the exact performance characteristics of the database, communications and security matter a lot. All major systems are fairly pluggable so that additional drivers (db, comms etc) can be developed.
 
 
 ## Features
