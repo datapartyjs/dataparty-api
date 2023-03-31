@@ -1,7 +1,7 @@
 {
   "name": "@dataparty/api",
   "private": false,
-  "version": "1.2.19",
+  "version": "1.2.20",
   "main": "dist/dataparty.js",
   "frontend": "dist/dataparty-browser.js",
   "backend": "dist/dataparty.js",
