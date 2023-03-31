@@ -59,7 +59,7 @@
   },
   "dependencies": {
     "@dataparty/bouncer-db": "1.0.1",
-    "@dataparty/crypto": "datapartyjs/dataparty-crypto#seed-phrase",
+    "@dataparty/crypto": "1.0.3",
     "@dataparty/tasker": "^0.0.2",
     "@diva.exchange/i2p-sam": "^4.1.8",
     "@hapi/joi": "^17.1.1",
