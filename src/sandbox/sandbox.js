@@ -33,7 +33,7 @@ class Sandbox {
         sandbox,
         require: {
           external: {
-            modules: ['debug', '@dataparty/crypto', '@hapi/joi', '@hapi/hoek']
+            modules: ['debug', '@dataparty/crypto', 'joi', '@hapi/hoek']
           },
           //builtin: ['*']
         }

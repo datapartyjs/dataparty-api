@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi')
+const Joi = require('joi')
 const Hoek = require('@hapi/hoek')
 const debug = require('debug')('dataparty.middleware.pre.validate')
 

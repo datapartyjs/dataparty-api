@@ -5,7 +5,7 @@ const HttpMocks = require('node-mocks-http')
 const SocketOp = require('./op/socket-op')
 const ISocketComms = require('./isocket-comms')
 
-const Joi = require('@hapi/joi')
+const Joi = require('joi')
 const HostOp = require('./host/host-op')
 const HostProtocolScheme = require('./host/host-protocol-scheme')
 

@@ -6,7 +6,7 @@ const {JSONPath} = require('jsonpath-plus')
 const gitRepoInfo = require('git-repo-info')
 const BouncerDb = require('@dataparty/bouncer-db')
 const mongoose = BouncerDb.mongoose()
-const { build } = require('@hapi/joi')
+const { build } = require('joi')
 const debug = require('debug')('dataparty.service.IService')
 
 module.exports = class IService {
@@ -79,7 +79,7 @@ module.exports = class IService {
       // provide a custom cache path or disable caching
       cache: false,
       // externals to leave as requires of the build
-      externals: ['debug', '@dataparty/crypto', '@dataparty/tasker', '@hapi/joi', '@hapi/hoek'],
+      externals: ['debug', '@dataparty/crypto', '@dataparty/tasker', 'joi', '@hapi/hoek'],
       // directory outside of which never to emit assets
       //filterAssetBase: process.cwd(), // default
       minify: false, // default

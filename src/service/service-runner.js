@@ -1,5 +1,5 @@
 const Path = require('path')
-const Joi = require('@hapi/joi')
+const Joi = require('joi')
 const Hoek = require('@hapi/hoek')
 const {VM, VMScript} = require('vm2')
 const Debug = require('debug')
