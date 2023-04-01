@@ -1,6 +1,6 @@
 const fs = require('fs')
 const Path = require('path')
-const NCC = require('@zeit/ncc')
+const NCC = require('@vercel/ncc')
 const Hoek = require('@hapi/hoek')
 const {JSONPath} = require('jsonpath-plus')
 const gitRepoInfo = require('git-repo-info')
