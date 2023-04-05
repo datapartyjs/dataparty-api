@@ -77,6 +77,7 @@ class IParty {
   async createDocument(type, data, id){
     let Type = this.factory.getFactory(type)
 
+
     return await Type.create(this, {data, type, id})
   }
 

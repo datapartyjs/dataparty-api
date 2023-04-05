@@ -1,6 +1,6 @@
 'use strict';
 
-const deepSet = require('deep-set')
+const deepSet = require('lodash').set
 const reach = require('../utils/reach')
 const logger = require('debug')('dataparty.config.memory');
 
