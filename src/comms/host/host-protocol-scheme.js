@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi')
+const Joi = require('joi')
 Joi.objectId = require('joi-objectid')(Joi)
 
 const ID_SCHEME = Joi.alternatives().try(Joi.string(), Joi.number())

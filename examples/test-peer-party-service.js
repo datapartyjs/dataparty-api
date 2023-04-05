@@ -18,6 +18,8 @@ class ExampleService extends Dataparty.IService {
     this.addEndpoint(Dataparty.endpoint_paths.secureecho)
     this.addEndpoint(Dataparty.endpoint_paths.identity)
     this.addEndpoint(Dataparty.endpoint_paths.version)
+
+    this.addSchema(Path.join(__dirname, './party/schema/user.js'))
   }
 
 }

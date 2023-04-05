@@ -80,7 +80,7 @@ async function main(){
 
   console.log('started')
   
-  //process.exit()
+  process.exit()
 }
 
 

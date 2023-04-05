@@ -176,8 +176,8 @@ class IDocument extends EventEmitter {
 
     const rawDocuments = (await party.create(type, data))
     
-      debug('hydrating', rawDocuments)
-      return (await party.factory.hydrate(rawDocuments))[0]
+    debug('hydrating', rawDocuments)
+    return (await party.factory.hydrate(rawDocuments))[0]
 
     /*const docs = (await party.find()
       .type(rawDocument.$meta.type)

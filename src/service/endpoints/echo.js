@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi')
+const Joi = require('joi')
 const debug = require('debug')('dataparty.endpoint.echo')
 
 const IEndpoint = require('../iendpoint')
