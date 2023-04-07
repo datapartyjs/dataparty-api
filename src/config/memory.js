@@ -21,28 +21,28 @@ class MemoryConfig extends IConfig {
     this.content = Object.assign({}, defaults)
   }
 
-  start () {
+  async start () {
     //read and merge defaults
     return this
   }
 
-  clear () {
+  async clear () {
     this.content = {}
   }
 
-  readAll(){
+  async readAll(){
 
     return Object.assign({}, this.content)
   }
 
-  read(key){
+  async read(key){
     logger('reading path: ' + key)
-    return reach( this.readAll(), key)
+    return reach( await this.readAll(), key)
   }
 
   async write(key, value){
 
-    let data = this.readAll()
+    let data = await this.readAll()
 
     deepSet(data, key, value)
 
@@ -52,8 +52,8 @@ class MemoryConfig extends IConfig {
   }
 
 
-  exists(key){
-    return (read(key) !== undefined)
+  async exists(key){
+    return (await read(key)) !== undefined
   }
 
   async save(){

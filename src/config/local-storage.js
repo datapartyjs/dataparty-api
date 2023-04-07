@@ -23,15 +23,15 @@ class LocalStorageConfig extends IConfig {
     this.defaults.logicalSeparator = '.'
   }
 
-  start () {
-    return Promise.resolve(this)
+  async start () {
+    return this
   }
 
-  clear () {
+  async clear () {
     localStorage.setItem(this.basePath, JSON.stringify({}))
   }
 
-  readAll(){
+  async readAll(){
     try{
       return Object.assign(
         {},
@@ -44,14 +44,14 @@ class LocalStorageConfig extends IConfig {
     }
   }
 
-  read(key){
+  async read(key){
     logger('reading path: ' + key)
-    return reach( this.readAll(), key)
+    return reach( await this.readAll(), key)
   }
 
   async write(key, value){
 
-    let data = this.readAll()
+    let data = await this.readAll()
 
     deepSet(data, key, value)
 
@@ -61,8 +61,8 @@ class LocalStorageConfig extends IConfig {
   }
 
 
-  exists(key){
-    return (read(key) !== undefined)
+  async exists(key){
+    return (await read(key)) !== undefined
   }
 
   async save(){

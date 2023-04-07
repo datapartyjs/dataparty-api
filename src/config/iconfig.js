@@ -1,10 +1,10 @@
-
+const EventEmitter = require('eventemitter3')
 
 /**
  * @interface module:Config.IConfig
  * @link module.Config
  */
-class IConfig {
+class IConfig extends EventEmitter {
     constructor(){}
     async start(){ throw 'not implemented' }
     async clear(){ throw 'not implemented' }
