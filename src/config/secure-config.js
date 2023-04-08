@@ -24,6 +24,8 @@ class SecureConfig extends IConfig {
         this.lastActivity = null
         this.timeoutMs = timeoutMs || 15*1000
         this.includeActivity = includeActivity || true
+
+        this.blocked = false
     }
 
     async start(){
@@ -78,18 +80,14 @@ class SecureConfig extends IConfig {
 
         await this.config.save()
 
-        this.emit('ready')
-
+        
         const contentMsg = new dataparty_crypto.Message( initialContent )
-
-        console.log('msg', contentMsg)
-
         //! Verify message
         await contentMsg.decrypt(pwIdentity)
+        this.emit('ready')
     }
 
     async waitForUnlocked(reason){
-
         
         if(!this.isLocked()){
             return
@@ -97,11 +95,17 @@ class SecureConfig extends IConfig {
         
         debug('waitForUnlocked', reason)
 
-        this.emit('blocked', reason)
+        if(!this.blocked){
+            this.emit('blocked', reason)
+        }
+
+        this.blocked = true
+
 
         let waiting = new Promise((resolve,reject)=>{
 
             this.once('unlocked', ()=>{
+                this.blocked = false
                 resolve()
                 debug('waitForUnlocked - done')
             })
@@ -121,9 +125,6 @@ class SecureConfig extends IConfig {
         let salt = Buffer.from(await this.config.read('salt'),'hex')
         let rounds = await this.config.read('rounds')
 
-        console.log('salt', salt)
-        console.log('rounds', rounds)
-
         let key = await dataparty_crypto.Routines.createKeyFromPassword(password, salt, rounds)
 
         const pwIdentity = new dataparty_crypto.Identity({
@@ -131,15 +132,10 @@ class SecureConfig extends IConfig {
             id: this.id
         })
 
-        console.log(pwIdentity)
 
         this.content = await this.config.read('content')
 
-        console.log('content', this.content, typeof this.content)
-
         const contentMsg = new dataparty_crypto.Message( this.content )
-
-        console.log('msg', contentMsg)
 
         //! Verify message
         await contentMsg.decrypt(pwIdentity)

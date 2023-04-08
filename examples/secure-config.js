@@ -3,6 +3,7 @@ const Dataparty = require('../src/index')
 
 const prompt = require('prompt')
 
+let secureConfig = null
 
 async function main(){
     const memoryConfig = new Dataparty.Config.MemoryConfig({foo: 'bar'})
@@ -13,8 +14,8 @@ async function main(){
     })
 
 
-    const secureConfig = new Dataparty.Config.SecureConfig({
-        config: memoryConfig
+    secureConfig = new Dataparty.Config.SecureConfig({
+        config: jsonConfig
     })
 
     
@@ -41,6 +42,7 @@ async function main(){
         if(await secureConfig.isInitialized() && secureConfig.isLocked()){
 
             if(blocked){
+                console.log('blocked true')
                 await secureConfig.waitForUnlocked()
                 return
             }
@@ -94,13 +96,22 @@ async function main(){
             console.log("passwords don't match")
         }
 
-        secureConfig.setPassword(password, {
+        await secureConfig.setPassword(password, {
             foo: 'bar'
         })
 
+        console.log('password set')
+
+
+        await secureConfig.unlock(password)
+
     })
 
+    console.log('starting')
+
     await secureConfig.start()
+
+    console.log('wait for startup')
 
     await secureConfig.waitForUnlocked('startup')
 
@@ -108,14 +119,13 @@ async function main(){
 
     console.log('main config', await secureConfig.readAll())
 
-    setTimeout(async ()=>{
+    let timer = setTimeout(async ()=>{
 
 
         console.log('timer config', await secureConfig.readAll())
 
     }, 30000)
 
-    //process.exit()
 }
 
 main().catch((err)=>{
@@ -123,9 +133,3 @@ main().catch((err)=>{
 }).then(()=>{
     console.log('done')
 })
-
-
-/*
-setTimeout(function () {
-    process.exit();
-}, 5000);*/
