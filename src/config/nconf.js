@@ -31,7 +31,7 @@ class NconfConfig extends IConfig {
     this.started=false
   }
 
-  start () {
+  async start () {
     if(this.started){ return Promise.resolve(this) }
 
     this.touchDir('')
@@ -66,7 +66,7 @@ class NconfConfig extends IConfig {
     return Promise.resolve(this)
   }
 
-  clear () {
+  async clear () {
     logger('clear')
     return Promise((resolve,reject)=>{
       logger('clearing')
@@ -80,12 +80,12 @@ class NconfConfig extends IConfig {
     })
   }
 
-  readAll(){
+  async readAll(){
     logger('read all')
     return nconf.get();
   }
 
-  read(key){
+  async read(key){
     logger('reading key: ' + key)
     let val = nconf.get(key)
 
@@ -104,8 +104,8 @@ class NconfConfig extends IConfig {
   }
 
 
-  exists(key){
-    return (read(key) !== undefined)
+  async exists(key){
+    return (await read(key)) !== undefined
   }
 
   async save(){

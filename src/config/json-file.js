@@ -52,16 +52,16 @@ class JsonFileConfig extends IConfig {
     logger('started')
   }
 
-  clear () {
+  async clear () {
     this.content = {}
   }
 
-  readAll(){
+  async readAll(){
 
     return Object.assign({}, this.content)
   }
 
-  read(key){
+  async read(key){
     logger('reading path: ' + key)
     return reach( this.content, key)
   }
@@ -73,8 +73,8 @@ class JsonFileConfig extends IConfig {
   }
 
 
-  exists(key){
-    return (read(key) !== undefined)
+  async exists(key){
+    return (await read(key)) !== undefined
   }
 
   async save(){
