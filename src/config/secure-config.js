@@ -14,15 +14,16 @@ class SecureConfig extends IConfig {
         id = 'secure-config',
         config, timeoutMs=60*10*1000, includeActivity=true
     }){
-        this.id = id
+        super()
+        this.id = id || 'secure-config'
         this.config = config
 
         this.content = null
         this.identity = null
         this.timer = null
         this.lastActivity = null
-        this.timeoutMs = timeoutMs
-        this.includeActivity = includeActivity
+        this.timeoutMs = timeoutMs || 60*10*1000
+        this.includeActivity = includeActivity || true
     }
 
     async start(){
@@ -37,10 +38,11 @@ class SecureConfig extends IConfig {
     }
 
     async isInitialized(){
-        let salt = this.config.read('salt')
-        let rounds = this.config.read('rounds')
+        let salt = await this.config.read('salt')
+        let rounds = await this.config.read('rounds')
 
-        return (salt.length == 32 && rounds > 100000)
+
+        return (salt != undefined && salt.length > 16 && rounds > 100000)
     }
 
     isLocked(){
@@ -65,34 +67,48 @@ class SecureConfig extends IConfig {
         
         await initialContent.encrypt(pwIdentity, pwIdentity.toMini())
 
-        await this.config.write('salt', salt)
+        await this.config.write('salt', salt.toString('hex'))
         await this.config.write('rounds', rounds)
         //await this.config.write('identity', pwIdentity.toJSON())
-        await this.config.write('content',{
-            enc: initialContent.enc,
-            sig: initialContent.sig
-        })
+        await this.config.write('content', initialContent.toJSON())
 
-        debug('\t', 'identity', pwIdentity.toJSON)
+        debug('\t', 'identity', pwIdentity)
+
+        debug('\t', 'content', initialContent.toJSON())
 
         await this.config.save()
 
         this.emit('ready')
+
+        const contentMsg = new dataparty_crypto.Message( initialContent )
+
+        console.log('msg', contentMsg)
+
+        //! Verify message
+        await contentMsg.decrypt(pwIdentity)
     }
 
     async waitForUnlocked(reason){
 
+        
         if(!this.isLocked()){
             return
         }
+        
+        debug('waitForUnlocked', reason)
 
         this.emit('blocked', reason)
 
-        return new Promise((resolve,reject)=>{
+        let waiting = new Promise((resolve,reject)=>{
 
-            this.once('unlocked', resolve)
+            this.once('unlocked', ()=>{
+                resolve()
+                debug('waitForUnlocked - done')
+            })
 
         })
+
+        await waiting
     }
 
     async unlock(password){
@@ -102,21 +118,32 @@ class SecureConfig extends IConfig {
             this.timer = null
         }
 
-        let salt = this.config.read('salt')
-        let rounds = this.config.read('rounds')
+        let salt = Buffer.from(await this.config.read('salt'),'hex')
+        let rounds = await this.config.read('rounds')
+
+        console.log('salt', salt)
+        console.log('rounds', rounds)
 
         let key = await dataparty_crypto.Routines.createKeyFromPassword(password, salt, rounds)
 
         const pwIdentity = new dataparty_crypto.Identity({
             key,
-            id: this.id,
+            id: this.id
         })
 
-        const contentMsg = new dataparty_crypto.Message( this.config.read('content') )
+        console.log(pwIdentity)
 
+        this.content = await this.config.read('content')
+
+        console.log('content', this.content, typeof this.content)
+
+        const contentMsg = new dataparty_crypto.Message( this.content )
+
+        console.log('msg', contentMsg)
+
+        //! Verify message
         await contentMsg.decrypt(pwIdentity)
 
-        this.content = this.config.read('content')
         this.identity = pwIdentity
 
         this.timer = setTimeout(this.onTimeout.bind(this), this.timeoutMs)
@@ -237,3 +264,5 @@ class SecureConfig extends IConfig {
         })
     }
 }
+
+module.exports = SecureConfig
