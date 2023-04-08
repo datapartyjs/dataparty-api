@@ -12,7 +12,7 @@ const PASSWORD_HASHING_ROUNDS = 1000000
 class SecureConfig extends IConfig {
     constructor({
         id = 'secure-config',
-        config, timeoutMs=60*10*1000, includeActivity=true
+        config, timeoutMs=15*1000, includeActivity=true
     }){
         super()
         this.id = id || 'secure-config'
@@ -22,7 +22,7 @@ class SecureConfig extends IConfig {
         this.identity = null
         this.timer = null
         this.lastActivity = null
-        this.timeoutMs = timeoutMs || 60*10*1000
+        this.timeoutMs = timeoutMs || 15*1000
         this.includeActivity = includeActivity || true
     }
 

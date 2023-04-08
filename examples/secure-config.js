@@ -5,35 +5,49 @@ const prompt = require('prompt')
 
 
 async function main(){
-    //const memoryConfig = new Dataparty.Config.MemoryConfig({foo: 'bar'})
+    const memoryConfig = new Dataparty.Config.MemoryConfig({foo: 'bar'})
 
 
     const jsonConfig = new Dataparty.Config.JsonFileConfig({
-        foo: 'bar',
         basePath: '/tmp'
     })
 
 
     const secureConfig = new Dataparty.Config.SecureConfig({
-        config: jsonConfig
+        config: memoryConfig
     })
 
     
     secureConfig.on('locked', ()=>{ console.log('locked') })
 
-    secureConfig.on('unlocked', ()=>{ console.log('unlocked') })
+    secureConfig.on('unlocked', async ()=>{ 
+        console.log('unlocked')
+
+        await secureConfig.write('timestamp', Date.now())
+    })
 
     secureConfig.on('timeout', ()=>{ console.log('timeout') })
 
-    secureConfig.on('ready', ()=>{ console.log('ready') })
+    secureConfig.on('ready', async ()=>{ 
+        console.log('ready')
+
+        console.log('config', await secureConfig.readAll())
+    })
+
+    let blocked = false
 
     secureConfig.on('blocked', async (reason)=>{
 
         if(await secureConfig.isInitialized() && secureConfig.isLocked()){
 
-            
+            if(blocked){
+                await secureConfig.waitForUnlocked()
+                return
+            }
 
+            blocked = true
             console.log('blocked -',reason)
+
 
             const {password} = await prompt.get({
                 properties: {
@@ -43,7 +57,9 @@ async function main(){
                 }
             }})
 
-            secureConfig.unlock(password)
+            await secureConfig.unlock(password)
+
+            blocked = false
         }
         
     
@@ -78,7 +94,9 @@ async function main(){
             console.log("passwords don't match")
         }
 
-        secureConfig.setPassword(password)
+        secureConfig.setPassword(password, {
+            foo: 'bar'
+        })
 
     })
 
@@ -87,6 +105,15 @@ async function main(){
     await secureConfig.waitForUnlocked('startup')
 
     console.log('wait over')
+
+    console.log('main config', await secureConfig.readAll())
+
+    setTimeout(async ()=>{
+
+
+        console.log('timer config', await secureConfig.readAll())
+
+    }, 30000)
 
     //process.exit()
 }
