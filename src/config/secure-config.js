@@ -8,11 +8,12 @@ const reach = require('../utils/reach')
 const IConfig = require('./iconfig')
 
 const PASSWORD_HASHING_ROUNDS = 1000000
+const DEFAULT_TIMEOUT_MS = 5*60*1000 //! 5min
 
 class SecureConfig extends IConfig {
     constructor({
         id = 'secure-config',
-        config, timeoutMs=15*1000, includeActivity=true
+        config, timeoutMs=DEFAULT_TIMEOUT_MS, includeActivity=true
     }){
         super()
         this.id = id || 'secure-config'
@@ -22,7 +23,7 @@ class SecureConfig extends IConfig {
         this.identity = null
         this.timer = null
         this.lastActivity = null
-        this.timeoutMs = timeoutMs || 15*1000
+        this.timeoutMs = timeoutMs || DEFAULT_TIMEOUT_MS
         this.includeActivity = includeActivity || true
 
         this.blocked = false
@@ -58,7 +59,18 @@ class SecureConfig extends IConfig {
         const salt = await dataparty_crypto.Routines.generateSalt()
         const rounds = PASSWORD_HASHING_ROUNDS
 
+
+        await this.config.write('salt', salt.toString('hex'))
+        await this.config.write('rounds', rounds)
+
         let key = await dataparty_crypto.Routines.createKeyFromPassword(password, salt, rounds)
+
+        await this.setIdentity(key)
+    }
+
+    async setIdentity(key){
+        debug('setIdentity')
+        if(await this.isInitialized()){ throw new Error('already initialized') }
 
         const pwIdentity = new dataparty_crypto.Identity({
             key,
@@ -69,9 +81,6 @@ class SecureConfig extends IConfig {
         
         await initialContent.encrypt(pwIdentity, pwIdentity.toMini())
 
-        await this.config.write('salt', salt.toString('hex'))
-        await this.config.write('rounds', rounds)
-        //await this.config.write('identity', pwIdentity.toJSON())
         await this.config.write('content', initialContent.toJSON())
 
         debug('\t', 'identity', pwIdentity)
@@ -142,7 +151,9 @@ class SecureConfig extends IConfig {
 
         this.identity = pwIdentity
 
-        this.timer = setTimeout(this.onTimeout.bind(this), this.timeoutMs)
+        if(this.timeoutMs >= 0){
+            this.timer = setTimeout(this.onTimeout.bind(this), this.timeoutMs)
+        }
 
         this.emit('unlocked')
     }
@@ -176,7 +187,11 @@ class SecureConfig extends IConfig {
         }
 
         clearTimeout(this.timer)
-        this.timer = setTimeout(this.onTimeout.bind(this), this.timeoutMs)
+
+        if(this.timeoutMs >= 0){
+            this.timer = setTimeout(this.onTimeout.bind(this), this.timeoutMs)
+        }
+        this.lastActivity = Date.now()
     }
 
     async clear(){ 

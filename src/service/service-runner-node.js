@@ -151,12 +151,14 @@ class ServiceRunnerNode {
 
     if(!this.useNative){
       const build = Hoek.reach(this.service, `compiled.endpoints.${name}`)
+      //debug('build', build)
       endpoint = eval(build.code/*, build.map*/)
     }
     else{
       endpoint = this.service.constructors.endpoints[name]
     }
 
+    debug('endpoint', endpoint)
 
     debug('endpoint info', endpoint.info)
 
@@ -265,7 +267,7 @@ class ServiceRunnerNode {
    * @returns 
    */
   async onRequest(req, res){
-    debug('onRequest', req)
+    debug('onRequest')
 
     debug('req', req.method, req.hostname,'-', req.url, req.ips, req.body)
 

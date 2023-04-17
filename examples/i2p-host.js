@@ -71,6 +71,7 @@ async function main(){
     runner: runnerRouter,
     trust_proxy: true,
     wsEnabled: true,
+    i2pEnabled: true
   })
   
   debug(runner.party.identity)
@@ -79,8 +80,6 @@ async function main(){
   await host.start()
 
   console.log('started')
-  
-  //process.exit()
 }
 
 
