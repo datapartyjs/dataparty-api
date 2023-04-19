@@ -64,6 +64,7 @@
     "@diva.exchange/i2p-sam": "^4.1.8",
     "@markwylde/liferaft": "^1.3.4",
     "@vercel/ncc": "^0.36.1",
+    "@zeit/ncc": "^0.22.3",
     "ajv": "6.9.1",
     "axios": "^0.27.2",
     "bleno": "npm:@abandonware/bleno@^0.5.1-4",

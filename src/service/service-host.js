@@ -8,6 +8,8 @@ const bodyParser = require('body-parser')
 const expressListRoutes = require('express-list-routes')
 const debug = require('debug')('dataparty.service.host')
 
+const reach = require('../utils/reach')
+
 const ServiceHostWebsocket = require('./service-host-websocket')
 
 const Pify = async (p)=>{
@@ -19,27 +21,31 @@ class ServiceHost {
   /**
    * @class module:Service.ServiceHost
    * @link module:Service
-   * @param {Object} options.cors           Cors to be passed to express via the `cors` package
-   * @param {boolean} options.trust_proxy   When true, the server will parse forwarding headers. This should be set when running behind a load-balancer for accurate error messages and logging
-   * @param {string} options.listenUri      The uri of the host interface to tell express to listen on. Defaults to `http://0.0.0.0:4001
-   * @param {boolean} options.i2pEnabled    When true, this server will be available over i2p
-   * @param {string} options.i2pSamHost     The hostname of the i2p SAM control API. Defaults to `127.0.0.1`
-   * @param {Integer} options.i2pSamPort    The port of the i2p SAM control API. Defaults to `4444`
-   * @param {string} options.i2pKey         When set this i2p key will be used to host the service. If not set a new i2p key will be generated. Defaults to `null`
-   * @param {boolean} options.wsEnabled     When true the server will host a dataparty websocket service. Defaults to `true`
-   * @param {Integer} options.wsPort        Port for the websocket service to listen on. Defaults to `null`, using the same port as the http server.
-   * @param {string} options.wsUpgradePath  The path within the http server to host an upgradeable websocket. Defaults to `/ws`
-   * @param {module:Service.ServiceRunner} options.runner   A pre-configured runner
+   * @param {Object}  options.cors            Cors to be passed to express via the `cors` package
+   * @param {boolean} options.trust_proxy     When true, the server will parse forwarding headers. This should be set when running behind a load-balancer for accurate error messages and logging
+   * @param {string}  options.listenUri       The uri of the host interface to tell express to listen on. Defaults to `http://0.0.0.0:4001
+   * @param {boolean} options.i2pEnabled      When true, this server will be available over i2p
+   * @param {string}  options.i2pSamHost      The hostname of the i2p SAM control API. Defaults to `127.0.0.1`
+   * @param {Integer} options.i2pSamPort      The port of the i2p SAM control API. Defaults to `7656`
+   * @param {string}  options.i2pForwardHost  Override i2p forward host. This defaults to `localhost` and typically doesn't need to be changed
+   * @param {Integer} options.i2pForwardPort  Override i2p forward post. This defaults to the port supplied in `options.listenUri`.
+   * @param {string}  options.i2pKey          When set this i2p key will be used to host the service. If not set a new i2p key will be generated. Defaults to `null`
+   * @param {boolean} options.wsEnabled       When true the server will host a dataparty websocket service. Defaults to `true`
+   * @param {Integer} options.wsPort          Port for the websocket service to listen on. Defaults to `null`, using the same port as the http server.
+   * @param {string}  options.wsUpgradePath   The path within the http server to host an upgradeable websocket. Defaults to `/ws`
+   * @param {module:Service.ServiceRunner}  options.runner  A pre-configured runner
    */
 
   constructor({
     cors = {},
     trust_proxy = false,
-    listenUri = 'http://0.0.0.0:4001',
+    listenUri = 'http://0.0.0.0:4000',
     i2pEnabled = false,
     i2pSamHost = '127.0.0.1',
-    i2pSamPort = 4444,
+    i2pSamPort = 7656,
     i2pKey = null,
+    i2pForwardHost = 'localhost',
+    i2pForwardPort = null,
     wsEnabled = true,
     wsPort = null,
     wsUpgradePath = '/ws',
@@ -107,8 +113,8 @@ class ServiceHost {
           privateKey: reach(i2pKey, 'privateKey')
         },
         forward: {
-          host: this.apiServerUri.host,
-          port: this.apiServerUri.port
+          host: i2pForwardHost ? i2pForwardHost : this.apiServerUri.hostname,
+          port: i2pForwardPort ? i2pForwardPort : parseInt( this.apiServerUri.port )
         }
       }
     }
@@ -178,17 +184,30 @@ class ServiceHost {
     }
 
     if(this.i2pEnabled && this.i2p == null){
-      debug('starting i2p forward')
+      debug('starting i2p forward', this.i2pSettings)
       const SAM = require('@diva.exchange/i2p-sam')
 
       this.i2p = await SAM.createForward(this.i2pSettings)
-      this.i2pUri = this.i2p.getPublicKeys()
+      this.i2pUri = this.i2p.getB32Address()
       this.i2pSettings.privateKey = null  // clear no longer needed
+
+
 
       this.i2p.on('error', this.reportI2pError.bind(this))
 
+
+      this.i2p.on('close', ()=>{
+        debug('i2p closed')
+      })
+
+      this.i2p.on('data', (data)=>{
+        debug('i2p data')
+        debug(data.toString())
+      })
+
       debug('i2p started')
-      debug('\t','address', this.i2pUri)
+      debug('\t', 'address', this.i2pUri)
+      debug('\t', 'key', this.i2p.getPublicKey())
     }
   }
 
