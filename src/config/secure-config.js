@@ -43,6 +43,8 @@ class SecureConfig extends IConfig {
      * Start the secure storage
      * @fires module:Config.SecureConfig#setup-required
      * @fires module:Config.SecureConfig#ready
+     * @method module:Config.SecureConfig.start
+     * @async
      */
     async start(){
         await this.config.start()
@@ -67,7 +69,9 @@ class SecureConfig extends IConfig {
 
     /**
      * Checks if the secure config has initialized with a password or key
+     * @method module:Config.SecureConfig.isInitialized
      * @returns {boolean}
+     * @async
      */
     async isInitialized(){
 
@@ -93,6 +97,7 @@ class SecureConfig extends IConfig {
     /**
      * Checks if the secure config is locked. If not locked the secure config
      * can be used without blocking waiting for user to unlock.
+     * @method module:Config.SecureConfig.isLocked
      * @returns {boolean}
      */
     isLocked(){
@@ -103,6 +108,7 @@ class SecureConfig extends IConfig {
      * Initialize the secure config with a password
      * @fires module:Config.SecureConfig#intialized
      * @fires module:Config.SecureConfig#ready
+     * @method module:Config.SecureConfig.setPassword
      * @param {string} password 
      * @param {object} defaults 
      * @param {('pbkdf2')} type
@@ -138,6 +144,7 @@ class SecureConfig extends IConfig {
      * Initialize the secure config with a key
      * @fires module:Config.SecureConfig#intialized
      * @fires module:Config.SecureConfig#ready
+     * @method module:Config.SecureConfig.setIdentity
      * @param {dataparty_crypto/IKey} key
      * @param {object}  defaults 
      * @async
@@ -202,7 +209,12 @@ class SecureConfig extends IConfig {
         this.emit('ready')
     }
 
-
+    /**
+     * Wait for config to be unlocked
+     * @method module:Config.SecureConfig.waitForUnlocked
+     * @param {string} reason   Optional reason message if config is locked
+     * @async
+     */
     async waitForUnlocked(reason){
         
         if(!this.isLocked()){
@@ -240,8 +252,9 @@ class SecureConfig extends IConfig {
     /**
      * Unlocks the secure config
      * @fires module:Config.SecureConfig#unlocked
+     * @method module:Config.SecureConfig.unlock
      * @param {string} password
-     * @returns {Promise}
+     * @async
      */
     async unlock(password){
 
@@ -284,6 +297,7 @@ class SecureConfig extends IConfig {
     /**
      * Locks the secure config
      * @fires module:Config.SecureConfig#locked
+     * @method module:Config.SecureConfig.lock
      * @param {string} password 
      */
     lock(){
@@ -326,6 +340,10 @@ class SecureConfig extends IConfig {
         this.lastActivity = Date.now()
     }
 
+    /**
+     * @method module:Config.SecureConfig.clear
+     * @async
+     */
     async clear(){ 
         debug('clear')
         if(this.isLocked()){
@@ -341,6 +359,11 @@ class SecureConfig extends IConfig {
         await this.save()
     }
 
+    /**
+     * @method module:Config.SecureConfig.readAll
+     * @async
+     * @returns {object}
+     */
     async readAll(){
         debug('readAll')
         if(this.isLocked()){
@@ -355,6 +378,11 @@ class SecureConfig extends IConfig {
         return decryptedContent.msg
     }
 
+    /**
+     * @method module:Config.SecureConfig.read
+     * @param {string}  key
+     * @async
+     */
     async read(key){ 
         debug('read',key)
         if(this.isLocked()){
@@ -368,6 +396,12 @@ class SecureConfig extends IConfig {
         return reach( data, key )
     }
     
+    /**
+     * @method module:Config.SecureConfig.write
+     * @param {string}  key
+     * @param {object}  data
+     * @async
+     */
     async write(key, value){ 
         debug('write',key)
         if(this.isLocked()){
@@ -393,6 +427,10 @@ class SecureConfig extends IConfig {
         return (await this.read(key)) !== undefined
     }
 
+    /**
+     * @method module:Config.SecureConfig.save
+     * @async
+     */
     async save(){ 
         debug('save')
         if(this.isLocked()){
