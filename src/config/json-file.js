@@ -68,6 +68,7 @@ class JsonFileConfig extends IConfig {
 
   async write(key, value){
 
+    logger('writing path:', key)
     deepSet(this.content, key, value)
     await this.save()
   }

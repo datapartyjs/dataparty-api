@@ -1,5 +1,5 @@
 const Path = require('path')
-const debug = require('debug')('test.server-db')
+const debug = require('debug')('example.i2p')
 const Dataparty = require('../src')
 const dataparty_crypto = require('@dataparty/crypto')
 
@@ -55,7 +55,6 @@ async function main(){
   
   const runner = new Dataparty.ServiceRunnerNode({
     party,
-    //prefix: 'foo',
     service: live,
     sendFullErrors: false,
     useNative: false
@@ -71,7 +70,9 @@ async function main(){
     runner: runnerRouter,
     trust_proxy: true,
     wsEnabled: true,
-    i2pEnabled: true
+    i2pEnabled: true,
+    i2pSamHost: 'localhost',
+    i2pSamPort: 7656
   })
   
   debug(runner.party.identity)

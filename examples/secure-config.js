@@ -16,7 +16,7 @@ async function main(){
 
     secureConfig = new Dataparty.Config.SecureConfig({
         config: jsonConfig,
-        //timeoutMs: 15*1000
+        timeoutMs: 15*1000
     })
 
     
@@ -122,10 +122,9 @@ async function main(){
 
     let timer = setTimeout(async ()=>{
 
-
         console.log('timer config', await secureConfig.readAll())
 
-    }, 1000*60*6)
+    }, 1000*30)
 
 }
 
