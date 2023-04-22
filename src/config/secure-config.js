@@ -386,7 +386,6 @@ class SecureConfig extends IConfig {
      * Locks the secure config
      * @fires module:Config.SecureConfig#locked
      * @method module:Config.SecureConfig.lock
-     * @param {string} password 
      */
     lock(){
         if(this.timer != null){
