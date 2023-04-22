@@ -10,6 +10,11 @@ const IConfig = require('./iconfig')
 const PASSWORD_HASHING_ROUNDS = 1000000
 const DEFAULT_TIMEOUT_MS = 5*60*1000 //! 5min
 
+const ARGON_TIME_COST = 3
+const ARGON_MEMORY_COST = 65536 
+const ARGON_PARALLELLISM = 4
+const ARGON_TYPE = 'argon2id'
+
 class SecureConfig extends IConfig {
 
     /**
@@ -20,14 +25,18 @@ class SecureConfig extends IConfig {
      * @param {IConfig}     config          The underlying IConfig to use for storage
      * @param {number}      timeoutMs       Timeout since last unlock, after which the config will be locked. Defaults to 5 minutes.
      * @param {boolean}     includeActivity When set to `true` the timeout is reset after any read/write activity. Defaults to `true`
+     * @param {Argon2}      argon           Instance of argon2 from either `npm:argon2` or `npm:argon2-browser`
      */
     constructor({
         id = 'secure-config',
-        config, timeoutMs=DEFAULT_TIMEOUT_MS, includeActivity=true
+        config, timeoutMs=DEFAULT_TIMEOUT_MS, includeActivity=true,
+        argon
     }){
         super()
         this.id = id || 'secure-config'
         this.config = config
+
+        this.argon = argon
 
         this.content = null
         this.identity = null
@@ -84,6 +93,16 @@ class SecureConfig extends IConfig {
 
             return (salt != undefined && salt.length > 16 && rounds > 100000)
 
+        } else if(keyType == 'argon2'){
+
+            let salt = await this.config.read(this.id+'.settings.salt')
+            let timeCost = await this.config.read(this.id+'.settings.timeCost')
+            let memoryCost = await this.config.read(this.id+'.settings.memoryCost')
+            let parallelism = await this.config.read(this.id+'.settings.parallelism')
+            let argonType = await this.config.read(this.id+'.settings.argonType')
+
+            return (salt != undefined && salt.length > 16 && memoryCost > 1024)
+
         } else if(keyType == 'key'){
             return true
         } else if(!keyType) {
@@ -111,28 +130,59 @@ class SecureConfig extends IConfig {
      * @method module:Config.SecureConfig.setPassword
      * @param {string} password 
      * @param {object} defaults 
-     * @param {('pbkdf2')} type
      * @async
      */
-    async setPassword(password, defaults={}, type='pbkdf2'){
+    async setPassword(password, defaults={}){
         debug('setPassword')
         if(await this.isInitialized()){ throw new Error('already initialized') }
 
         let key = null
         let settings = null
 
-        if(type == 'pbkdf2'){
+        if(!this.argon){
+            //! pbkdf2
             const salt = await dataparty_crypto.Routines.generateSalt()
             const rounds = PASSWORD_HASHING_ROUNDS
 
             settings = {
-                type: type,
+                type: 'pbkdf2',
                 salt: salt.toString('hex'),
                 rounds
             }
     
-            key = await dataparty_crypto.Routines.createKeyFromPassword(password, salt, rounds)
+            key = await dataparty_crypto.Routines.createKeyFromPasswordPbkdf2(password, salt, rounds)
 
+        } else if(this.argon){
+            //! argon2
+
+            const salt = await dataparty_crypto.Routines.generateSalt()
+            let timeCost = ARGON_TIME_COST
+            let memoryCost = ARGON_MEMORY_COST
+            let parallelism = ARGON_PARALLELLISM
+            let argonType = ARGON_TYPE
+
+            settings = {
+                type: 'argon2',
+                salt: salt.toString('hex'),
+                timeCost,
+                memoryCost,
+                parallelism,
+                argonType
+            }
+
+            if(!this.argon){
+                this.argon = argon
+            }
+
+            key = await dataparty_crypto.Routines.createKeyFromPasswordArgon2(
+                this.argon,
+                password,
+                salt,
+                timeCost,
+                memoryCost,
+                parallelism,
+                argonType
+            )
         } else {
             throw new Error('unsupported KDF['+type+']')
         }
@@ -263,10 +313,37 @@ class SecureConfig extends IConfig {
             this.timer = null
         }
 
-        let salt = Buffer.from(await this.config.read(this.id+'.settings.salt'),'hex')
-        let rounds = await this.config.read(this.id+'.settings.rounds')
+        let key = null
+        let keyType = await this.config.read(this.id+'.settings.type')
 
-        let key = await dataparty_crypto.Routines.createKeyFromPassword(password, salt, rounds)
+        if(keyType == 'pbkdf2'){
+
+            let salt = Buffer.from(await this.config.read(this.id+'.settings.salt'),'hex')
+            let rounds = await this.config.read(this.id+'.settings.rounds')
+
+            key = await dataparty_crypto.Routines.createKeyFromPasswordPbkdf2(password, salt, rounds)
+
+        } else if(keyType == 'argon2'){
+
+            let salt = Buffer.from(await this.config.read(this.id+'.settings.salt'), 'hex')
+            let timeCost = await this.config.read(this.id+'.settings.timeCost')
+            let memoryCost = await this.config.read(this.id+'.settings.memoryCost')
+            let parallelism = await this.config.read(this.id+'.settings.parallelism')
+            let argonType = await this.config.read(this.id+'.settings.argonType')
+
+
+            key = await dataparty_crypto.Routines.createKeyFromPasswordArgon2(
+                this.argon,
+                password,
+                salt,
+                timeCost,
+                memoryCost,
+                parallelism,
+                argonType
+            )
+
+        }
+
 
         const pwIdentity = new dataparty_crypto.Identity({
             key,
