@@ -18,6 +18,11 @@ const ARGON_TYPE = 'argon2id'
 class SecureConfig extends IConfig {
 
     /**
+     * A secure configuration. This uses an underlying `IConfig` for storage. Multiple
+     * secure configs can be placed within the same `IConfig` so long as different `id`
+     * is set. By default `pbkdf2` is used to generate NaCl keys. If `argon` is provided
+     * then `argon2` will be used to generate the NaCl keys. Applications should
+     * use `argon2`.
      * @class   module:Config.SecureConfig
      * @implements  {module:Config.SecureConfig}
      * @link module.Config
@@ -26,6 +31,8 @@ class SecureConfig extends IConfig {
      * @param {number}      timeoutMs       Timeout since last unlock, after which the config will be locked. Defaults to 5 minutes.
      * @param {boolean}     includeActivity When set to `true` the timeout is reset after any read/write activity. Defaults to `true`
      * @param {Argon2}      argon           Instance of argon2 from either `npm:argon2` or `npm:argon2-browser`
+     * @see https://github.com/ranisalt/node-argon2
+     * @see https://github.com/antelle/argon2-browser
      */
     constructor({
         id = 'secure-config',
@@ -37,6 +44,10 @@ class SecureConfig extends IConfig {
         this.config = config
 
         this.argon = argon
+
+        if(!this.argon){
+            console.warn('Warning - PBKDF2 based secure config. You should probably use argon2!')
+        }
 
         this.content = null
         this.identity = null
