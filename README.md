@@ -54,7 +54,7 @@ Database | Browser | Cordova | Electron | Embedded Linux | Node
 
 ## Example
 
-```
+```js
 
 const Dataparty = require('@dataparty/api')
 
