@@ -83,8 +83,8 @@ class RestComms extends EventEmitter {
   }
 
   async loadCloud() {
-    this.uri = this.config.read('cloud.uri')
-    this.wsUri = this.config.read('cloud.wsUri')
+    this.uri = await this.config.read('cloud.uri')
+    this.wsUri = await this.config.read('cloud.wsUri')
 
     if (this.uri && this.uri[this.uri.length - 1] !== '/') {
       this.uri = this.uri + '/'
@@ -95,9 +95,9 @@ class RestComms extends EventEmitter {
     //
   }
 
-  storeSession() {
+  async storeSession() {
     const path = this.cfgPrefix + '.rest-session'
-    this.config.write(path, { id: this.sessionId })
+    await this.config.write(path, { id: this.sessionId })
   }
 
   async call(path, data, 
@@ -316,7 +316,7 @@ class RestComms extends EventEmitter {
 
       this.sessionId = reply.session
       this.authed = true
-      this.storeSession()
+      await this.storeSession()
 
       await this.syncActors()
       this.emit('open')

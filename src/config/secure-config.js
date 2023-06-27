@@ -215,7 +215,7 @@ class SecureConfig extends IConfig {
         if(await this.isInitialized()){ throw new Error('already initialized') }
 
         const settings = {
-            key_type: 'key'
+            type: 'key'
         }
 
         await this.initialize(key, defaults, settings)
@@ -223,7 +223,7 @@ class SecureConfig extends IConfig {
 
 
     async initialize(key, defaults, settings){
-        debug('initialize - type:', settings.key_type)
+        debug('initialize - type:', settings.type)
         if(await this.isInitialized()){ throw new Error('already initialized') }
 
         const pwIdentity = new dataparty_crypto.Identity({

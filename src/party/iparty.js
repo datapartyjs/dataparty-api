@@ -213,6 +213,8 @@ class IParty {
     this._actor.type = primaryActor.type
 
     const path = 'actor'
+
+    //! @hack & @todo - this needs to be `await` so this accessor probably should be removed
     this.config.write(path, this._actor)
   }
 
@@ -238,7 +240,7 @@ class IParty {
    */
   async loadIdentity(){
     const path = 'identity'
-    const cfgIdenStr = this.config.read(path)
+    const cfgIdenStr = await this.config.read(path)
 
     if (!cfgIdenStr){
       debug('generated new identity')
@@ -270,7 +272,7 @@ class IParty {
    */
   async loadActor(){
     const path = 'actor'
-    const localActorObj = this.config.read(path)
+    const localActorObj = await this.config.read(path)
 
     if (!localActorObj){ return }
 
