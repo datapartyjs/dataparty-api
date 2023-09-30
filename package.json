@@ -91,7 +91,7 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "nconf": "^0.10.0",
-    "noble": "npm:@abandonware/noble@^1.9.2-20",
+    "noble": "npm:@abandonware/noble@^1.9.2-23",
     "node-mocks-http": "^1.12.1",
     "node-persist": "^3.0.1",
     "origin-router": "^1.6.4",
