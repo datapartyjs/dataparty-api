@@ -50,7 +50,6 @@ class ServiceRunnerNode {
     this.started = true
 
     const taskMap = Hoek.reach(this.service, 'compiled.tasks')
-    //const endpointsLoading = []
     for(let name in taskMap){
       debug('\t',name)
       await this.loadTask(name)

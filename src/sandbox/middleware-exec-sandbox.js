@@ -5,6 +5,13 @@ class MiddlewareExecSandbox extends Sandbox {
   constructor(code, map, func='run'){
     super(`
 
+var self={};
+
+function userCode(){
+  ${code}
+}
+    
+
 module.exports = async (ctx, static_ctx)=>{
 
   class ErrorError extends Error { 
@@ -16,8 +23,7 @@ module.exports = async (ctx, static_ctx)=>{
   }
 
   try{
-    var self = {}
-    ${code}
+    userCode()
 
     return await self.Lib.${func}(ctx, static_ctx)
   }
