@@ -151,8 +151,11 @@ class ServiceRunnerNode {
 
     if(!this.useNative){
       const build = Hoek.reach(this.service, `compiled.endpoints.${name}`)
-      //debug('build', build)
-      endpoint = eval(build.code/*, build.map*/)
+      debug('build', build.code)
+      var self={}
+      eval(build.code, build.map)
+      endpoint = self.Lib
+      debug('obj Lib', self)
     }
     else{
       endpoint = this.service.constructors.endpoints[name]
@@ -218,7 +221,9 @@ class ServiceRunnerNode {
       let middle=null
   
       if(!this.useNative){
-        middle = eval(build.code/*, build.map*/)
+        let self={}
+        eval(build.code, build.map)
+        middle = self.Lib
       }
       else{
         middle = this.service.constructors.middleware[type][name]

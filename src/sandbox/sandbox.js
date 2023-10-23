@@ -15,6 +15,7 @@ class Sandbox {
     this.offsetToken = offsetToken
     this.offset = code.split(this.offsetToken)[0].split('\n').length-1
     this.script = new VMScript(code).compile()
+    debug(code)
   }
 
   async loadSourceMap(){
@@ -26,7 +27,7 @@ class Sandbox {
   }
 
   async run(context, sandbox){
-    //debug('running')
+    debug('running')
     try{
       
       let vm = new NodeVM({

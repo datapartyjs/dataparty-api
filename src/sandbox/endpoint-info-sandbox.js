@@ -16,12 +16,13 @@ module.exports = async ()=>{
   }
 
   try{
-    let Lib = ${code}
+    var self = {}
+    ${code}
 
     return {
-      Name: Lib.Name,
-      Description: Lib.Description,
-      MiddlewareConfig: Lib.MiddlewareConfig
+      Name: self.Lib.Name,
+      Description: self.Lib.Description,
+      MiddlewareConfig: self.Lib.MiddlewareConfig
     }
   }
   catch(err){

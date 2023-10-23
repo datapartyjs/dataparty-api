@@ -16,9 +16,10 @@ module.exports = async (ctx, static_ctx)=>{
   }
 
   try{
-    let Lib = ${code}
+    var self = {}
+    ${code}
 
-    return await Lib.${func}(ctx, static_ctx)
+    return await self.Lib.${func}(ctx, static_ctx)
   }
   catch(err){
 

@@ -16,13 +16,14 @@ module.exports = async ()=>{
   }
 
   try{
-    let Lib = ${code}
+    var self = {}
+    ${code}
 
     return {
-      Name: Lib.Name,
-      Type: Lib.Type,
-      Description: Lib.Description,
-      ConfigSchema: Lib.ConfigSchema
+      Name: self.Lib.Name,
+      Type: self.Lib.Type,
+      Description: self.Lib.Description,
+      ConfigSchema: self.Lib.ConfigSchema
     }
   }
   catch(err){
