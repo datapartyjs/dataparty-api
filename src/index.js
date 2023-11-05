@@ -6,7 +6,11 @@ const Bouncer = require('./bouncer')
 const Service = require('./service')
 const Sandbox = require('./sandbox')
 
+const Crypto = require('@dataparty/crypto')
+
+
 module.exports = {
+  Crypto,
   Comms,
   Config,
   Bouncer,

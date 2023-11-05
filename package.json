@@ -60,7 +60,7 @@
   },
   "dependencies": {
     "@dataparty/bouncer-db": "1.0.1",
-    "@dataparty/crypto": "^1.1.2",
+    "@dataparty/crypto": "file:../dataparty-crypto",
     "@dataparty/tasker": "^0.0.2",
     "@diva.exchange/i2p-sam": "^4.1.8",
     "@markwylde/liferaft": "^1.3.4",

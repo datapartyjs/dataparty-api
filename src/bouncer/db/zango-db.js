@@ -39,7 +39,7 @@ module.exports = class ZangoDb extends IDb {
     for(const name of this.factory.getValidators()){
       debug('creating collection', name)
 
-      const indexSettings = reach(this.factory, 'model.IndexSettings.'+name)
+      const indexSettings = reach(this.factory, 'schemas.IndexSettings.'+name)
 
       const indices = ['$meta.id'].concat(indexSettings.unique).concat(indexSettings.indices)
 

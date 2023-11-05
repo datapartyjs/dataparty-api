@@ -12,8 +12,10 @@ const Config = {
   SecureConfig
 }
 
+const Crypto = require('@dataparty/crypto')
 
 let lib = {
+  Crypto,
   Comms,
   Config,
   ...Party,
