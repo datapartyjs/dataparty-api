@@ -32,7 +32,6 @@ module.exports = class LokiCache extends EventEmitter {
   }
 
   remove(type, id){
-    console('cache remove')
     debug('remove', type, id)
     var collection = this.db.getCollection(type)
 

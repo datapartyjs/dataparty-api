@@ -17,7 +17,7 @@ module.exports = class LoopbackChannel {
     this.port1 = new LoopbackChannelPort(undefined, '1')
 
     //! The second channel peer
-    this.peer2 = new LoopbackChannelPort(this.port1, '2')
+    this.port2 = new LoopbackChannelPort(this.port1, '2')
 
     this.port1.peer = this.port2
   }

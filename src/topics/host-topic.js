@@ -1,7 +1,7 @@
 'use strict'
 
 const Path = require('path')
-const debug = require('debug')('dataparty.topics.peer-node')
+const debug = require('debug')('dataparty.topics.host-topic')
 
 class HostTopic {
   constructor(path, type){

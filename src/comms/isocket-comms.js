@@ -126,7 +126,7 @@ class ISocketComms extends EventEmitter {
             debug(msg.id)
 
             if(msg.op != 'publish'){
-                debug('emit id')
+                debug('emit id', msg.id)
                 comm.emit(msg.id, msg)
             } else {
                 debug('emit message')
@@ -136,7 +136,11 @@ class ISocketComms extends EventEmitter {
     }
 
     send(input){
-        debug('send - ', input)
+        debug('send - ', typeof input, input)
+
+        if(typeof input != 'object'){
+            input = JSON.parse(input)
+        }
 
         const content = new Message({msg: input})
 

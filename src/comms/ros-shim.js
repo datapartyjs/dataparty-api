@@ -27,8 +27,6 @@ class RosShim extends ROSLIB.Ros {
 
     handleMessage(message) {
 
-      console.log(message)
-
         if (message.op === 'publish') {
           debug('publish op')
           this.emit(message.topic, message.msg);

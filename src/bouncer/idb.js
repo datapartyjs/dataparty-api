@@ -60,6 +60,7 @@ class IDb extends EventEmitter {
 
   emitChange(msg, change){
     const { type, id, revision } = msg.$meta
+    debug('emitChange', `${type}:${id}`)
     this.emit(
       `${type}:${id}`,
       {

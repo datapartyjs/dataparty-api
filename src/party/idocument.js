@@ -239,6 +239,10 @@ class IDocument extends EventEmitter {
       .id(this.id)
       .exec()
       .then(docs => {
+        if(docs.length==0){
+          return
+        }
+
         this._data = docs[0].data
 
         debug('pull found', docs)
@@ -268,8 +272,7 @@ class IDocument extends EventEmitter {
 
     if (this.watchSub){ return }
 
-    const socket = await this.party.socket()
-    const ros = socket.ros
+    const ros = this.party.comms.ros
     const watchPath = '/dataparty/document/' + this.type + '/' + this.id
 
     debug('watch document', watchPath)
@@ -355,7 +358,7 @@ class IDocument extends EventEmitter {
       case 'update':
       case 'create':
 
-        if(this.followcache){ 
+        if(this.followcache && event.event !== 'remove'){ 
           this._data = newMsg 
 
           /**

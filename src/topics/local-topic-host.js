@@ -77,15 +77,19 @@ class LocalTopicHost {
 
     if(topic.path.indexOf('/dataparty/document/') != -1 && !exists){
       const [arg0, arg1, docType, docId] = topic.path.substr(1).split('/')
+      debug('is document watcher', docType+':'+docId)
 
-      peer.hostParty.db.on(docType+':'+docId, async (event)=>{
+      peer.party.hostParty.db.on(docType+':'+docId, async (event)=>{
         await this.handleDocChange(topic.path, event)
       })
     }
   }
 
   async handleDocChange(path, event){
+    debug('handleDocChange', path)
     const topic = this.getTopic(path,false)
+
+    debug('\ttopic',topic)
 
     if(!topic){return}
 
@@ -96,7 +100,7 @@ class LocalTopicHost {
         id: event.msg.id,
         type: event.msg.type,
         revision: event.msg.revision,
-        operationType: event.change
+        operationType: event.event
       })
     }
   }
