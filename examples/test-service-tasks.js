@@ -20,12 +20,12 @@ async function main(){
 
   debug('built', Object.keys(build))
 
-  const path = '/data/datparty/srv-party'
+  const path = '/data/dataparty/srv-party'
 
   let party = new Dataparty.TingoParty({
     path,
     model: build,
-    config: new Dataparty.Config.JsonFileConfig({basePath: '/data/datparty/'})
+    config: new Dataparty.Config.JsonFileConfig({basePath: path})
   })
 
 

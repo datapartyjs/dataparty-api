@@ -30,11 +30,11 @@ class VenueSrv extends Dataparty.ISchema {
         branch: String
       },
       schemas: {
-        Package: {},
         IndexSettings: {},
         JSONSchema: {},
         Permissions: {}
       },
+      documents: {},
       endpoints: {},
       middleware: {
         pre: {},
@@ -43,6 +43,21 @@ class VenueSrv extends Dataparty.ISchema {
       middleware_order: {
         pre: [String],
         post: [String]
+      },
+      tasks: {},
+      compileSettings: {
+        cache: Boolean,
+        externals: [String],
+        minify: Boolean,
+        sourceMap: Boolean,
+        sourceMapRegister: Boolean,
+        watch: Boolean,
+        v8cache: Boolean,
+        quite: Boolean,
+        debugLog: Boolean,
+        esm: Boolean,
+        moduleType: Boolean,
+        libraryName: Boolean
       }
     }
   }
