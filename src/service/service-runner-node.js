@@ -40,6 +40,8 @@ class ServiceRunnerNode {
     this.taskRunner = new Runner()
 
     this.started = false
+
+    this.taskCounter = 0
   }
 
   async start(){
@@ -77,6 +79,12 @@ class ServiceRunnerNode {
     debug('endpoints ready:')
     for(let name in this.endpoint){
       debug('\t', Path.join('/', name))
+    }
+  }
+
+  assertTaskIsValid(name){
+    if(!this.tasks[name]){
+      throw new Error('invalid task ['+name+']')
     }
   }
 
@@ -124,12 +132,56 @@ class ServiceRunnerNode {
     debug('loaded task',name,'in',dt.deltaMs,'ms')
   }
 
+  async spawnTask(type, context){
+    this.assertTaskIsValid(type)
+
+    debug('spawnTask', type, 'useNative =',this.useNative)
+
+    let dt = new DeltaTime().start()
+    
+
+    "use strict"
+    let task=null
+
+    let TaskClass = null
+
+    if(!this.useNative){
+      const build = Hoek.reach(this.service, `compiled.tasks.${type}`)
+      TaskClass = eval(build.code/*, build.map*/)
+    }
+    else{
+      TaskClass = this.service.constructors.tasks[type]
+    }
+
+    task = new TaskClass({
+      context:{
+        party: this.party,
+        serviceRunner: this,
+        ...context
+      }
+    })
+
+    task.name = task.name + '-' + this.taskCounter++
+
+
+    debug('task info', TaskClass.info)
+
+    this.taskRunner.addTask(task)
+
+
+    dt.end()
+    debug('spawned task',task.name,'in',dt.deltaMs,'ms')
+
+    return task
+  }
+
   /**
    * Add a named task to the run queue
    * @see https://github.com/datapartyjs/tasker
    * @param {string} name 
    */
   runTask(name){
+    this.assertTaskIsValid(name)
     const task = this.tasks[name]
 
     this.taskRunner.addTask(task)
