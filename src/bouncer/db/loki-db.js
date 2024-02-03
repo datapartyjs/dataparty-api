@@ -6,6 +6,7 @@ const Loki = require('lokijs')
 const LokiFS = Loki.LokiFsAdapter
 const LFSA = require('lokijs/src/loki-fs-structured-adapter')
 const ObjectId = require('bson-objectid')
+const uuidv4 = require('uuid/v4')
 
 const MongoQuery = require('../mongo-query')
 const { promisfy } = require('promisfy')
@@ -26,7 +27,7 @@ const debug = require('debug')('bouncer.db.loki-db')
  */
 module.exports = class LokiDb extends IDb {
 
-  constructor ({path, factory, dbAdapter, lokiOptions}) {
+  constructor ({path, factory, dbAdapter, lokiOptions, useUuid}) {
     super(factory)
     debug('constructor')
     this.loki = null
@@ -34,6 +35,7 @@ module.exports = class LokiDb extends IDb {
     this.path = path
     this.dbAdapter = dbAdapter || new LFSA()
     this.error = null
+    this.useUuid = (useUuid==undefined) ? true : useUuid
   }
 
   static get LokiLocalStorageAdapter(){
@@ -142,7 +144,13 @@ module.exports = class LokiDb extends IDb {
   ensureId(obj){
     let temp = {...obj}
     if(!reach(temp,'$meta.id')){
-      temp.$meta.id = (new ObjectId()).toHexString()
+
+      if(this.useUuid){
+        temp.$meta.id = uuidv4()
+      }
+      else{
+        temp.$meta.id = (new ObjectId()).toHexString()
+      }
     }
 
     let dbDoc = this.documentFromObject(temp)
@@ -232,7 +240,19 @@ module.exports = class LokiDb extends IDb {
 
     for(let obj of docs){
       let temp = {...obj}
-      if(temp._id===undefined){ temp._id = (new ObjectId()).toString(); temp.$meta.id=temp._id;  }
+      if(temp._id===undefined){
+
+        if(this.useUuid){
+          temp._id = uuidv4()
+        }
+        else{
+          temp._id = (new ObjectId()).toHexString()
+        }
+
+        temp.$meta.id=temp._id;
+      }
+
+      
 
       let dbDoc = this.documentFromObject(temp)
 
@@ -311,15 +331,16 @@ module.exports = class LokiDb extends IDb {
 
     const dbDoc = collection.findAndRemove( { '$meta.id': obj.$meta.id } )
 
-    debug('dbDoc', dbDoc)
-
-    let finalObj = this.documentToObject(dbDoc)
+    let finalObj = {
+      $meta: obj.$meta
+    }
 
     finalObj.$meta.removed = true
 
     this.emitChange(finalObj, 'remove')
 
-    debug('obj', finalObj)
+    debug('finalObj', finalObj)
+    debug('obj', obj)
 
     await promisfy(this.loki.saveDatabase.bind(this.loki))
     return finalObj

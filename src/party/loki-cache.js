@@ -32,6 +32,7 @@ module.exports = class LokiCache extends EventEmitter {
   }
 
   remove(type, id){
+    console('cache remove')
     debug('remove', type, id)
     var collection = this.db.getCollection(type)
 
@@ -51,6 +52,10 @@ module.exports = class LokiCache extends EventEmitter {
         debug('remove CATCH -', exception)
         collection.findAndRemove({'$meta.id': id})
       }
+
+      debug('remove found', found)
+
+      this._emitChange(found, 'remove')
     }
 
     var item = this.findById(type, id)
@@ -115,8 +120,10 @@ module.exports = class LokiCache extends EventEmitter {
             catch(err){
               debug('WARN', err)
             }
-            this._emitChange(msg, 'remove')
           }
+
+          debug('emit remove', msg)
+          this._emitChange(msg, 'remove')
 
         // otherwise insert new message (remove old message if it exists)
         } else {

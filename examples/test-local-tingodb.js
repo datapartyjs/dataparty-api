@@ -31,32 +31,44 @@ async function main(){
 
   
   if(!user){
-    debug('creating document')
+    console.log('creating document')
     user = await local.createDocument('user', {name: 'tester', created: (new Date()).toISOString() })
   }
   else{
-    debug('loaded document')
+    console.log('loaded document')
   }
 
-  console.log('before', user.data)
+  console.log(user.data)
+  console.log('hash',user.hash)
 
+  user.on('update', (obj)=>{ console.log('event [document.on(update)]') })
+  user.on('value', (obj)=>{ console.log('event [document.on(value)]') })
+  user.on('remove', (obj)=>{ console.log('event [document.on(remove)]') })
+
+  console.log('\nchanging document field')
   user.data.name = 'renamed-tester'
-  //user.data.invalideField = true
   await user.save()
 
-  console.log('after', user.data)
+  console.log(user.data)
+  console.log('hash',user.hash)
 
+  console.log('find document by new field value')
   let userFind = await getUser('renamed-tester')
 
   console.log(userFind.data)
+  console.log('hash',userFind.hash)
 
-  process.exit()
+  console.log('\nchanging document field')
+  userFind.data.name = 'renamed-tester'
+  await userFind.save()
 
+  
 
-  await user.remove()
+  console.log('delete document')
+  await userFind.remove()
+
 
   console.log(await getUser('renamed-tester'))
-
 }
 
 

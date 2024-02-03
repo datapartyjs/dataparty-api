@@ -3,9 +3,9 @@
 
 const IDb = require('../idb')
 const Hoek = require('@hapi/hoek')
+const uuidv4 = require('uuid/v4')
 
 const {promisfy} = require('promisfy')
-
 
 const debug = require('debug')('bouncer.db.tingo-db')
 
@@ -20,13 +20,14 @@ const debug = require('debug')('bouncer.db.tingo-db')
  */
 module.exports = class TingoDb extends IDb {
 
-  constructor ({path, factory, tingoOptions, prefix}) {
+  constructor ({path, factory, tingoOptions, prefix, useUuid}) {
     super(factory, prefix)
     debug('constructor path=',path, tingoOptions)
     this.tingo = null
     this.path = path
     this.tingoOptions = tingoOptions || {nativeObjectID: true}
     this.error = null
+    this.useUuid = (useUuid==undefined) ? true : useUuid
   }
 
 
@@ -92,7 +93,13 @@ module.exports = class TingoDb extends IDb {
   ensureId(obj){
     let temp = {...obj}
     if(!reach(temp,'$meta.id')){
-      temp.$meta.id = new this.tingo.ObjectID().valueOf()
+      
+      if(this.useUuid){
+        temp.$meta.id = uuidv4()
+      }
+      else{
+        temp.$meta.id = new this.tingo.ObjectID().valueOf()
+      }
     }
 
     let dbDoc = this.documentFromObject(temp)
@@ -196,7 +203,17 @@ module.exports = class TingoDb extends IDb {
 
     for(let obj of docs){
       let temp = {...obj}
-      if(temp._id===undefined){ temp._id = (new this.tingo.ObjectID()).toString(); temp.$meta.id=temp._id;  }
+      if(temp._id===undefined){
+        
+        if(this.useUuid){
+          temp._id = uuidv4()
+        }
+        else{
+          temp._id = (new this.tingo.ObjectID()).toString();
+        }
+      
+        temp.$meta.id=temp._id;
+      }
 
       let dbDoc = this.documentFromObject(temp)
 

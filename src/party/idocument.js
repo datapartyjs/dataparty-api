@@ -3,6 +3,7 @@
 const reach = require('../utils/reach')
 const debug = require('debug')('dataparty.idocument')
 const EventEmitter = require('eventemitter3')
+const objectHasher = require('node-object-hash').hasher()
 
 class IDocument extends EventEmitter {
 
@@ -117,6 +118,15 @@ class IDocument extends EventEmitter {
   }
 
   /**
+   * hash of `document.data` using sha256
+   * @member module:Party.IDocument.hash
+   * @type {object}
+   */
+  get hash(){
+    return objectHasher.hash(this.data)
+  }
+
+  /**
    * @async
    * Merge fields into document
    * @method module:Party.IDocument.mergeData
@@ -193,7 +203,9 @@ class IDocument extends EventEmitter {
    * 
    */
   async remove(){
-    debug('removing document ', this.data.type, this.data.id)
+    debug('removing document ', this.type, this.id)
+
+    //this.emit('remove', this)
 
     return this.party.remove(this.data)
   }
