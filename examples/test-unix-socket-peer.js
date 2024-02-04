@@ -138,13 +138,16 @@ async function main(){
   user.on('value', (doc)=>{ console.log('client event [document.on(value)]') })
   user.on('remove', (obj)=>{ console.log('client event [document.on(remove)]') })
 
+  //! watch remote changes
   await user.watch()
 
+  //! The server finds the document
   let localUser = (await party.find()
   .type('user')
   .where('name').equals('tester')
   .exec())[0]
 
+  //! The server changes the document
   console.log('\nserver changing document field')
   localUser.data.name = 'renamed-tester'
   await localUser.save()
@@ -152,6 +155,7 @@ async function main(){
   console.log(localUser.data)
   console.log('hash',localUser.hash)
 
+  //! The server deletes the document
   await localUser.remove()
 }
 
