@@ -34,7 +34,7 @@ async function main(){
     Model: BouncerServerModels.Model,
     Types: {
       ...BouncerServerModels.Types,
-      BanList: require('./schema/ban_list'),
+      //BanList: require('./schema/ban_list'),
       VenueSrv: require('./schema/venue_service')
     }
   }

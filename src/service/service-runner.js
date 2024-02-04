@@ -11,6 +11,7 @@ const EndpointRunner = require('./endpoint-runner')
 const DeltaTime = require('../utils/delta-time')
 
 const Router = require('origin-router').Router
+const Runner = require('@dataparty/tasker').Runner
 
 class ServiceRunner {
 
@@ -33,9 +34,12 @@ class ServiceRunner {
 
     this.middleware = { pre: {}, post: {} }
     this.endpoint = {}
+    this.tasks = {}
 
     this.prefix = prefix
     this.router = router
+    this.taskRunner = new Runner()
+
     this.started = false
   }
 

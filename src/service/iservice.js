@@ -1,7 +1,7 @@
 const fs = require('fs')
 const Path = require('path')
-//const NCC = require('@vercel/ncc')
-const NCC = require('@zeit/ncc')
+const NCC = require('@sevenbitbyte/ncc')
+//const NCC = require('@zeit/ncc')
 const Hoek = require('@hapi/hoek')
 const {JSONPath} = require('jsonpath-plus')
 const gitRepoInfo = require('git-repo-info')
@@ -92,7 +92,11 @@ module.exports = class IService {
       watch: false, // default
       v8cache: false, // default
       quiet: false, // default
-      debugLog: false // default
+      debugLog: false, // default
+      //target: 'es2015'
+      esm: false,
+      moduleType: 'self',
+      libraryName: 'Lib'
     }
 
     if(build){

@@ -181,10 +181,6 @@ class SecureConfig extends IConfig {
                 argonType
             }
 
-            if(!this.argon){
-                this.argon = argon
-            }
-
             key = await dataparty_crypto.Routines.createKeyFromPasswordArgon2(
                 this.argon,
                 password,

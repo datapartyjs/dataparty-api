@@ -29,11 +29,11 @@ class PeerNode {
         msg: data
       })*/
 
-      await this.peer.socket.send(JSON.stringify({
+      await this.peer.send(JSON.stringify({
         op: 'publish',
         id: 'publish:'+this.peer.opId,
         topic: topic.path,
-        sender: { uuid: this.uuid, identity: this.peer.remoteIdentity },
+        sender: { uuid: this.peer.uuid, identity: this.peer.remoteIdentity },
         msg: data
       }))
 

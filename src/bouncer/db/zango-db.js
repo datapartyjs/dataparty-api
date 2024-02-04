@@ -5,6 +5,7 @@ const Hoek = require('@hapi/hoek')
 const zango = require('zangodb')
 const reach = require('../../utils/reach')
 const ObjectId = require('bson-objectid')
+const uuidv4 = require('uuid/v4')
 
 const MongoQuery = require('../mongo-query')
 const { promisfy } = require('promisfy')
@@ -20,12 +21,13 @@ const debug = require('debug')('bouncer.db.zango-db')
 */
 module.exports = class ZangoDb extends IDb {
 
-  constructor ({dbname, factory}) {
+  constructor ({dbname, factory, useUuid}) {
     super(factory)
     debug('constructor')
     this.zango = null
     this.dbname = dbname
     this.error = null
+    this.useUuid = (useUuid==undefined) ? true : useUuid
   }
 
 
@@ -39,7 +41,7 @@ module.exports = class ZangoDb extends IDb {
     for(const name of this.factory.getValidators()){
       debug('creating collection', name)
 
-      const indexSettings = reach(this.factory, 'model.IndexSettings.'+name)
+      const indexSettings = reach(this.factory, 'schemas.IndexSettings.'+name)
 
       const indices = ['$meta.id'].concat(indexSettings.unique).concat(indexSettings.indices)
 
@@ -105,7 +107,13 @@ module.exports = class ZangoDb extends IDb {
   ensureId(obj){
     let temp = {...obj}
     if(!reach(temp,'$meta.id')){
-      temp.$meta.id = (new ObjectId()).toHexString()
+
+      if(this.useUuid){
+        temp.$meta.id = uuidv4()
+      }
+      else{
+        temp.$meta.id = (new ObjectId()).toHexString()
+      }
     }
 
     let dbDoc = this.documentFromObject(temp)

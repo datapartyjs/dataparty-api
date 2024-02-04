@@ -3,7 +3,13 @@ const Sandbox = require('./sandbox')
 
 class EndpointInfoSandbox extends Sandbox {
   constructor(code, map){
-    super(`  
+    super(`
+
+var self={};
+
+function userCode(){
+  ${code}
+}
 
 module.exports = async ()=>{
 
@@ -16,12 +22,13 @@ module.exports = async ()=>{
   }
 
   try{
-    let Lib = ${code}
+
+    userCode()
 
     return {
-      Name: Lib.Name,
-      Description: Lib.Description,
-      MiddlewareConfig: Lib.MiddlewareConfig
+      Name: self.Lib.Name,
+      Description: self.Lib.Description,
+      MiddlewareConfig: self.Lib.MiddlewareConfig
     }
   }
   catch(err){

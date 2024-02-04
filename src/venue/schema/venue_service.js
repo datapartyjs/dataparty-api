@@ -1,19 +1,14 @@
 'use strict'
 
-const Hoek = require('hoek')
-//const BouncerDb = require('@dataparty/bouncer-db')
-/*
-require('mongoose-schema-jsonschema')(BouncerDb.mongoose())
-BouncerDb.mongoose().plugin(require("mongoose-ajv-plugin"))
-*/
 const debug = require('debug')('venue.venue_srv')
 
-const Dataparty = require('../../service')
 
-const Utils = Dataparty.ISchema.Utils
+const ISchema = require('../../index').Bouncer.ISchema
+
+const Utils = ISchema.Utils
 
 
-class VenueSrv extends Dataparty.ISchema {
+class VenueSrv extends ISchema {
 
   static get Type () { return 'venue_srv' }
 
@@ -30,11 +25,11 @@ class VenueSrv extends Dataparty.ISchema {
         branch: String
       },
       schemas: {
-        Package: {},
         IndexSettings: {},
         JSONSchema: {},
         Permissions: {}
       },
+      documents: {},
       endpoints: {},
       middleware: {
         pre: {},
@@ -43,6 +38,21 @@ class VenueSrv extends Dataparty.ISchema {
       middleware_order: {
         pre: [String],
         post: [String]
+      },
+      tasks: {},
+      compileSettings: {
+        cache: Boolean,
+        externals: [String],
+        minify: Boolean,
+        sourceMap: Boolean,
+        sourceMapRegister: Boolean,
+        watch: Boolean,
+        v8cache: Boolean,
+        quite: Boolean,
+        debugLog: Boolean,
+        esm: Boolean,
+        moduleType: Boolean,
+        libraryName: Boolean
       }
     }
   }

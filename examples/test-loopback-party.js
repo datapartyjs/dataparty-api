@@ -4,6 +4,15 @@ const WRTC = require('wrtc')
 const BouncerModel = require('@dataparty/bouncer-model/dist/bouncer-model.json')
 const Dataparty = require('../src')
 
+
+async function getUser(party, name) {
+  return (await party.find()
+    .type('user')
+    .where('name').equals(name)
+    .exec())[0]
+}
+
+
 async function main(){
   const dbPath = await fs.mkdtemp('/tmp/tingo-party')
   const configPath = await fs.mkdtemp('/tmp/tingo-party-config')
@@ -18,11 +27,13 @@ async function main(){
     config
   })
 
+  hostLocal.topics = new Dataparty.LocalTopicHost()
+
   let loopback = new Dataparty.Comms.LoopbackChannel()
 
   let comms1 = new Dataparty.Comms.LoopbackComms({
     host: true,
-    channel: loopback.peer1
+    channel: loopback.port1
   })
 
   let peer1 = new Dataparty.PeerParty({
@@ -33,7 +44,9 @@ async function main(){
   })
 
 
-  let comms2 = new Dataparty.Comms.LoopbackComms({ channel: loopback.peer2, session: 'foobar' })
+
+
+  let comms2 = new Dataparty.Comms.LoopbackComms({ channel: loopback.port2, session: 'foobar' })
 
   let peer2 = new Dataparty.PeerParty({
     comms: comms2,
@@ -71,16 +84,36 @@ async function main(){
 
   
   if(!user){
-    debug('creating document')
+    console.log('peer2 creating document')
     user = await peer2.createDocument('user', {name: 'tester', created: (new Date()).toISOString() })
   }
   else{
-    debug('loaded document')
+    console.log('peer2 loaded document')
   }
-    
+  
+    console.log(user.data)
+    console.log('hash',user.hash)
 
-  console.log(user.data)
-  process.exit()
+  console.log('peer1 find document by new field value')
+  let userFind = await getUser(peer1,'tester')
+  console.log(userFind.data)
+  console.log('hash',userFind.hash)
+
+  user.on('change', (obj)=>{ console.log('peer2 remote event [document.on(change)]', obj ) })
+  user.on('update', (obj)=>{ console.log('peer2 event [document.on(update)]')})
+  user.on('value', (doc)=>{ console.log('peer2 event [document.on(value)]') })
+  user.on('remove', (obj)=>{ console.log('peer2 event [document.on(remove)]') })
+
+  await user.watch()
+
+  console.log('\npeer1 changing document field')
+  userFind.data.name = 'renamed-tester'
+  await userFind.save()
+
+  console.log(userFind.data)
+  console.log('hash',userFind.hash)
+
+  await userFind.remove()
 }
 
 

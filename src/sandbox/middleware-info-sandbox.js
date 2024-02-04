@@ -5,6 +5,13 @@ class MiddlewareInfoSandbox extends Sandbox {
   constructor(code, map){
     super(`
 
+var self={};
+
+function userCode(){
+  ${code}
+}
+    
+
 module.exports = async ()=>{
 
   class ErrorError extends Error { 
@@ -16,13 +23,13 @@ module.exports = async ()=>{
   }
 
   try{
-    let Lib = ${code}
+    userCode()
 
     return {
-      Name: Lib.Name,
-      Type: Lib.Type,
-      Description: Lib.Description,
-      ConfigSchema: Lib.ConfigSchema
+      Name: self.Lib.Name,
+      Type: self.Lib.Type,
+      Description: self.Lib.Description,
+      ConfigSchema: self.Lib.ConfigSchema
     }
   }
   catch(err){

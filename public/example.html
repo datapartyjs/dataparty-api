@@ -28,7 +28,7 @@ async function init(){
   config = new Dataparty.Config.MemoryConfig({
     basePath:'demo',
     cloud: {
-      uri: 'http://172.16.3.1:4001'
+      uri: 'http://10.10.10.201:4000'
     }
   })
 
@@ -40,14 +40,14 @@ async function init(){
   })*/
 
 
-  const remoteIdentity = await Dataparty.Comms.RestComms.HttpGet( config.read('cloud.uri') + '/identity')
+  const remoteIdentity = await Dataparty.Comms.RestComms.HttpGet(  await config.read('cloud.uri') + '/identity')
 
   console.log('cloud.uri -',config.read('cloud.uri'))
   console.log('\tremoteIdentity', remoteIdentity)
 
   let party = new Dataparty.PeerParty({
     comms: new Dataparty.Comms.WebsocketComms({
-      uri:'ws://172.16.3.1:4001/ws',
+      uri:'ws://10.10.10.201:4001/ws',
       discoverRemoteIdentity: false,
       remoteIdentity: remoteIdentity,
       session: Math.random().toString(36).slice(2)
@@ -68,7 +68,7 @@ async function init(){
   })
 
   timeTopic.subscribe((msg)=>{
-    console.log(name, msg)
+    console.log(timeTopic.name, msg)
   })
 
 

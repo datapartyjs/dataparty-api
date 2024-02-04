@@ -1,10 +1,10 @@
-const config = new DataParty.Config.LocalStorageConfig({
+const config = new Dataparty.Config.LocalStorageConfig({
   cloud: {
-    uri: 'http://localhost:4001'
+    uri: `http://${window.location.hostname}:4000`
   }
 })
 
-const party = new DataParty.CloudParty({
+const party = new Dataparty.CloudParty({
   config, 
 })
 
@@ -77,7 +77,7 @@ async function main(){
     const text = `call deltaMs=<i>${callTime2.deltaMs}</i>ms complete ${complete}` 
     document.getElementById("secure-echo-speed").innerHTML = text    
 
-  }, 250)
+  }, 100)
 
   
   setInterval(async ()=>{
@@ -100,7 +100,7 @@ async function main(){
     const text = `call deltaMs=<i>${callTime2.deltaMs}</i>ms complete ${complete}` 
     document.getElementById("echo-speed").innerHTML = text    
 
-  }, 100)
+  }, 10000)
   
 }
 

@@ -1,5 +1,5 @@
 const debug=require('debug')('dataparty.comms.loopback-channel-port')
-
+const EventEmitter = require("eventemitter3")
 
 class LoopbackChannelPort {
     constructor(peer, name){

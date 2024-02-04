@@ -70,6 +70,10 @@ class IParty {
     debug('\tDocument Classes', this.factory.getTypes())
   }
 
+  async stop(){
+    this.comms.close()
+  }
+
   /**
    * @async
    * @method module:Party.IParty.createDocument

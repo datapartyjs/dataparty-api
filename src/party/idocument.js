@@ -3,6 +3,7 @@
 const reach = require('../utils/reach')
 const debug = require('debug')('dataparty.idocument')
 const EventEmitter = require('eventemitter3')
+const objectHasher = require('node-object-hash').hasher()
 
 class IDocument extends EventEmitter {
 
@@ -117,6 +118,15 @@ class IDocument extends EventEmitter {
   }
 
   /**
+   * hash of `document.data` using sha256
+   * @member module:Party.IDocument.hash
+   * @type {object}
+   */
+  get hash(){
+    return objectHasher.hash(this.data)
+  }
+
+  /**
    * @async
    * Merge fields into document
    * @method module:Party.IDocument.mergeData
@@ -193,7 +203,9 @@ class IDocument extends EventEmitter {
    * 
    */
   async remove(){
-    debug('removing document ', this.data.type, this.data.id)
+    debug('removing document ', this.type, this.id)
+
+    //this.emit('remove', this)
 
     return this.party.remove(this.data)
   }
@@ -227,6 +239,10 @@ class IDocument extends EventEmitter {
       .id(this.id)
       .exec()
       .then(docs => {
+        if(docs.length==0){
+          return
+        }
+
         this._data = docs[0].data
 
         debug('pull found', docs)
@@ -256,8 +272,7 @@ class IDocument extends EventEmitter {
 
     if (this.watchSub){ return }
 
-    const socket = await this.party.socket()
-    const ros = socket.ros
+    const ros = this.party.comms.ros
     const watchPath = '/dataparty/document/' + this.type + '/' + this.id
 
     debug('watch document', watchPath)
@@ -343,7 +358,7 @@ class IDocument extends EventEmitter {
       case 'update':
       case 'create':
 
-        if(this.followcache){ 
+        if(this.followcache && event.event !== 'remove'){ 
           this._data = newMsg 
 
           /**

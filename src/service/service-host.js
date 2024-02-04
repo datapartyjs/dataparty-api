@@ -1,5 +1,6 @@
 const CORS = require('cors')
 const {URL} = require('url')
+const mdns = require('mdns')
 const http = require('http')
 const https = require('https')
 const morgan = require('morgan')
@@ -7,13 +8,16 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const expressListRoutes = require('express-list-routes')
 const debug = require('debug')('dataparty.service.host')
+const objectHasher = require('node-object-hash').hasher()
 
 const reach = require('../utils/reach')
 
 const ServiceHostWebsocket = require('./service-host-websocket')
 
-const Pify = async (p)=>{
-  return await p
+const Pify = (p)=>{
+  return new Promise((resolve,reject)=>{
+    p(resolve)
+  })
 }
 
 class ServiceHost {
@@ -22,17 +26,18 @@ class ServiceHost {
    * @class module:Service.ServiceHost
    * @link module:Service
    * @param {Object}  options.cors            Cors to be passed to express via the `cors` package
-   * @param {boolean} options.trust_proxy     When true, the server will parse forwarding headers. This should be set when running behind a load-balancer for accurate error messages and logging
-   * @param {string}  options.listenUri       The uri of the host interface to tell express to listen on. Defaults to `http://0.0.0.0:4001
-   * @param {boolean} options.i2pEnabled      When true, this server will be available over i2p
-   * @param {string}  options.i2pSamHost      The hostname of the i2p SAM control API. Defaults to `127.0.0.1`
-   * @param {Integer} options.i2pSamPort      The port of the i2p SAM control API. Defaults to `7656`
-   * @param {string}  options.i2pForwardHost  Override i2p forward host. This defaults to `localhost` and typically doesn't need to be changed
+   * @param {boolean} [options.trust_proxy=false]     When true, the server will parse forwarding headers. This should be set when running behind a load-balancer for accurate error messages and logging
+   * @param {string}  [options.listenUri=http://0.0.0.0:4000]       The uri of the host interface to tell express to listen on. Defaults to `http://0.0.0.0:4001
+   * @param {boolean} [options.i2pEnabled=false]      When true, this server will be available over i2p
+   * @param {string}  [options.i2pSamHost=127.0.0.1]      The hostname of the i2p SAM control API. Defaults to `127.0.0.1`
+   * @param {Integer} [options.i2pSamPort=7656]      The port of the i2p SAM control API. Defaults to `7656`
+   * @param {string}  [options.i2pForwardHost=localhost]  Override i2p forward host. This defaults to `localhost` and typically doesn't need to be changed
    * @param {Integer} options.i2pForwardPort  Override i2p forward post. This defaults to the port supplied in `options.listenUri`.
    * @param {string}  options.i2pKey          When set this i2p key will be used to host the service. If not set a new i2p key will be generated. Defaults to `null`
-   * @param {boolean} options.wsEnabled       When true the server will host a dataparty websocket service. Defaults to `true`
+   * @param {boolean} [options.wsEnabled=true]       When true the server will host a dataparty websocket service. Defaults to `true`
    * @param {Integer} options.wsPort          Port for the websocket service to listen on. Defaults to `null`, using the same port as the http server.
-   * @param {string}  options.wsUpgradePath   The path within the http server to host an upgradeable websocket. Defaults to `/ws`
+   * @param {string}  [options.wsUpgradePath=/ws]   The path within the http server to host an upgradeable websocket. Defaults to `/ws`
+   * @param {boolean} [options.mdnsEnabled=true]     When true, the server will publish mDNS records advertising the service and party identity
    * @param {module:Service.ServiceRunner}  options.runner  A pre-configured runner
    */
 
@@ -49,6 +54,7 @@ class ServiceHost {
     wsEnabled = true,
     wsPort = null,
     wsUpgradePath = '/ws',
+    mdnsEnabled = true,
     runner
   }={}){
 
@@ -119,6 +125,8 @@ class ServiceHost {
       }
     }
 
+    this.mdnsEnabled = mdnsEnabled
+
     this.started = false
   }
 
@@ -140,23 +148,30 @@ class ServiceHost {
       //Setup router
       this.apiApp.use(this.runner.onRequest.bind(this.runner))
 
-      if(debug.enabled){ expressListRoutes('API:', this.router ) }
+      if(debug.enabled){ expressListRoutes(this.router ) }
     }
 
+    let backlog = 511
     let listenPort = this.apiServerUri.port
     let listenHost = this.apiServerUri.hostname
     
     if(this.apiServerUri.protocol == 'http:'){
+
+      debug('http server')
 
       //! Handle http
       this.apiServer = http.createServer(this.apiApp)
 
     } else if(this.apiServerUri.protocol == 'https:'){
 
+      debug('http server')
+
       //! Handle https
       this.apiServer = https.createServer(this.apiApp)
 
     } else if(this.apiServerUri.protocol == 'file:'){
+
+      debug('unix socket server')
 
       //! Handle unix socket
       listenHost = null
@@ -167,7 +182,10 @@ class ServiceHost {
 
 
     await new Promise((resolve,reject)=>{
-      this.apiServer.listen(listenPort, listenHost, resolve)
+
+      debug('listening', this.apiServerUri.toString())
+
+      this.apiServer.listen(listenPort, listenHost==null ? backlog : listenHost, resolve)
     })
 
     clearTimeout(this.errorHandlerTimer)
@@ -209,6 +227,40 @@ class ServiceHost {
       debug('\t', 'address', this.i2pUri)
       debug('\t', 'key', this.i2p.getPublicKey())
     }
+
+    if(this.mdnsEnabled && this.apiServer && this.apiServerUri.protocol != 'file:'){
+
+      let servicePkg = null
+      let partyIdentity = null
+      const routerClass = this.runner.constructor.name
+
+      switch(routerClass){
+        case 'ServiceRunner':
+        case 'ServiceRunnerNode':
+          partyIdentity = this.runner.party.identity
+          servicePkg = this.runner.service.compiled.package
+          break
+        case 'RunnerRouter':
+          partyIdentity = this.runner.defaultRunner.party.identity
+          servicePkg = this.runner.defaultRunner.service.compiled.package
+          break
+      }
+
+
+      const idHash = objectHasher.hash(
+        partyIdentity.toJSON()
+      )
+
+      
+      const txt_record = {
+        partyhash: idHash,
+        pkgname: servicePkg.name
+      }
+      
+      console.log('mdns', servicePkg.name, idHash)
+      this.mdnsAd = mdns.createAdvertisement(mdns.tcp('party'), parseInt(listenPort), {txtRecord: txt_record})
+    }
+
   }
 
   /**
@@ -217,16 +269,19 @@ class ServiceHost {
    * @async
    */
   async stop(){
-    debug('stopping server')
-
+    
     if(!this.apiServer || !this.apiServer.listening){
       return
     }
-
+    
+    debug('stopping server')
+    
     clearTimeout(this.errorHandlerTimer)
     this.errorHandlerTimer = null
 
-    await (Pify(this.apiServer.close)())
+    await new Promise((resolve,reject)=>{
+      this.apiServer.close(resolve)
+    })
 
     debug('stopped server')
   }

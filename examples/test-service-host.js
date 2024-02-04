@@ -28,7 +28,7 @@ async function main(){
   //const uri = 'mongodb://localhost:27017/server-party-test'
   //debug('db location', uri)
 
-  const path = '/data/datparty/srv-party'
+  const path = '/data/dataparty/example-host-party'
 
   let party = new Dataparty.TingoParty({
     path,
