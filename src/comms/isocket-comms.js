@@ -7,16 +7,22 @@ const {Message, Routines} = require('@dataparty/crypto')
 
 const AuthOp = require('./op/auth-op')
 const RosShim = require('./ros-shim')
+const IParty = require('../party/iparty')
 
 
 /**
  * @interface module:Comms.ISocketComms
  * @link module:Comms
  * @extends EventEmitter
+ * 
+ * @param {string}                  session
+ * @param {module:Party.IParty}     party
+ * @param {module:Dataparty_Crypto.IIdentityProps}  remoteIdentity
+ * @param {boolean}                 discoverRemoteIdentity  Set to true if ANY remote identity can connect. When set to `true` the remoteIdentity will be populated from the client.
  */
 
 class ISocketComms extends EventEmitter {
-    constructor({session, uri, party, remoteIdentity, discoverRemoteIdentity}){
+    constructor({session, party, remoteIdentity, discoverRemoteIdentity}){
         super()
         this.uri = uri
         this.session = session

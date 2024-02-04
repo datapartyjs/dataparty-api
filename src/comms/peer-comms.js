@@ -42,6 +42,9 @@ function truncateString(str, num) {
  * @extends {module:Comms.ISocketComms}
  * @link module:Comms
  * 
+ * 
+ * @param {boolean}     host    Set to `true` to make this peer act as the protocol host
+ * @param {Object}      socket  Already connected peer socket
  */
 class PeerComms extends ISocketComms {
   constructor({remoteIdentity, discoverRemoteIdentity, host, party, socket, ...options}){
