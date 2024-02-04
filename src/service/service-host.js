@@ -12,8 +12,10 @@ const reach = require('../utils/reach')
 
 const ServiceHostWebsocket = require('./service-host-websocket')
 
-const Pify = async (p)=>{
-  return await p
+const Pify = (p)=>{
+  return new Promise((resolve,reject)=>{
+    p(resolve)
+  })
 }
 
 class ServiceHost {
@@ -140,23 +142,30 @@ class ServiceHost {
       //Setup router
       this.apiApp.use(this.runner.onRequest.bind(this.runner))
 
-      if(debug.enabled){ expressListRoutes('API:', this.router ) }
+      if(debug.enabled){ expressListRoutes(this.router ) }
     }
 
+    let backlog = 511
     let listenPort = this.apiServerUri.port
     let listenHost = this.apiServerUri.hostname
     
     if(this.apiServerUri.protocol == 'http:'){
+
+      debug('http server')
 
       //! Handle http
       this.apiServer = http.createServer(this.apiApp)
 
     } else if(this.apiServerUri.protocol == 'https:'){
 
+      debug('http server')
+
       //! Handle https
       this.apiServer = https.createServer(this.apiApp)
 
     } else if(this.apiServerUri.protocol == 'file:'){
+
+      debug('unix socket server')
 
       //! Handle unix socket
       listenHost = null
@@ -167,7 +176,10 @@ class ServiceHost {
 
 
     await new Promise((resolve,reject)=>{
-      this.apiServer.listen(listenPort, listenHost, resolve)
+
+      debug('listening', this.apiServerUri.toString())
+
+      this.apiServer.listen(listenPort, listenHost==null ? backlog : listenHost, resolve)
     })
 
     clearTimeout(this.errorHandlerTimer)
@@ -217,16 +229,19 @@ class ServiceHost {
    * @async
    */
   async stop(){
-    debug('stopping server')
-
+    
     if(!this.apiServer || !this.apiServer.listening){
       return
     }
-
+    
+    debug('stopping server')
+    
     clearTimeout(this.errorHandlerTimer)
     this.errorHandlerTimer = null
 
-    await (Pify(this.apiServer.close)())
+    await new Promise((resolve,reject)=>{
+      this.apiServer.close(resolve)
+    })
 
     debug('stopped server')
   }

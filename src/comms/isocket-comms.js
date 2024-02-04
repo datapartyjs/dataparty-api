@@ -22,7 +22,7 @@ const IParty = require('../party/iparty')
  */
 
 class ISocketComms extends EventEmitter {
-    constructor({session, party, remoteIdentity, discoverRemoteIdentity}){
+    constructor({session, uri, party, remoteIdentity, discoverRemoteIdentity}){
         super()
         this.uri = uri
         this.session = session

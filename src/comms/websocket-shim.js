@@ -2,6 +2,8 @@
 const debug = require('debug')('dataparty.comms.websocket-shim')
 const EventEmitter = require('eventemitter3')
 
+const WebSocket = global.WebSocket ? global.WebSocket : require('ws')
+
 class WebsocketShim extends EventEmitter {
     constructor(conn){
       super()

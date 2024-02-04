@@ -76,7 +76,7 @@
     "dom-storage": "^2.1.0",
     "eventemitter3": "^4.0.7",
     "express": "^4.17.1",
-    "express-list-routes": "^0.1.4",
+    "express-list-routes": "^1.1.9",
     "git-repo-info": "^2.1.1",
     "joi": "^17.9.1",
     "joi-objectid": "^4.0.2",
