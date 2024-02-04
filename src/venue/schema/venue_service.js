@@ -1,19 +1,14 @@
 'use strict'
 
-const Hoek = require('hoek')
-//const BouncerDb = require('@dataparty/bouncer-db')
-/*
-require('mongoose-schema-jsonschema')(BouncerDb.mongoose())
-BouncerDb.mongoose().plugin(require("mongoose-ajv-plugin"))
-*/
 const debug = require('debug')('venue.venue_srv')
 
-const Dataparty = require('../../service')
 
-const Utils = Dataparty.ISchema.Utils
+const ISchema = require('../../index').Bouncer.ISchema
+
+const Utils = ISchema.Utils
 
 
-class VenueSrv extends Dataparty.ISchema {
+class VenueSrv extends ISchema {
 
   static get Type () { return 'venue_srv' }
 
