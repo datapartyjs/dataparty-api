@@ -108,9 +108,9 @@
     "uuid": "^3.2.1",
     "uuidv4": "^6.2.12",
     "vm2": "^3.9.2",
-    "websocket": "github:sevenbitbyte/WebSocket-Node#parcel-build",
+    "websocket": "https://github.com/sevenbitbyte/WebSocket-Node#parcel-build",
     "ws": "^8.11.0",
-    "zangodb": "github:sevenbitbyte/zangodb#hash-patch"
+    "zangodb": "https://github.com/sevenbitbyte/zangodb#hash-patch"
   },
   "devDependencies": {
     "@dataparty/bouncer-model": "1.4.3",
