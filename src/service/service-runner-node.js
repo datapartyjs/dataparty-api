@@ -104,8 +104,10 @@ class ServiceRunnerNode {
     let TaskClass = null
 
     if(!this.useNative){
+      var self={}
       const build = Hoek.reach(this.service, `compiled.tasks.${name}`)
-      TaskClass = eval(build.code/*, build.map*/)
+      eval(build.code/*, build.map*/)
+      TaskClass = self.Lib
     }
     else{
       TaskClass = this.service.constructors.tasks[name]
@@ -138,7 +140,7 @@ class ServiceRunnerNode {
     debug('spawnTask', type, 'useNative =',this.useNative)
 
     let dt = new DeltaTime().start()
-    
+
 
     "use strict"
     let task=null
@@ -146,8 +148,10 @@ class ServiceRunnerNode {
     let TaskClass = null
 
     if(!this.useNative){
+      var self={}
       const build = Hoek.reach(this.service, `compiled.tasks.${type}`)
-      TaskClass = eval(build.code/*, build.map*/)
+      eval(build.code/*, build.map*/)
+      TaskClass = self.Lib
     }
     else{
       TaskClass = this.service.constructors.tasks[type]
