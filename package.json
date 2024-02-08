@@ -61,7 +61,7 @@
   "dependencies": {
     "@dataparty/bouncer-db": "1.0.1",
     "@dataparty/crypto": "git://github.com/datapartyjs/dataparty-crypto.git",
-    "@dataparty/tasker": "^0.0.2",
+    "@dataparty/tasker": "^0.0.3",
     "@diva.exchange/i2p-sam": "^4.1.8",
     "@markwylde/liferaft": "^1.3.4",
     "@sevenbitbyte/ncc": "0.0.2",
@@ -138,6 +138,7 @@
     "tmp": "^0.2.1",
     "url": "^0.11.0",
     "util": "^0.12.4",
+    "vm-browserify": "^1.1.2",
     "wrtc": "npm:@koush/wrtc@^0.5.3"
   },
   "repository": {
@@ -145,5 +146,8 @@
     "url": "https://github.com/datapartyjs/dataparty-api.git"
   },
   "author": "dataparty <code@dataparty.xyz>",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "overrides": {
+    "nan": "github:jkleinsc/nan#remove_accessor_signature"
+  }
 }
