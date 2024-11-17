@@ -3,7 +3,7 @@
 
 const IDb = require('../idb')
 const Hoek = require('@hapi/hoek')
-const uuidv4 = require('uuid/v4')
+const { v4: uuidv4 } = require('uuid')
 
 const {promisfy} = require('promisfy')
 

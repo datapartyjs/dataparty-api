@@ -5,7 +5,7 @@ const Hoek = require('@hapi/hoek')
 const zango = require('zangodb')
 const reach = require('../../utils/reach')
 const ObjectId = require('bson-objectid')
-const uuidv4 = require('uuid/v4')
+const { v4: uuidv4 } = require('uuid')
 
 const MongoQuery = require('../mongo-query')
 const { promisfy } = require('promisfy')

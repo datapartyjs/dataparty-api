@@ -3,7 +3,7 @@
 const debug = require('debug')('dataparty.party.qb')
 const EventEmitter = require("eventemitter3")
 
-const uuidv4 = require('uuid/v4')
+const { v4: uuidv4 } = require('uuid')
 
 const Clerk = require('./clerk.js')
 const Crufl = require('./crufl')

@@ -1,5 +1,5 @@
 const debug = require('debug')('dataparty.comms.peercomms')
-const uuidv4 = require('uuid/v4')
+const { v4: uuidv4 } = require('uuid')
 const HttpMocks = require('node-mocks-http')
 
 const SocketOp = require('./op/socket-op')

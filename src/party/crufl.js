@@ -5,7 +5,7 @@ const EventEmitter = require("eventemitter3")
 
 const moment = require('moment')
 
-const uuidv4 = require('uuid/v4') // random uuid generator
+const { v4: uuidv4 } = require('uuid')
 const Clerk = require('./clerk.js')
 const reach = require('../utils/reach')
 const Hashes = require('jshashes')

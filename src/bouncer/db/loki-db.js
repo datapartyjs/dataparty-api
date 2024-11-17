@@ -6,7 +6,7 @@ const Loki = require('lokijs')
 const LokiFS = Loki.LokiFsAdapter
 const LFSA = require('lokijs/src/loki-fs-structured-adapter')
 const ObjectId = require('bson-objectid')
-const uuidv4 = require('uuid/v4')
+const { v4: uuidv4 } = require('uuid')
 
 const MongoQuery = require('../mongo-query')
 const { promisfy } = require('promisfy')
