@@ -55,7 +55,7 @@ async function main(){
   peer1.comms.socket.on('signal', async (data)=>{
     //console.log('p1 >> p2', JSON.stringify(data))
 
-
+    offer.push(data)
 
     if(offer.length == 2){
        fs.writeFileSync(offerPath, JSON.stringify(offer))

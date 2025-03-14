@@ -11,11 +11,12 @@ const PeerComms = require('./peer-comms')
  * @see https://en.wikipedia.org/wiki/WebRTC
  */
 class RTCSocketComms extends PeerComms {
-  constructor({remoteIdentity, host, party, wrtc, trickle = false, ...options}){
+  constructor({remoteIdentity, host, party, wrtc, config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }] }, trickle = false, ...options}){
     super({remoteIdentity, host, party, ...options})
 
     this.rtcSettings = {
       wrtc,
+      config,
       trickle,
       initiator: host
     }
