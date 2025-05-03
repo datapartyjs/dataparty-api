@@ -265,6 +265,7 @@ class IParty {
     await this.config.write(path, null)
 
     this._identity = new dataparty_crypto.Identity({id: 'primary'})
+    await this._identity.initialize()
     await this.config.write(path, this._identity.toJSON(true))
 
     await this.loadIdentity()
