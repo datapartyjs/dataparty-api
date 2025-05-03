@@ -28,6 +28,8 @@ class ServiceHost {
    * @param {Object}  options.cors            Cors to be passed to express via the `cors` package
    * @param {boolean} [options.trust_proxy=false]     When true, the server will parse forwarding headers. This should be set when running behind a load-balancer for accurate error messages and logging
    * @param {string}  [options.listenUri=http://0.0.0.0:4000]       The uri of the host interface to tell express to listen on. Defaults to `http://0.0.0.0:4001
+   * @param {string}  options.ssl_cert                SSL Certificate
+   * @param {string}  options.ssl_key                 SSL Key
    * @param {boolean} [options.i2pEnabled=false]      When true, this server will be available over i2p
    * @param {string}  [options.i2pSamHost=127.0.0.1]      The hostname of the i2p SAM control API. Defaults to `127.0.0.1`
    * @param {Integer} [options.i2pSamPort=7656]      The port of the i2p SAM control API. Defaults to `7656`
@@ -45,6 +47,8 @@ class ServiceHost {
     cors = {},
     trust_proxy = false,
     listenUri = 'http://0.0.0.0:4000',
+    ssl_cert = '',
+    ssl_key = '',
     i2pEnabled = false,
     i2pSamHost = '127.0.0.1',
     i2pSamPort = 7656,
@@ -83,6 +87,9 @@ class ServiceHost {
       this.apiApp.use(CORS())
       this.apiApp.options('*', CORS(cors))
     }
+
+    this.ssl_cert = ssl_cert
+    this.ssl_key = ssl_key
     
 
     if(debug.enabled){ this.apiApp.use(morgan('combined')) }
@@ -164,10 +171,13 @@ class ServiceHost {
 
     } else if(this.apiServerUri.protocol == 'https:'){
 
-      debug('http server')
+      debug('https server')
 
       //! Handle https
-      this.apiServer = https.createServer(this.apiApp)
+      this.apiServer = https.createServer({
+        key: this.ssl_key,
+        cert: this.ssl_cert
+      }, this.apiApp)
 
     } else if(this.apiServerUri.protocol == 'file:'){
 

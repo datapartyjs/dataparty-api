@@ -28,7 +28,7 @@ async function init(){
   config = new Dataparty.Config.MemoryConfig({
     basePath:'demo',
     cloud: {
-      uri: 'http://10.10.10.201:4000'
+      uri: 'https://10.36.158.251:4000'
     }
   })
 
@@ -47,7 +47,7 @@ async function init(){
 
   let party = new Dataparty.PeerParty({
     comms: new Dataparty.Comms.WebsocketComms({
-      uri:'ws://10.10.10.201:4001/ws',
+      uri:'wss://10.36.158.251:4000/ws',
       discoverRemoteIdentity: false,
       remoteIdentity: remoteIdentity,
       session: Math.random().toString(36).slice(2)
@@ -58,8 +58,11 @@ async function init(){
   window.party = party
   await party.start()
 
+  console.log('started')
+
   await party.comms.authorized()
 
+  console.log('authed')
 
   timeTopic = new party.ROSLIB.Topic({
     ros : party.comms.ros,
@@ -89,6 +92,8 @@ async function init(){
       
       setTimeout(onTimeout, 0)
     })
+
+    console.log('publishing')
     
     await timeTopic.publish({number: Date.now(), text:text})
     
@@ -97,7 +102,7 @@ async function init(){
 
   window.onTimeout = onTimeout
 
-  //onTimeout()
+  onTimeout()
 }
 
 init()

@@ -1,3 +1,4 @@
+const fs = require('fs')
 const Path = require('path')
 const debug = require('debug')('test.server-db')
 const Dataparty = require('../src')
@@ -65,12 +66,17 @@ async function main(){
   
   
   const runnerRouter = new Dataparty.RunnerRouter(runner)
+
+  const ssl_key  = fs.readFileSync( Path.join(__dirname,'key.pem'), 'utf8')
+  const ssl_cert = fs.readFileSync( Path.join(__dirname,'cert.pem'), 'utf8')
   
   
   const host = new Dataparty.ServiceHost({
+    listenUri: 'https://0.0.0.0:4000',
     runner: runnerRouter,
     trust_proxy: true,
     wsEnabled: true,
+    ssl_key, ssl_cert
   })
   
   debug(runner.party.identity)
