@@ -34,6 +34,7 @@ class ServiceRunnerNode {
     this.middleware = { pre: {}, post: {} }
     this.endpoint = {}
     this.tasks = {}
+    this.topics = {}
 
     this.prefix=prefix
     this.router = router
@@ -87,6 +88,7 @@ class ServiceRunnerNode {
       throw new Error('invalid task ['+name+']')
     }
   }
+
 
   async loadTask(name){
     if(this.tasks[name]){
@@ -189,6 +191,47 @@ class ServiceRunnerNode {
     const task = this.tasks[name]
 
     this.taskRunner.addTask(task)
+  }
+
+  async loadTopic(name){
+    if(this.topic[name]){
+      return
+    }
+
+    debug('loadTopic', name, 'useNative =',this.useNative)
+    let dt = new DeltaTime().start()
+    
+    "use strict"
+    let topic=null
+
+    let TopicClass = null
+
+    if(!this.useNative){
+      var self={}
+      const build = Hoek.reach(this.service, `compiled.topics.${name}`)
+      eval(build.code/*, build.map*/)
+      TopicClass = self.Lib
+    }
+    else{
+      TopicClass = this.service.constructors.topics[name]
+    }
+
+    topic = new TopicClass({
+      context:{
+        party: this.party,
+        serviceRunner: this
+      }
+    })
+
+
+    debug('topic info', TopicClass.info)
+
+    this.topics[name] = topic
+
+
+
+    dt.end()
+    debug('loaded topic',name,'in',dt.deltaMs,'ms')
   }
 
   async loadEndpoint(name){

@@ -147,7 +147,7 @@ class SecureConfig extends IConfig {
         debug('setPassword')
         if(await this.isInitialized()){ throw new Error('already initialized') }
 
-        let key = null
+        let seed = null
         let settings = null
 
         if(!this.argon){
@@ -161,7 +161,7 @@ class SecureConfig extends IConfig {
                 rounds
             }
     
-            key = await dataparty_crypto.Routines.createKeyFromPasswordPbkdf2(password, salt, rounds)
+            seed = await dataparty_crypto.Routines.createSeedFromPasswordPbkdf2(password, salt, rounds)
 
         } else if(this.argon){
             //! argon2
@@ -181,7 +181,7 @@ class SecureConfig extends IConfig {
                 argonType
             }
 
-            key = await dataparty_crypto.Routines.createKeyFromPasswordArgon2(
+            seed = await dataparty_crypto.Routines.createSeedFromPasswordArgon2(
                 this.argon,
                 password,
                 salt,
@@ -193,6 +193,11 @@ class SecureConfig extends IConfig {
         } else {
             throw new Error('unsupported KDF['+type+']')
         }
+
+
+        debug('seed', seed)
+        const key = await dataparty_crypto.Routines.createKey(seed)
+        debug('key', key)
 
         await this.initialize(key, defaults, settings)
     }
@@ -320,7 +325,7 @@ class SecureConfig extends IConfig {
             this.timer = null
         }
 
-        let key = null
+        let seed = null
         let keyType = await this.config.read(this.id+'.settings.type')
 
         if(keyType == 'pbkdf2'){
@@ -328,7 +333,7 @@ class SecureConfig extends IConfig {
             let salt = Buffer.from(await this.config.read(this.id+'.settings.salt'),'hex')
             let rounds = await this.config.read(this.id+'.settings.rounds')
 
-            key = await dataparty_crypto.Routines.createKeyFromPasswordPbkdf2(password, salt, rounds)
+            seed = await dataparty_crypto.Routines.createSeedFromPasswordPbkdf2(password, salt, rounds)
 
         } else if(keyType == 'argon2'){
 
@@ -339,7 +344,7 @@ class SecureConfig extends IConfig {
             let argonType = await this.config.read(this.id+'.settings.argonType')
 
 
-            key = await dataparty_crypto.Routines.createKeyFromPasswordArgon2(
+            seed = await dataparty_crypto.Routines.createSeedFromPasswordArgon2(
                 this.argon,
                 password,
                 salt,
@@ -350,6 +355,8 @@ class SecureConfig extends IConfig {
             )
 
         }
+
+        const key = await dataparty_crypto.Routines.createKey(seed)
 
 
         const pwIdentity = new dataparty_crypto.Identity({

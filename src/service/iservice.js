@@ -37,7 +37,8 @@ module.exports = class IService {
         pre: {},
         post: {}
       },
-      tasks: {}
+      tasks: {},
+      topics: {}
     }
 
     this.middleware_order = {
@@ -53,7 +54,8 @@ module.exports = class IService {
         pre: {},
         post: {}
       },
-      tasks: {}
+      tasks: {},
+      topics: {}
     }
 
     this.compiled = {
@@ -73,7 +75,8 @@ module.exports = class IService {
         pre: [],
         post: []
       },
-      tasks: {}
+      tasks: {},
+      topics: {}
     }
 
     this.compileSettings = {
@@ -196,6 +199,23 @@ module.exports = class IService {
     this.constructors.tasks[name] = TaskClass
   }
 
+  /**
+   * Add a `topic` implementation to the service
+   * @method module:Service.IService.addTopic
+   * @param {string} topic_path 
+   */
+  addTopic(topic_path){
+
+    debug('addTopic', topic_path)
+
+    const TopicClass = require(topic_path)
+
+    const name = TopicClass.Name
+
+    this.sources.topics[name] = topic_path
+    this.constructors.topics[name] = TopicClass
+  }
+
 
   /**
    * Compile a service. This will build two output files, one for host usage `-service.json`
@@ -225,6 +245,7 @@ module.exports = class IService {
       this.compileList('documents'),
       this.compileList('endpoints'),
       this.compileList('tasks'),
+      this.compileList('topics'),
       this.compileSchemas()
     ])
 

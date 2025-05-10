@@ -7,6 +7,13 @@ const prompt = require('prompt')
 
 let secureConfig = null
 
+const HELP_INFO = `
+  help
+  get
+  set
+  lock
+`
+
 async function main(){
     const memoryConfig = new Dataparty.Config.MemoryConfig({foo: 'bar'})
 
@@ -23,13 +30,31 @@ async function main(){
     })
 
     
-    secureConfig.on('locked', ()=>{ console.log('locked') })
+    secureConfig.on('locked', async ()=>{
+        console.log('locked')
 
-    secureConfig.on('unlocked', async ()=>{ 
-        console.log('unlocked')
+        /*
+        while(secureConfig.isLocked()){
+            const {password} = await prompt.get({
+                properties: {
+                    password: {
+                        message: 'Enter password',
+                        hidden: true
+                }
+            }})
+    
 
-        await secureConfig.write('timestamp', Date.now())
+            try{
+                await secureConfig.unlock(password)
+            }
+            catch(err){
+                console.log('bad password')
+            }
+        }
+        */
     })
+
+    
 
     secureConfig.on('timeout', ()=>{ console.log('timeout') })
 
@@ -69,6 +94,13 @@ async function main(){
         }
         
     
+    })
+
+    secureConfig.on('unlocked', async ()=>{ 
+        console.log('unlocked')
+
+        await secureConfig.write('timestamp', Date.now())
+
     })
 
     secureConfig.on('setup-required', async ()=>{
@@ -123,11 +155,54 @@ async function main(){
 
     console.log('main config', await secureConfig.readAll())
 
-    let timer = setTimeout(async ()=>{
+    while(1){
+
+        const {cmd} = await prompt.get({
+            properties: {
+                cmd: {
+                    message: 'command >'
+            }
+        }})
+    
+        if(cmd && cmd.length > 0){
+            let parts = cmd.split(' ')
+    
+            switch(parts[0]){
+                case 'help':
+                    console.log(HELP_INFO)
+                    break
+                case 'lock':
+                    secureConfig.lock()
+                    break
+                case 'get':
+                    if(parts.length == 1){
+                        let value = await secureConfig.readAll()
+                        console.log(value)
+                    } else {
+                        let value = await secureConfig.read(parts[1])
+                        console.log(parts[1], '=', value)
+                    }
+                    break
+                case 'set':
+                    await secureConfig.write(parts[1], parts[2])
+                    console.log(parts[1], '=', parts[2])
+                    break
+                case 'quit':
+                case 'exit':
+                    process.exit(0)
+                default:
+                    console.log('unknown command [',cmd,']')
+                    break
+            }
+        }
+    }
+
+
+    /*let timer = setTimeout(async ()=>{
 
         console.log('timer config', await secureConfig.readAll())
 
-    }, 1000*30)
+    }, 1000*30)*/
 
 }
 
