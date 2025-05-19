@@ -20,6 +20,7 @@ class ExampleService extends Dataparty.IService {
     this.addEndpoint(Dataparty.endpoint_paths.version)
 
     this.addSchema(Path.join(__dirname, './party/schema/basic_types.js'))
+    this.addTopic(Path.join(__dirname, './party/topics/time-topic.js'))
   }
 
 }
@@ -72,11 +73,11 @@ async function main(){
   
   
   const host = new Dataparty.ServiceHost({
-    listenUri: 'https://0.0.0.0:4000',
+    listenUri: 'http://0.0.0.0:4000',
     runner: runnerRouter,
     trust_proxy: true,
     wsEnabled: true,
-    ssl_key, ssl_cert
+    //ssl_key, ssl_cert
   })
   
   debug(runner.party.identity)

@@ -38,6 +38,7 @@ class ServiceRunnerNode {
 
     this.prefix=prefix
     this.router = router
+    this.topicsRouter = new Router()
     this.taskRunner = new Runner()
 
     this.started = false
@@ -80,6 +81,14 @@ class ServiceRunnerNode {
     debug('endpoints ready:')
     for(let name in this.endpoint){
       debug('\t', Path.join('/', name))
+    }
+
+    debug('starting topics')
+
+    const topicMap = Hoek.reach(this.service, 'compiled.topics')
+    for(let name in topicMap){
+      debug('\t',name)
+      await this.loadTopic(name)
     }
   }
 
@@ -194,14 +203,14 @@ class ServiceRunnerNode {
   }
 
   async loadTopic(name){
-    if(this.topic[name]){
+    if(this.topics[name]){
       return
     }
 
     debug('loadTopic', name, 'useNative =',this.useNative)
     let dt = new DeltaTime().start()
     
-    "use strict"
+    //"use strict"
     let topic=null
 
     let TopicClass = null
@@ -209,7 +218,7 @@ class ServiceRunnerNode {
     if(!this.useNative){
       var self={}
       const build = Hoek.reach(this.service, `compiled.topics.${name}`)
-      eval(build.code/*, build.map*/)
+      eval(build.code, build.map)
       TopicClass = self.Lib
     }
     else{
@@ -228,7 +237,11 @@ class ServiceRunnerNode {
 
     this.topics[name] = topic
 
+    const routablePath = Path.join(this.prefix, Path.normalize(name))
 
+    let route = this.topicsRouter.add(name, routablePath/*, this.topicHandler(topic)*/)
+
+    route.data = topic
 
     dt.end()
     debug('loaded topic',name,'in',dt.deltaMs,'ms')
@@ -386,6 +399,42 @@ class ServiceRunnerNode {
     }
   }
 
+  async getTopic(path){
+    debug('looking up route', path)
+
+    let p = new Promise(async (resolve,reject)=>{
+
+      let route = await this.topicsRouter.route(path, (event)=>{
+
+        //debug(event)
+        //debug('topic route callback')
+
+
+        if(!event.route){
+          debug('no such topic', path)
+          //reject('no such topic')
+          resolve(null)
+        } else {
+          debug('found route', event.route.name)
+        }
+
+        return resolve({ route: event.route, topic: event.route.data, arguments: event.arguments })
+
+      })
+
+    })
+
+    return await p
+  }
+
+  /*topicHandler(topic){
+    return async (event)=>{
+      debug(event)
+      debug('topic handler')
+
+      return "123"
+    }
+  }*/
 
   endpointHandler(endpoint){
     return async (event)=>{

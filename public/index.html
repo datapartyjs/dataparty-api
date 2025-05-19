@@ -1,0 +1,297 @@
+<html>
+<head>
+  <script src="dist/dataparty-browser.js"></script>
+  <script src="node_modules/argon2-browser/dist/argon2-bundled.min.js"></script>
+
+  <link href="node_modules/jsoneditor/dist/jsoneditor.min.css" rel="stylesheet" type="text/css">
+  <script src="node_modules/jsoneditor/dist/jsoneditor.min.js"></script>
+
+
+  <title>dataparty-api</title>
+</head>
+
+<body>
+
+  <div>Status: <span id="status">undefined</span></div>
+
+  <div><button hidden id="lockBtn" onclick="lockNow()">Lock</button></div>
+
+  <form id="loginUi" hidden onsubmit="onLogin(event)">
+    <button id="unlockBtn">unlock</button>
+    <input type="password" id="login-password" placeholder="enter password to unlock">
+  </form>
+
+  <form id="setupUi" hidden onsubmit="onSetPassword(event)">
+    Enter a password to create secure config:
+    <br>
+    <div id="setupErrorUi" hidden><font color='red' id='setupErrorDetails'></font><br></div>
+    <input type="password" id="setup-password1" placeholder="password">
+    <input type="password" id="setup-password2" placeholder="password again">
+    <button type="submit" id="setupSaveBtn" onclick="onSetPassword(event)">save</button>
+  </form>
+  
+  <div>
+    <textarea id="logs" rows="10" cols="70"></textarea>
+  </div>
+
+  <div id="configUi">
+    config
+    <div id="localstorage-editor" style="width: 50vw; height: 25vh;"></div>
+  </div>
+
+
+  <div id="secureConfigUi">
+    secure config
+    <button id="saveBtn" onclick="saveChanges()">save</button>
+    <div id="secure-config-editor" style="width: 50vw; height: 25vh;"></div>
+  </div>
+
+  <!-- <div>
+    identity
+    <span id="identity"></span>
+  </div> -->
+
+
+
+
+<script>
+
+const defaultConfig = {
+  your: {
+    default: {
+      settings: 'here'
+    }
+  }
+}
+
+let localConfig
+let secureConfig
+
+let log = ''
+
+document.getElementById('logs').textContent = log
+document.getElementById('login-password').value = null
+
+document.getElementById('configUi').hidden = true
+document.getElementById('secureConfigUi').hidden = true
+
+let configEditor1
+let configEditor2
+
+function debug(text){
+  log += text + '\n'
+
+  document.getElementById('logs').textContent = log
+
+  console.log(text)
+}
+
+function setStatus(value){
+
+  debug('status: '+value)
+
+  document.getElementById('status').textContent = value
+
+}
+
+async function lockNow(){
+  await secureConfig.lock()
+}
+
+function onReady(){
+  setStatus('ready')
+}
+
+function onLocked(){
+  setStatus('locked')
+  document.getElementById('loginUi').hidden = false
+  document.getElementById('lockBtn').hidden = true
+}
+
+function onTimeout(){ setStatus('timeout') }
+
+
+
+async function onBlocked(reason) {
+
+  document.getElementById('configUi').hidden = true
+  document.getElementById('secureConfigUi').hidden = true
+
+  if( !await secureConfig.isInitialized() ){ 
+    
+    document.getElementById('loginUi').hidden = true
+    document.getElementById('lockBtn').hidden = true
+
+
+    return
+  }
+
+  document.getElementById('loginUi').hidden = false
+  document.getElementById('lockBtn').hidden = true
+
+  setStatus('blocked - '+reason)
+
+
+}
+
+async function onUnlocked( ){
+  setStatus('unlocked')
+  document.getElementById('loginUi').hidden = true
+  document.getElementById('lockBtn').hidden = false
+  
+  document.getElementById('configUi').hidden = false
+  document.getElementById('secureConfigUi').hidden = false
+
+  const configUi1 = document.getElementById("localstorage-editor")
+  const configUi2 = document.getElementById('secure-config-editor')
+  const options = {}
+  configEditor1 = new JSONEditor(configUi1, options)
+  configEditor2 = new JSONEditor(configUi2, {
+    onChange: ()=>{
+      debug('json changed')
+    }
+  })
+
+
+  configEditor1.set(await localConfig.readAll())
+  configEditor2.set(await secureConfig.readAll())
+}
+
+async function saveChanges(){
+  const data = configEditor2.get()
+  debug('writing user changes')
+  console.log(data)
+  await secureConfig.writeAll(data)
+}
+
+function onSetupRequired(){
+  setStatus('setup-required')
+  document.getElementById('setupUi').hidden = false
+}
+
+async function onLogin(e){
+  e.preventDefault()
+  const pwd = document.getElementById('login-password')
+
+  const pwdValue = pwd.value
+
+  document.getElementById('login-password').value = null
+
+  debug('login - unlocking ...')
+
+  try{
+    await secureConfig.unlock(pwdValue)
+  }
+  catch(err){
+    debug(err)
+    
+    setStatus('login failed')
+
+  }
+
+}
+
+async function onSetPassword(e){
+  e.preventDefault()
+
+  const pwd1 = document.getElementById('setup-password1')
+  const pwd2 = document.getElementById('setup-password2')
+
+
+  if(pwd1.value != pwd2.value){
+    document.getElementById('setupErrorUi').hidden = false
+    document.getElementById('setupErrorDetails').textContent = 'Passwords do not match'
+    debug('WARNING - password mismatch')
+    return
+  }
+
+  document.getElementById('setupErrorUi').hidden = true
+  debug('passwords match')
+
+  let userConfig = {
+    created: (new Date()).toISOString(),
+    ...defaultConfig
+  }
+
+  debug('setting password ...')
+
+  document.getElementById('setupUi').hidden = true
+
+  await secureConfig.setPassword(pwd1.value, userConfig)
+
+  debug('password set')
+
+  debug('unlocking ...')
+
+  await secureConfig.unlock(pwd1.value)
+
+  debug('unlocked')
+}
+
+async function onConfigSaved(){
+  debug('localStorage changed')
+
+  configEditor1.set(await localConfig.readAll())
+  configEditor2.set(await secureConfig.readAll())
+}
+
+window.addEventListener('storage', async (e)=>{
+  debug('storage event'+e)
+  console.log(e)
+
+  configEditor1.set(await localConfig.readAll())
+  configEditor2.set(await secureConfig.readAll())
+})
+
+
+async function onSecureSaved(){
+  configEditor1.set(await localConfig.readAll())
+  configEditor2.set(await secureConfig.readAll())
+}
+
+async function init(){
+
+  localConfig = new Dataparty.Config.LocalStorageConfig({
+    basePath:'dataparty-app-demo',
+  })
+
+  localConfig.on('save', onConfigSaved)
+
+
+  secureConfig = new Dataparty.Config.SecureConfig({
+      config: localConfig,
+      timeoutMs: 60*1000,
+      argon: argon2
+  })
+
+  secureConfig.on('save', onSecureSaved)
+
+  secureConfig.on('ready', onReady)
+  secureConfig.on('timeout', onTimeout)
+  secureConfig.on('blocked', onBlocked)
+  secureConfig.on('locked', onLocked)
+  secureConfig.on('unlocked', onUnlocked)
+  secureConfig.on('setup-required', onSetupRequired)
+
+  debug('starting')
+
+  await secureConfig.start()
+
+  debug('wait for startup')
+
+  await secureConfig.waitForUnlocked('startup')
+
+  debug('wait over')
+
+}
+
+init().catch((err)=>{
+  console.error('crashed', err)
+})
+
+
+</script>
+
+</body>
+
+</html>

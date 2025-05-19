@@ -20,6 +20,7 @@ class LocalTopicHost {
     debug('constructor')
     this.nodesByUuid = new Map()
     this.topicsByPath = new Map()
+    this.party = null
   }
 
   getTopic(path, create=true){

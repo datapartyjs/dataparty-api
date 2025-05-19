@@ -3,15 +3,10 @@ const debug = require('debug')('dataparty.service.IAcl')
 module.exports = class ITopic {
 
   /**
-   * Interface class for supporting `tasker` tasks in dataparty.
-   * To add a task to dataparty service extend this class and implement
-   * the `Name`, `Description` and `Config` members.
+   * Interface class for Topics
    * 
-   * @interface module:Service.ITask
+   * @interface module:Service.ITopic
    * @link module:Service
-   * @see https://github.com/datapartyjs/tasker
-   * @extends {tasker.Task}
-   * @param {Object} options Options to pass to `tasker.Task(options)`
    */
   constructor({context}){
     this.context = {
@@ -36,15 +31,15 @@ module.exports = class ITopic {
     throw new Error('not implemented')
   }
 
-  static async canAdvertise(party, ){
+  async canAdvertise(identity, args){
     throw new Error('not implemented')
   }
 
-  static async canPublish(){
+  async canPublish(identity, args){
     throw new Error('not implemented')
   }
 
-  static async canSubscribe(){
+  async canSubscribe(identity, args){
     throw new Error('not implemented')
   }
 
@@ -63,8 +58,7 @@ module.exports = class ITopic {
   static get info(){
     return {
       Name: this.Name,
-      Description: this.Description,
-      Config: this.Config
+      Description: this.Description
     }
   }
 }

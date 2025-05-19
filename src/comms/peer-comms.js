@@ -262,8 +262,25 @@ class PeerComms extends ISocketComms {
     } else if (op.op === 'advertise' && this.state === PeerComms.STATES.AUTHED) {
 
       if(this.party.topics){
-        await this.party.topics.advertise(this, op.input.topic)
-        op.setState(HostOp.STATES.Finished_Success)
+
+        let topicAndArgs = await this.party.hostRunner.getTopic(op.input.topic)
+
+        debug('advertise', op.input.topic)
+        
+        debug(topicAndArgs)
+
+        if(!topicAndArgs){
+          op.setState(HostOp.STATES.Finished_Fail)
+        } else {
+          let can = await topicAndArgs.topic.canAdvertise(this.remoteIdentity, topicAndArgs.arguments)
+
+          if(!can){
+            op.setState(HostOp.STATES.Finished_Permission_Denied)
+          } else {
+            await this.party.topics.advertise(this, op.input.topic)
+            op.setState(HostOp.STATES.Finished_Success)
+          }
+        }
       }
       else{
         op.setState(HostOp.STATES.Finished_Fail)
@@ -272,8 +289,25 @@ class PeerComms extends ISocketComms {
     } else if (op.op === 'subscribe' && this.state === PeerComms.STATES.AUTHED) {
 
       if(this.party.topics){
-        await  this.party.topics.subscribe.bind(this.party.topics)(this, op.input.topic)
-        op.setState(HostOp.STATES.Finished_Success)
+
+        let topicAndArgs = await this.party.hostRunner.getTopic(op.input.topic)
+
+        debug('subscribe', op.input.topic)
+        
+        debug(topicAndArgs)
+
+        if(!topicAndArgs){
+          op.setState(HostOp.STATES.Finished_Fail)
+        } else {
+          let can = await topicAndArgs.topic.canSubscribe(this.remoteIdentity, topicAndArgs.arguments)
+
+          if(!can){
+            op.setState(HostOp.STATES.Finished_Permission_Denied)
+          } else {
+            await  this.party.topics.subscribe.bind(this.party.topics)(this, op.input.topic)
+            op.setState(HostOp.STATES.Finished_Success)
+          }
+        }
       }
       else{
         op.setState(HostOp.STATES.Finished_Fail)
@@ -292,8 +326,24 @@ class PeerComms extends ISocketComms {
     } else if (op.op === 'publish' && this.state === PeerComms.STATES.AUTHED) {
 
       if(this.party.topics){
-        await this.party.topics.publish(this, op.input.topic, op.input.msg)
-        op.setState(HostOp.STATES.Finished_Success)
+
+        let topicAndArgs = await this.party.hostRunner.getTopic(op.input.topic)
+
+        debug('publish', op.input.topic)
+
+        if(!topicAndArgs){
+          op.setState(HostOp.STATES.Finished_Fail)
+        } else {
+          let can = await topicAndArgs.topic.canPublish(this.remoteIdentity, topicAndArgs.arguments)
+
+          if(!can){
+            op.setState(HostOp.STATES.Finished_Permission_Denied)
+          } else {
+            await this.party.topics.publish(this, op.input.topic, op.input.msg)
+            op.setState(HostOp.STATES.Finished_Success)
+          }
+        }
+
       }
       else{
         op.setState(HostOp.STATES.Finished_Fail)

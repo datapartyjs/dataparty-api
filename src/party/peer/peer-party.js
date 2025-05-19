@@ -43,6 +43,10 @@ class PeerParty extends IParty {
       this.hostParty = hostParty
       this.hostRunner = hostRunner
       this.topics = hostParty.topics || new LocalTopicHost()
+
+      if(!this.topics.party){
+        this.topics.party = this
+      }
     }
   }
 

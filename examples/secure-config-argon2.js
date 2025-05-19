@@ -12,6 +12,9 @@ const HELP_INFO = `
   get
   set
   lock
+  unlock
+  id
+  exit
 `
 
 async function main(){
@@ -25,7 +28,7 @@ async function main(){
 
     secureConfig = new Dataparty.Config.SecureConfig({
         config: jsonConfig,
-        timeoutMs: 15*1000,
+        timeoutMs: 60*1000,
         argon: argon2
     })
 
@@ -61,7 +64,7 @@ async function main(){
     secureConfig.on('ready', async ()=>{ 
         console.log('ready')
 
-        console.log('config', await secureConfig.readAll())
+        //console.log('config', await secureConfig.readAll())
     })
 
     let blocked = false
@@ -153,7 +156,7 @@ async function main(){
 
     console.log('wait over')
 
-    console.log('main config', await secureConfig.readAll())
+    //console.log('main config', await secureConfig.readAll())
 
     while(1){
 
@@ -187,6 +190,9 @@ async function main(){
                     await secureConfig.write(parts[1], parts[2])
                     console.log(parts[1], '=', parts[2])
                     break
+                case 'id':
+                   console.log(secureConfig.identity.toMini())
+                   break
                 case 'quit':
                 case 'exit':
                     process.exit(0)

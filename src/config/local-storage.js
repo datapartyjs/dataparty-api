@@ -29,6 +29,8 @@ class LocalStorageConfig extends IConfig {
 
   async clear () {
     localStorage.setItem(this.basePath, JSON.stringify({}))
+    this.emit('clear')
+    this.emit('save')
   }
 
   async readAll(){
@@ -57,6 +59,8 @@ class LocalStorageConfig extends IConfig {
 
     localStorage.setItem(this.basePath, JSON.stringify(data))
 
+    this.emit('write')
+    this.emit('save')
     return
   }
 
@@ -66,6 +70,7 @@ class LocalStorageConfig extends IConfig {
   }
 
   async save(){
+    this.emit('save')
     return
   }
 }
