@@ -1,6 +1,6 @@
 const CORS = require('cors')
 const {URL} = require('url')
-const mdns = require('mdns')
+//const mdns = require('mdns')
 const http = require('http')
 const https = require('https')
 const morgan = require('morgan')
@@ -58,7 +58,7 @@ class ServiceHost {
     wsEnabled = true,
     wsPort = null,
     wsUpgradePath = '/ws',
-    mdnsEnabled = true,
+    mdnsEnabled = false,
     runner
   }={}){
 
