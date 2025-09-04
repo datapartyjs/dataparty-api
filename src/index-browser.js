@@ -20,7 +20,8 @@ let lib = {
   Comms,
   Config,
   ...Party,
-  ...Topics
+  ...Topics,
+  ...Service
 }
 
 
