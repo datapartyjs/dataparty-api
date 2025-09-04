@@ -11,14 +11,9 @@ exports.IEndpoint= require('./iendpoint')
 exports.IMiddleware= require('./imiddleware')
 exports.ITask = require('./itask')
 exports.ITopic = require('./itopic')
-exports.ServiceHost= require('./service-host')
 exports.RunnerRouter= require('./runner-router')
-exports.ServiceBuilder= require('./service-builder')
-exports.ServiceRunner= require('./service-runner')
 exports.ServiceRunnerNode= require('./service-runner-node')
-exports.EndpointRunner= require('./endpoint-runner')
 exports.EndpointContext= require('./endpoint-context')
-exports.MiddlewareRunner= require('./middleware-runner')
 
 exports.middleware = {
   pre: {
