@@ -21,6 +21,9 @@ class RTCSocketComms extends PeerComms {
     }
   }
 
+  static get SimplePeer(){
+    return SimplePeer
+  }
 
   async socketInit(){
     debug('init')
