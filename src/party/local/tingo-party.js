@@ -24,6 +24,7 @@ class TingoParty extends IParty {
   constructor ({path, qbOptions, tingoOptions, ...options}) {
     super(options)
 
+    this.dbStarted = false
     this.db = new TingoDb({
       path, factory: this.factory,
       tingoOptions
@@ -45,7 +46,10 @@ class TingoParty extends IParty {
    */
   async start(){
     await super.start()
-    await this.db.start()
+    if(!this.dbStarted){
+      await this.db.start()
+      this.dbStarted = true
+    }
   }
 
 

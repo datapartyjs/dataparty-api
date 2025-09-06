@@ -41,7 +41,7 @@ module.exports = class LokiCache extends EventEmitter {
 
     var found = collection.findOne({'$meta.id': {'$eq': id}})
 
-    debug(found)
+    debug('removing found', found)
     if(found){ 
     
       try{
@@ -52,7 +52,7 @@ module.exports = class LokiCache extends EventEmitter {
         collection.findAndRemove({'$meta.id': id})
       }
 
-      debug('remove found', found)
+      debug('removed found', found)
 
       this._emitChange(found, 'remove')
     }
@@ -104,6 +104,8 @@ module.exports = class LokiCache extends EventEmitter {
 
         // check for cached version of message
         const cachedMsg = collection.findOne({'$meta.id': {'$eq': id}})
+
+        debug('cachedMsg', cachedMsg)
 
         // if backend set error or removed flag invalidate cache
         if (error || removed) {

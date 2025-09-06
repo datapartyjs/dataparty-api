@@ -31,6 +31,8 @@ class LokiParty extends IParty {
   constructor ({path, dbAdapter, qbOptions, lokiOptions, ...options}) {
     super(options)
 
+    this.dbStarted = false
+
     this.db = new LokiDb({
       dbAdapter,
       path, factory: this.factory,
@@ -54,7 +56,11 @@ class LokiParty extends IParty {
    */
   async start(){
     await super.start()
-    await this.db.start()
+
+    if(!this.dbStarted){
+      await this.db.start()
+      this.dbStarted = true
+    }
   }
 
   static get Loki(){

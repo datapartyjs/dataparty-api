@@ -27,6 +27,7 @@ class ZangoParty extends IParty {
   constructor ({dbname, qbOptions, ...options}) {
     super(options)
 
+    this.dbStarted = false
     this.db = new ZangoDb({
       dbname, factory: this.factory,
     })
@@ -48,7 +49,10 @@ class ZangoParty extends IParty {
    */
   async start(){
     await super.start()
-    await this.db.start()
+    if(!this.dbStarted){
+      await this.db.start()
+      this.dbStarted = true
+    }
   }
 
 
