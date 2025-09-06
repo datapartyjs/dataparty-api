@@ -23,7 +23,7 @@ async function main(){
   let config = new Dataparty.Config.MemoryConfig({
     basePath:'demo',
     cloud: {
-      uri: 'http://10.36.158.251:4000'
+      uri: 'http://10.36.158.252:4000'
     }
   })
 
@@ -35,7 +35,7 @@ async function main(){
 
   let party = new Dataparty.PeerParty({
     comms: new Dataparty.Comms.WebsocketComms({
-      uri:'ws://10.36.158.251:4000/ws',
+      uri:'ws://10.36.158.252:4000/ws',
       discoverRemoteIdentity: false,
       remoteIdentity: remoteIdentity,
       session: Math.random().toString(36).slice(2)

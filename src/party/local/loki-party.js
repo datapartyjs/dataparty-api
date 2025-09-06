@@ -57,6 +57,9 @@ class LokiParty extends IParty {
     await this.db.start()
   }
 
+  static get Loki(){
+    return LokiDb.Loki
+  }
 
   /**
    * @method  module:Party.LokiParty.handleCall
