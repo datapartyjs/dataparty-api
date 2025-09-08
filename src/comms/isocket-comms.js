@@ -7,9 +7,7 @@ const {Message, Routines} = require('@dataparty/crypto')
 
 const AuthOp = require('./op/auth-op')
 const RosShim = require('./ros-shim')
-//const IParty = require('../party/iparty')
 
-const {Routines} = require('@dataparty/crypto')
 
 
 /**
