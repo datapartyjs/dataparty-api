@@ -27,15 +27,19 @@ module.exports = class ServiceIdentity extends IEndpoint {
           id: Joi.string(),
           key: {
             type: Joi.alternatives().try(
-              Joi.string().valid('ecdsa'),
-              Joi.string().valid('nacl')
+              Joi.string().valid('nacl,nacl,ml_kem768,ml_dsa65,slh_dsa_sha2_128f')
             ),
+            hash: Joi.string(),
             public: Joi.object().keys({
               box: Joi.string(),
-              sign: Joi.string()
+              sign: Joi.string(),
+              pqkem: Joi.string(),
+              pqsign_ml: Joi.string(),
+              pqsign_slh: Joi.string()
             }),
             private: Joi.any().strip()
-          }
+          },
+          seed: Joi.any().strip()
         })
       }
     }

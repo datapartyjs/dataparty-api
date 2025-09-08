@@ -1,3 +1,4 @@
+const fs = require('fs')
 const Path = require('path')
 const debug = require('debug')('test.server-db')
 const Dataparty = require('../src')
@@ -7,18 +8,21 @@ class ExampleService extends Dataparty.IService {
   constructor(opts){
     super(opts)
 
-    this.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
-    this.addMiddleware(Dataparty.middleware_paths.pre.validate)
+    let builder = new Dataparty.ServiceBuilder(this)
 
-    this.addMiddleware(Dataparty.middleware_paths.post.validate)
-    this.addMiddleware(Dataparty.middleware_paths.post.encrypt)
+    builder.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
+    builder.addMiddleware(Dataparty.middleware_paths.pre.validate)
 
-    this.addEndpoint(Dataparty.endpoint_paths.echo)
-    this.addEndpoint(Dataparty.endpoint_paths.secureecho)
-    this.addEndpoint(Dataparty.endpoint_paths.identity)
-    this.addEndpoint(Dataparty.endpoint_paths.version)
+    builder.addMiddleware(Dataparty.middleware_paths.post.validate)
+    builder.addMiddleware(Dataparty.middleware_paths.post.encrypt)
 
-    this.addSchema(Path.join(__dirname, './party/schema/basic_types.js'))
+    builder.addEndpoint(Dataparty.endpoint_paths.echo)
+    builder.addEndpoint(Dataparty.endpoint_paths.secureecho)
+    builder.addEndpoint(Dataparty.endpoint_paths.identity)
+    builder.addEndpoint(Dataparty.endpoint_paths.version)
+
+    builder.addSchema(Path.join(__dirname, './party/schema/basic_types.js'))
+    builder.addTopic(Path.join(__dirname, './party/topics/time-topic.js'))
   }
 
 }
@@ -31,7 +35,8 @@ async function main(){
 
   
   const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
-  const build = await service.compile(Path.join(__dirname,'/dataparty'), true)
+  const builder = new Dataparty.ServiceBuilder(service)
+  const build = await builder.compile(Path.join(__dirname,'/dataparty'), true)
   
   const serviceName = build.package.name
   const basePath = '/data/dataparty/'
@@ -65,12 +70,17 @@ async function main(){
   
   
   const runnerRouter = new Dataparty.RunnerRouter(runner)
+
+  const ssl_key  = fs.readFileSync( Path.join(__dirname,'key.pem'), 'utf8')
+  const ssl_cert = fs.readFileSync( Path.join(__dirname,'cert.pem'), 'utf8')
   
   
   const host = new Dataparty.ServiceHost({
+    listenUri: 'http://0.0.0.0:4000',
     runner: runnerRouter,
     trust_proxy: true,
     wsEnabled: true,
+    //ssl_key, ssl_cert
   })
   
   debug(runner.party.identity)

@@ -107,6 +107,7 @@ class ISocketComms extends EventEmitter {
                     }
                     sender = this.remoteIdentity
                 }
+                debug(`sender from - ${msg.from}`)
                 debug(`senderPub - ${senderPub}`)
       
                 if(senderPub.box != sender.key.public.box || senderPub.sign != sender.key.public.sign){

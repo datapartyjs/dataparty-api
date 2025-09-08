@@ -39,9 +39,9 @@ module.exports = class LokiCache extends EventEmitter {
       '$meta.id': id
     }).remove()
 
-    var found = collection.findOne({'$meta.id': id})
+    var found = collection.findOne({'$meta.id': {'$eq': id}})
 
-    debug(found)
+    debug('removing found', found)
     if(found){ 
     
       try{
@@ -52,7 +52,7 @@ module.exports = class LokiCache extends EventEmitter {
         collection.findAndRemove({'$meta.id': id})
       }
 
-      debug('remove found', found)
+      debug('removed found', found)
 
       this._emitChange(found, 'remove')
     }
@@ -71,7 +71,7 @@ module.exports = class LokiCache extends EventEmitter {
   }
 
   findById(type, id){
-    const cachedMsg = this.db.getCollection(type).findOne({ '$meta.id': id })
+    const cachedMsg = this.db.getCollection(type).findOne({'$meta.id': {'$eq': id}})
 
     if(cachedMsg){
       delete cachedMsg.$loki
@@ -103,7 +103,9 @@ module.exports = class LokiCache extends EventEmitter {
         const collection = this.db.getCollection(type)
 
         // check for cached version of message
-        const cachedMsg = collection.findOne({ '$meta.id': id })
+        const cachedMsg = collection.findOne({'$meta.id': {'$eq': id}})
+
+        debug('cachedMsg', cachedMsg)
 
         // if backend set error or removed flag invalidate cache
         if (error || removed) {
@@ -111,10 +113,10 @@ module.exports = class LokiCache extends EventEmitter {
 
           if (cachedMsg) {
             try{
-              //collection.remove(cachedMsg)
-              collection.findAndRemove({
-                '$meta.id': id,
-              })
+              collection.remove(cachedMsg)
+              //collection.findAndRemove({
+              //  '$meta.id': id,
+              //})
             }
             catch(err){
               debug('WARN', err)
@@ -131,9 +133,10 @@ module.exports = class LokiCache extends EventEmitter {
 
           // check if msg is already in cache
           if (cachedMsg) {
-            collection.findAndRemove({
-              '$meta.id': id,
-            })
+            collection.remove(cachedMsg)
+            //collection.findAndRemove({
+            //  '$meta.id': id,
+            //})
           }
 
           // clone msg on insert - cache should follow backend
@@ -170,7 +173,7 @@ module.exports = class LokiCache extends EventEmitter {
           // get msg by id & strip loki metadata
           const cachedMsg = Object.assign(
             {},
-            collection.findOne({ '$meta.id': id})
+            collection.findOne({'$meta.id': {'$eq': id}})
           )
           delete cachedMsg.$loki
           delete cachedMsg.meta

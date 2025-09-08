@@ -11,16 +11,19 @@ const PeerComms = require('./peer-comms')
  * @see https://en.wikipedia.org/wiki/WebRTC
  */
 class RTCSocketComms extends PeerComms {
-  constructor({remoteIdentity, host, party, wrtc, trickle = false, ...options}){
+  constructor({remoteIdentity, host, party, rtcOptions, trickle = false, ...options}){
     super({remoteIdentity, host, party, ...options})
 
     this.rtcSettings = {
-      wrtc,
       trickle,
-      initiator: host
+      initiator: host,
+      ...rtcOptions
     }
   }
 
+  static get SimplePeer(){
+    return SimplePeer
+  }
 
   async socketInit(){
     debug('init')

@@ -38,8 +38,16 @@ module.exports = class LokiDb extends IDb {
     this.useUuid = (useUuid==undefined) ? true : useUuid
   }
 
+  static get Loki(){
+    return Loki
+  }
+
   static get LokiLocalStorageAdapter(){
     return Loki.LokiLocalStorageAdapter
+  }
+
+  static get LokiMemoryAdapter(){
+    return Loki.LokiMemoryAdapter
   }
 
 
@@ -306,7 +314,7 @@ module.exports = class LokiDb extends IDb {
 
       debug('its good, updating', dbDoc)
 
-      let old = collection.findOne( {'$meta.id': dbDoc._id})
+      let old = collection.findOne( {'$meta.id': {'$eq': dbDoc._id}})
       
       let mergedDoc = {...old, ...dbDoc}
 

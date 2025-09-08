@@ -176,7 +176,7 @@ const buildQueryDoc = (node, cursor) => {
     // -> { 'param.path': value }
     case 'equals':
       cursor.push({
-        [node.param.join('.')]: node.value
+        [node.param.join('.')]: {'$eq':  node.value}
       })
       return
 

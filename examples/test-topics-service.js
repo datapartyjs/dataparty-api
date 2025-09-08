@@ -1,14 +1,8 @@
-<html>
-<head>
-<script src="dist/dataparty-browser.js">
+const Path = require('path')
+const debug = require('debug')('test.topics-service')
+const Dataparty = require('../src')
+const dataparty_crypto = require('@dataparty/crypto')
 
-</script>
-</head>
-
-<body>
-
-
-<script>
 
 function makeid(length) {
     let result = '';
@@ -23,21 +17,15 @@ function makeid(length) {
 }
 
 
-async function init(){
 
-  config = new Dataparty.Config.MemoryConfig({
+async function main(){
+
+  let config = new Dataparty.Config.MemoryConfig({
     basePath:'demo',
     cloud: {
-      uri: 'https://10.36.158.251:4000'
+      uri: 'http://10.36.158.252:4000'
     }
   })
-
-  /*config = new Dataparty.Config.LocalStorageConfig({
-    basePath:'demo',
-    cloud: {
-      uri: 'http://172.16.3.1:4001'
-    }
-  })*/
 
 
   const remoteIdentity = await Dataparty.Comms.RestComms.HttpGet(  await config.read('cloud.uri') + '/identity')
@@ -47,7 +35,7 @@ async function init(){
 
   let party = new Dataparty.PeerParty({
     comms: new Dataparty.Comms.WebsocketComms({
-      uri:'wss://10.36.158.251:4000/ws',
+      uri:'ws://10.36.158.252:4000/ws',
       discoverRemoteIdentity: false,
       remoteIdentity: remoteIdentity,
       session: Math.random().toString(36).slice(2)
@@ -55,7 +43,7 @@ async function init(){
     config: config
   })
 
-  window.party = party
+  //window.party = party
   await party.start()
 
   console.log('started')
@@ -66,9 +54,10 @@ async function init(){
 
   timeTopic = new party.ROSLIB.Topic({
     ros : party.comms.ros,
-    name : '/time',
+    name : '/time/abc123',
     messageType: 'number'
   })
+
 
   timeTopic.subscribe((msg)=>{
     console.log(timeTopic.name, msg)
@@ -100,16 +89,14 @@ async function init(){
 
   }
 
-  window.onTimeout = onTimeout
+  //window.onTimeout = onTimeout
 
   onTimeout()
+
 }
 
-init()
 
 
-</script>
-
-</body>
-
-</html>
+main().catch(err=>{
+  console.error(err)
+})

@@ -8,18 +8,19 @@ class ExampleService extends Dataparty.IService {
   constructor(opts){
     super(opts)
 
-    this.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
-    this.addMiddleware(Dataparty.middleware_paths.pre.validate)
+    let builder = new Dataparty.ServiceBuilder(this)
+    builder.addMiddleware(Dataparty.middleware_paths.pre.decrypt)
+    builder.addMiddleware(Dataparty.middleware_paths.pre.validate)
 
-    this.addMiddleware(Dataparty.middleware_paths.post.validate)
-    this.addMiddleware(Dataparty.middleware_paths.post.encrypt)
+    builder.addMiddleware(Dataparty.middleware_paths.post.validate)
+    builder.addMiddleware(Dataparty.middleware_paths.post.encrypt)
 
-    this.addEndpoint(Dataparty.endpoint_paths.echo)
-    this.addEndpoint(Dataparty.endpoint_paths.secureecho)
-    this.addEndpoint(Dataparty.endpoint_paths.identity)
-    this.addEndpoint(Dataparty.endpoint_paths.version)
+    builder.addEndpoint(Dataparty.endpoint_paths.echo)
+    builder.addEndpoint(Dataparty.endpoint_paths.secureecho)
+    builder.addEndpoint(Dataparty.endpoint_paths.identity)
+    builder.addEndpoint(Dataparty.endpoint_paths.version)
 
-    this.addSchema(Path.join(__dirname, './party/schema/user.js'))
+    builder.addSchema(Path.join(__dirname, './party/schema/user.js'))
   }
 
 }
@@ -31,7 +32,8 @@ async function main(){
 
   const service = new ExampleService({ name: '@dataparty/example', version: '0.0.1' })
 
-  const build = await service.compile(Path.join(__dirname,'/dataparty'), true)
+  const builder = new Dataparty.ServiceBuilder(service)
+  const build = await builder.compile(Path.join(__dirname,'/dataparty'), true)
 
   debug('built', Object.keys(build))
 

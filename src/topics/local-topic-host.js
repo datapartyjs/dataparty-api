@@ -20,6 +20,7 @@ class LocalTopicHost {
     debug('constructor')
     this.nodesByUuid = new Map()
     this.topicsByPath = new Map()
+    this.party = null
   }
 
   getTopic(path, create=true){
@@ -134,12 +135,15 @@ class LocalTopicHost {
     await topic.publish(data, sender)
   }
 
-  async publishInternal(path, data){
-    const topic = this.getTopic(path, false)
+  async publishInternal(path, data, create=false){
+    const topic = this.getTopic(path, create)
 
     debug('publishInternal', path)
 
-    await topic.publish(data)
+    if(topic){
+      await topic.publish(data)
+    }
+
   }
 
   async destroyNode(peer){
