@@ -35,6 +35,7 @@ class ServiceRunnerNode {
     this.endpoint = {}
     this.tasks = {}
     this.topics = {}
+    this.auth = null
 
     this.prefix=prefix
     this.router = router
@@ -52,6 +53,8 @@ class ServiceRunnerNode {
     debug('starting tasks')
 
     this.started = true
+
+    await this.loadAuth()
 
     const taskMap = Hoek.reach(this.service, 'compiled.tasks')
     for(let name in taskMap){
@@ -91,6 +94,49 @@ class ServiceRunnerNode {
       await this.loadTopic(name)
     }
   }
+
+
+  async loadAuth(){
+    if(this.auth){ return }
+
+    debug('loadAuth', name, 'useNative =',this.useNative)
+
+    let dt = new DeltaTime().start()
+    
+
+    "use strict"
+    let authInstance=null
+
+    let AuthClass = null
+
+    if(!this.useNative){
+      var self={}
+      const build = Hoek.reach(this.service, `compiled.auth`)
+      eval(build.code/*, build.map*/)
+      AuthClass = self.Lib
+    }
+    else{
+      AuthClass = this.service.constructors.auth
+    }
+
+    authInstance = new AuthClass({
+      context:{
+        party: this.party,
+        serviceRunner: this
+      }
+    })
+
+
+    debug('auth info', AuthClass.info)
+
+    this.auth = authInstance
+
+
+    dt.end()
+    debug('loaded auth','in',dt.deltaMs,'ms')
+  }
+
+
 
   assertTaskIsValid(name){
     if(!this.tasks[name]){

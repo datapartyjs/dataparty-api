@@ -7,7 +7,9 @@ const {Message, Routines} = require('@dataparty/crypto')
 
 const AuthOp = require('./op/auth-op')
 const RosShim = require('./ros-shim')
-const IParty = require('../party/iparty')
+//const IParty = require('../party/iparty')
+
+const {Routines} = require('@dataparty/crypto')
 
 
 /**
@@ -37,6 +39,9 @@ class ISocketComms extends EventEmitter {
         this._opId = Math.round(Math.random()*65536)
 
         this.socket = undefined
+
+        //this.aesOffer = null
+        this.aesStream = null
 
         this._ros = undefined
     }
@@ -80,8 +85,10 @@ class ISocketComms extends EventEmitter {
         op.run().then((status)=>{
             debug(status)
             debug('authed')
-            this.emit('open')
+            //this.aesOffer = op.offer
+            this.aesStream = op.stream
             this.authed = true
+            this.emit('open')
         }).catch(error=>{
             this.authed = false
             debug('auth error', error)
@@ -89,40 +96,47 @@ class ISocketComms extends EventEmitter {
         })
     }
 
-    decrypt(reply, sender){
-        const replyObj = JSON.parse(reply.data)
-        let dataPromise = new Promise((resolve, reject)=>{
-            if(replyObj.enc && replyObj.sig){
-              let msg = new Message(replyObj)
-      
-              return resolve(msg.decrypt(this.party._identity).then(content=>{
-                const senderPub = Routines.extractPublicKeys(msg.enc)
-                debug('sender', sender, '\tdiscover', this.discoverRemoteIdentity)
-                if(this.discoverRemoteIdentity && !sender){
-                    debug('discovered remote identity', senderPub)
-                    this.remoteIdentity = {
-                        key: {
-                            public: senderPub
-                        }
-                    }
-                    sender = this.remoteIdentity
-                }
-                debug(`sender from - ${msg.from}`)
-                debug(`senderPub - ${senderPub}`)
-      
-                if(senderPub.box != sender.key.public.box || senderPub.sign != sender.key.public.sign){
-                  return Promise.reject('TRUST - reply is not from expected remote')
-                }
+    async decrypt(reply, sender){
+      if(this.aesStream){
+        debug('decrypting quantum aes')
 
-                debug('decrypted data')
-                return content
-              }))
-            }
-      
-            reject( Promise.reject('TRUST - reply is not encrypted') )
-          })
-      
-        return dataPromise
+        const contentBSON = await this.aesStream.decrypt( reply.data )
+        const content = Routines.BSON.parseObject(new Routines.BSON.BaseParser( contentBSON ))
+
+        return content
+
+      } else {
+        debug('decrypting classic')
+        const replyObj = JSON.parse(reply.data)
+  
+        if(replyObj.enc && replyObj.sig){
+          let msg = new Message(replyObj)
+  
+          let content = await msg.decrypt(this.party.privateIdentity())
+        
+          const senderPub = Routines.extractPublicKeys(msg.enc)
+          debug('sender', sender, '\tdiscover', this.discoverRemoteIdentity)
+          if(this.discoverRemoteIdentity && !sender){
+              debug('discovered remote identity', senderPub)
+              this.remoteIdentity = {
+                  key: {
+                      public: senderPub
+                  }
+              }
+              sender = this.remoteIdentity
+          }
+          debug(`sender from - ${msg.from}`)
+          debug(`senderPub - ${senderPub}`)
+  
+          if(senderPub.box != sender.key.public.box || senderPub.sign != sender.key.public.sign){
+            throw new Error('TRUST - reply is not from expected remote')
+          }
+  
+          debug('decrypted data')
+          return content
+        }
+      }
+
     }
 
     onmessage(message){
@@ -142,28 +156,37 @@ class ISocketComms extends EventEmitter {
         })
     }
 
-    send(input){
-        debug('send - ', typeof input, input)
+    async send(input){
+      debug('send - ', typeof input, input)
 
-        if(typeof input != 'object'){
-            input = JSON.parse(input)
-        }
+      if(typeof input != 'object'){
+        input = JSON.parse(input)
+      }
 
-        const content = new Message({msg: input})
+      let content = null
 
-        return content.encrypt(this.party._identity, this.remoteIdentity.key)
-            .then(JSON.stringify)
-            .then(this.socket.send.bind(this.socket))
+      if(this.aesStream){
+        debug('sending quantum aes')
+        const contentBSON = Routines.BSON.serializeBSONWithoutOptimiser( input )
+        content = await this.aesStream.encrypt( contentBSON )
+      } else {
 
+        debug('sending classic')
+        const msg = new Message({msg: input})
+        await msg.encrypt(this.party._identity, this.remoteIdentity.key)
+        content = JSON.stringify(msg)
+      }
+
+      await this.socket.send(content)
     }
 
     get ros(){
-        if(!this._ros){
-            this._ros = new RosShim(this)
-            this._ros.connect()
-        }
+      if(!this._ros){
+          this._ros = new RosShim(this)
+          this._ros.connect()
+      }
 
-        return this._ros
+      return this._ros
     }
 }
 

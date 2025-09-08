@@ -11,6 +11,7 @@ const debug = require('debug')('dataparty.service.ServiceBuilder')
 //const IService = require('../iservice')
 
 
+
 module.exports = class ServiceBuilder {
   constructor(service){
     this.service = service
@@ -46,6 +47,7 @@ module.exports = class ServiceBuilder {
       this.compileList('endpoints'),
       this.compileList('tasks'),
       this.compileList('topics'),
+      this.compileFile('auth'),
       this.compileSchemas()
     ])
 
@@ -68,6 +70,22 @@ module.exports = class ServiceBuilder {
 
   }
 
+  async compileFile(field, outputPath){
+
+    if(field == 'auth' && !this.service.sources[field]){
+      this.service.sources[field] = Path.join(__dirname, './iauth')
+    }
+
+    // Build file list
+    debug('compileFile',field)
+    const name = this.service.sources[field]
+    debug('\r', field, name)
+
+    const buildPath = !outputPath ? '' : Path.join(outputPath, field+'-'+name)
+    const build = await this.compileFileTo(this.service.sources[field], buildPath)
+
+    this.service.compiled[field] = build
+  }
 
   async compileList(field, outputPath){
     // Build file list
@@ -279,5 +297,22 @@ module.exports = class ServiceBuilder {
 
     this.service.sources.topics[name] = topic_path
     this.service.constructors.topics[name] = TopicClass
+  }
+
+  /**
+   * Add a `topic` implementation to the service
+   * @method module:Service.IService.addAuth
+   * @param {string} topic_path 
+   */
+  addAuth(auth_path){
+
+    debug('addTopic', auth_path)
+
+    const TopicClass = require(auth_path)
+
+    const name = TopicClass.Name
+
+    this.service.sources.auth = auth_path
+    this.service.constructors.auth = TopicClass
   }
 }
