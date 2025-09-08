@@ -311,7 +311,7 @@ class IParty {
   async decrypt(reply, expectedSender, expectClearTextReply = false){
     // if reply has ciphertext & sig attempt to decrypt
     if (reply.enc && reply.sig) {
-      const msg = new dataparty_crypto.Message()
+      const msg = new dataparty_crypto.Message({})
       msg.fromJSON(reply)
 
       const replyContent = await msg.decrypt(this._identity)
