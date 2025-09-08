@@ -38,7 +38,7 @@ module.exports = class Decrypt extends IMiddleware {
     context.debug('input', context.input, typeof context.input)
   
 
-    const msg = new Message()
+    const msg = new Message({})
     msg.fromJSON(context.input)
     context.debug('privateIdentity', context.party.privateIdentity.id)
 

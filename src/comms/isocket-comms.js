@@ -108,7 +108,7 @@ class ISocketComms extends EventEmitter {
         const replyObj = JSON.parse(reply.data)
   
         if(replyObj.enc && replyObj.sig){
-          let msg = new Message()
+          let msg = new Message({})
           msg.fromJSON(replyObj)
   
           let content = await msg.decrypt(this.party.privateIdentity())
