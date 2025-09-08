@@ -20,7 +20,8 @@ module.exports = class IAuth {
    * @member module:Service.ITask.Name
    */
   static get Name(){
-    throw new Error('not implemented')
+    return 'auth'
+    //throw new Error('not implemented')
   }
 
   /**
@@ -28,7 +29,8 @@ module.exports = class IAuth {
    * @member module:Service.ITask.Description
    */
   static get Description(){
-    throw new Error('not implemented')
+    return 'default auth'
+    //throw new Error('not implemented')
   }
 
   async lookupIdentity(identity){

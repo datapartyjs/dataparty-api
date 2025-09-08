@@ -48,7 +48,7 @@ module.exports = class IService {
       },
       tasks: {},
       topics: {},
-      auth: {}
+      auth: null
     }
 
     this.compiled = {

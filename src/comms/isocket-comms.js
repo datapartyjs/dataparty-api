@@ -108,7 +108,8 @@ class ISocketComms extends EventEmitter {
         const replyObj = JSON.parse(reply.data)
   
         if(replyObj.enc && replyObj.sig){
-          let msg = new Message(replyObj)
+          let msg = new Message()
+          msg.fromJSON(replyObj)
   
           let content = await msg.decrypt(this.party.privateIdentity())
         
@@ -172,7 +173,7 @@ class ISocketComms extends EventEmitter {
         debug('sending classic')
         const msg = new Message({msg: input})
         await msg.encrypt(this.party._identity, this.remoteIdentity.key)
-        content = JSON.stringify(msg)
+        content = JSON.stringify(msg.toJSON())
       }
 
       await this.socket.send(content)

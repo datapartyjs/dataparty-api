@@ -99,6 +99,7 @@ class ServiceRunnerNode {
   async loadAuth(){
     if(this.auth){ return }
 
+    let name = 'auth'
     debug('loadAuth', name, 'useNative =',this.useNative)
 
     let dt = new DeltaTime().start()
