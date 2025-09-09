@@ -37,7 +37,8 @@ module.exports = class Encrypt extends IMiddleware {
     const reply = new Message({msg: ctx.output})
     const sender = Identity.fromString(senderStr)
 
-    const payload = (await reply.encrypt(ctx.party.privateIdentity, sender.key)).toJSON()
+    await reply.encrypt(ctx.party.privateIdentity, sender.key)
+    const payload = reply.toJSON()
 
     ctx.debug('setting payload', payload)
     ctx.setOutput(payload)
