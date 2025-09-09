@@ -98,14 +98,15 @@ class ISocketComms extends EventEmitter {
       if(this.aesStream){
         debug('decrypting quantum aes')
         console.log(reply, typeof reply)
+        console.log(typeof reply.data)
 
-        let buf = reply
+        let buf = reply.data
 
         if(buf instanceof Blob){
-          debug('reply is a blob')
-          buf = await reply.arrayBuffer();
+          debug('reply.data is a blob')
+          buf = await reply.data.arrayBuffer();
         } else {
-          buf = reply.data
+          //buf = reply.data
         }
 
         const contentBSON = await this.aesStream.decrypt( new Uint8Array(buf) )
