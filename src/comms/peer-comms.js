@@ -1,3 +1,4 @@
+const {Routines} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.comms.peercomms')
 const uuidv4 = require('uuid/v4')
 const HttpMocks = require('node-mocks-http')
