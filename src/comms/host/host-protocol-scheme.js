@@ -23,7 +23,7 @@ const AUTH_OP = Joi.object().keys({
   offer: Joi.object().keys({
     sender: Joi.object().keys({
       id: Joi.string(),
-      keys: Joi.object().keys({
+      key: Joi.object().keys({
         type: Joi.string().required(),
         hash: Joi.string().required(),
         public: Joi.object().keys({
