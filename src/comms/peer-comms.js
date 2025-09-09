@@ -1,4 +1,4 @@
-const {Routines} = require('@dataparty/crypto')
+const {Routines, Identity} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.comms.peercomms')
 const uuidv4 = require('uuid/v4')
 const HttpMocks = require('node-mocks-http')
@@ -365,9 +365,9 @@ class PeerComms extends ISocketComms {
 
     const offerBSON = Routines.BSON.serializeBSONWithoutOptimiser( op.input.offer )
     const offer = {
-      sender: aesStreamOffer.sender,
-      pqCipherText: aesStreamOffer.pqCipherText,
-      streamNonce: aesStreamOffer.streamNonce
+      sender: new Identity(op.input.offer.sender),
+      pqCipherText: op.input.offer.pqCipherText,
+      streamNonce: op.input.offer.streamNonce
     }
 
     const signature = {
@@ -400,9 +400,11 @@ class PeerComms extends ISocketComms {
       debug('DENY - client not allowed - ', this.remoteIdentity)
     }
 
-    this.aesStream = this.party.privateIdentity.recoverStream(offer, true)
+    
     
     debug('ALLOW - allowing client - ', this.remoteIdentity)
+
+    this.aesStream = await this.party.privateIdentity.recoverStream(offer, true)
 
     clearTimeout(this._host_auth_timeout)
     this._host_auth_timeout = null

@@ -164,7 +164,7 @@ class ISocketComms extends EventEmitter {
 
       let content = null
 
-      if(this.aesStream){
+      if(this.aesStream && input.id.indexOf('auth') == -1){
         debug('sending quantum aes')
         const contentBSON = Routines.BSON.serializeBSONWithoutOptimiser( input )
         content = await this.aesStream.encrypt( contentBSON )
