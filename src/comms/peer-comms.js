@@ -376,31 +376,46 @@ class PeerComms extends ISocketComms {
       value: Routines.Utils.base64.decode( op.input.signature.value )
     }
 
-    const actor = await this.party.hostRunner.auth.lookupIdentity(offer.sender)
-    const verified = await Routines.verifyDataPQ(actor, signature, offerBSON)
-    
-    if(!verified){
-      throw new Error('DENY - auth op signature is not valid')
+    const computedHash = await Routines.hashKey( offer.sender.key )
+    debug('computed hash -', computedHash)
+    if(computedHash != offer.sender.key.hash){ throw new Error('DENY - sender key hash is not valid!') }
+
+    if(this.party.hostRunner){
+      const actor = await this.party.hostRunner.auth.lookupIdentity(offer.sender)
+      const verified = await Routines.verifyDataPQ(actor, signature, offerBSON)
+      
+      if(!verified){
+        throw new Error('DENY(hostRunner) - auth op signature is not valid')
+      }
+
+      if(this.discoverRemoteIdentity){ this.remoteIdentity = actor }
+      
+      const authorized = await this.party.hostRunner.auth.isSocketConnectionAllowed(actor)
+      if(!authorized){
+
+        clearTimeout(this._host_auth_timeout)
+        this._host_auth_timeout = null
+
+        this.authed = false
+        this.setState(PeerComms.STATES.SERVER_CLOSED)
+        op.setState(HostOp.STATES.Finished_Success)
+
+        await this.stop()
+
+        debug('DENY - client not allowed - ', this.remoteIdentity)
+      }
+    } else {
+      const actor = offer.sender
+      const verified = await Routines.verifyDataPQ(actor, signature, offerBSON)
+      
+      if(!verified){ throw new Error('DENY - auth op signature is not valid') }
+
+      if(this.discoverRemoteIdentity){
+        this.remoteIdentity = actor
+      } else if(this.remoteIdentity.key.hash != actor.key.hash){
+        throw new Error('DENY - auth op sender does not match expected remote')
+      }
     }
-
-    if(this.discoverRemoteIdentity){ this.remoteIdentity = actor }
-    
-    const authorized = await this.party.hostRunner.auth.isSocketConnectionAllowed(actor)
-    if(!authorized){
-
-      clearTimeout(this._host_auth_timeout)
-      this._host_auth_timeout = null
-
-      this.authed = false
-      this.setState(PeerComms.STATES.SERVER_CLOSED)
-      op.setState(HostOp.STATES.Finished_Success)
-
-      await this.stop()
-
-      debug('DENY - client not allowed - ', this.remoteIdentity)
-    }
-
-    
     
     debug('ALLOW - allowing client - ', this.remoteIdentity)
 
