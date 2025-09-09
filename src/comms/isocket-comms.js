@@ -111,7 +111,7 @@ class ISocketComms extends EventEmitter {
           let msg = new Message({})
           msg.fromJSON(replyObj)
   
-          let content = await msg.decrypt(this.party.privateIdentity())
+          let content = await msg.decrypt(this.party.privateIdentity)
         
           const senderPub = Routines.extractPublicKeys(msg.enc)
           debug('sender', sender, '\tdiscover', this.discoverRemoteIdentity)

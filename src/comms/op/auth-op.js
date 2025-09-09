@@ -13,7 +13,7 @@ class AuthOp extends SocketOp {
   }
 
   async run(){
-    const actor = this.socket.party.privateIdentity()
+    const actor = this.socket.party.privateIdentity
     const aesStreamOffer = await actor.createStream( this.socket.remoteIdentity )
 
     this.stream = aesStreamOffer.stream
