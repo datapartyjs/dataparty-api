@@ -97,8 +97,9 @@ class ISocketComms extends EventEmitter {
     async decrypt(reply, sender){
       if(this.aesStream){
         debug('decrypting quantum aes')
+        console.log(reply, typeof reply)
 
-        const contentBSON = await this.aesStream.decrypt( reply.data )
+        const contentBSON = await this.aesStream.decrypt( new Uint8Array(reply.data) )
         const content = Routines.BSON.parseObject(new Routines.BSON.BaseParser( contentBSON ))
 
         return content
