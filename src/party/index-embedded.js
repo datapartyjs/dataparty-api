@@ -7,11 +7,11 @@ const TingoParty = require('./local/tingo-party')
 const IDocument = require('./idocument')
 const DocumentFactory = require('./document-factory')
 const CloudDocument = require('./cloud/cloud-document')
-const P2PMatchMaker = require('./peer/p2p-match-maker')
+const MatchMakerClient = require('./peer/match-maker-client')
 
 module.exports = {
   IDocument, IParty, DocumentFactory,
   CloudDocument,
   CloudParty, LokiParty, PeerParty,
-  TingoParty, P2PMatchMaker
+  TingoParty, MatchMakerClient
 }

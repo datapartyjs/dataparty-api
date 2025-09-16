@@ -39,7 +39,6 @@ class MatchMakerClient extends EventEmitter {
       tx: {},
       rx: {}
     }
-    //this.restParty = 
   }
 
 
@@ -211,8 +210,6 @@ class MatchMakerClient extends EventEmitter {
       toIdentity = toHashOrIdentity
     }
 
-
-
     debug('toIdentity', toIdentity)
 
     const invitePayload = {
@@ -255,6 +252,8 @@ class MatchMakerClient extends EventEmitter {
 
     this.pendingInvites.tx[inviteDoc.$meta.id] = invite
 
+    invite.once('done', this.removeInvite.bind(this))
+
     return invite
   }
 
@@ -280,6 +279,22 @@ class MatchMakerClient extends EventEmitter {
     return lookupResult.invites
   }
 
+  removeInvite(invite){
+
+    let txInvite = this.pendingInvites.tx[invite.id]
+    let rxInvite = this.pendingInvites.rx[invite.id]
+
+    if(txInvite){
+      this.pendingInvites.tx[invite.id] = null
+      delete this.pendingInvites.tx[invite.id]
+    }
+
+    if(rxInvite){
+      this.pendingInvites.rx[invite.id] = null
+      delete this.pendingInvites.rx[invite.id]
+    }
+  }
+
   async getPeerInvitesFromInviteDocs(invites){
 
     let peerInvites = []
@@ -291,6 +306,14 @@ class MatchMakerClient extends EventEmitter {
       let from = await this.lookupPublicKey( invite.fromHash )
 
       let peerInvite = new PeerInvite( invites[i], to, this, from)
+
+      if(peerInvite.isSender()){
+        this.pendingInvites.tx[ peerInvite.id ] = peerInvite
+      } else {
+        this.pendingInvites.rx[ peerInvite.id ] = peerInvite
+      }
+
+      peerInvite.once('done', this.removeInvite.bind(this))
 
       peerInvites.push(peerInvite)
     }
