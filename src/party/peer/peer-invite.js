@@ -89,7 +89,7 @@ class PeerInvite extends EvetEmitter {
     await this.matchMaker.setInviteState(this, 'rejected')
   }
 
-  async onAccepted(){}
+  //async onAccepted(){}
 
   async onInviteMsg(inviteMsg){
 

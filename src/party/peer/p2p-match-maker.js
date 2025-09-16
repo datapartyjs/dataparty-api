@@ -2,7 +2,7 @@ const EventEmitter = require('eventemitter3')
 
 const dataparty_crypto = require('@dataparty/crypto')
 const LokiParty = require('../local/loki-party')
-const PeerParty = require('../local/peer-party')
+const PeerParty = require('./peer-party')
 const MemoryConfig = require('../../config/memory')
 const WebsocketComms = require('../../comms/websocket-comms')
 
