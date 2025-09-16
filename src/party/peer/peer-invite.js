@@ -10,6 +10,9 @@ const END_STATES = [
   'cancelled', 'rejected', 'expired', 'completed'
 ]
 
+const TURN_PASSWORD='somethingsimple'
+const TURN_USERNAME='srs_demo'
+
 async function delay(ms){
   return new Promise((resolve,reject)=>{
     setTimeout(resolve, ms)
