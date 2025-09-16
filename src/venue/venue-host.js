@@ -1,81 +1,92 @@
+const fs = require('fs')
 const Path = require('path')
 const debug = require('debug')('venue.host')
 const Dataparty = require('../index')
 
-const BouncerServerModels = require('@dataparty/bouncer-model')
-const BouncerClientModels = require('@dataparty/bouncer-model/dist/bouncer-model.json')
-
 const VenueService = require('./venue-service')
 
-
-
+const VenueServiceSchema = require('./dataparty/@dataparty-venue.dataparty-schema.json')
+const VenueSrv = require('./dataparty/@dataparty-venue.dataparty-service.json')
 
 
 async function main(){
 
-  const uri = 'mongodb://localhost:27017/venue-test'
-  debug('db location', uri)
+  const path = '/data/dataparty/venue-service'
 
-
-
-
-  const service = new VenueService({ name: '@dataparty/venue', version: '0.0.1' })
-
-
-  const build = await service.compile(Path.join(__dirname,'../../dataparty'), true)
-
-
-  debug('compiled')
-
-  console.log(Object.keys(BouncerServerModels))
-
-  const serverModels = {
-    Utils: BouncerServerModels.Utils,
-    Model: BouncerServerModels.Model,
-    Types: {
-      ...BouncerServerModels.Types,
-      //BanList: require('./schema/ban_list'),
-      VenueSrv: require('./schema/venue_service')
-    }
+  const CloudFlareIpFilter = {
+    options: {
+      mode: 'allow'
+    },
+    ips: [
+      '173.245.48.0/20',
+      '103.21.244.0/22',
+      '103.22.200.0/22',
+      '103.31.4.0/22',
+      '141.101.64.0/18',
+      '108.162.192.0/18',
+      '190.93.240.0/20',
+      '188.114.96.0/20',
+      '197.234.240.0/22',
+      '198.41.128.0/17',
+      '162.158.0.0/15',
+      '104.16.0.0/13',
+      '104.24.0.0/14',
+      '172.64.0.0/13',
+      '131.0.72.0/22',
+      '2400:cb00::/32',
+      '2606:4700::/32',
+      '2803:f800::/32',
+      '2405:b500::/32',
+      '2405:8100::/32',
+      '2a06:98c0::/29',
+      '2c0f:f248::/32'
+    ]
   }
 
-  let party = new Dataparty.MongoParty({
-    uri,
-    model: build.schemas,
-    serverModels,
-    config: new Dataparty.Config.MemoryConfig()
+  let party = new Dataparty.TingoParty({
+    path: path+'/db',
+    model: VenueServiceSchema,
+    config: new Dataparty.Config.JsonFileConfig({basePath: path+'/config'}),
+    noCache: false
   })
 
-  const dbPath = 'dataparty-venue.db'
-
-  debug('party db location', dbPath)
-
-  /*let party = new Dataparty.LocalParty({
-    path: dbPath,
-    model: build.schemas,
-    config: new Dataparty.Config.MemoryConfig()
-  })*/
+  const service = new VenueService(VenueServiceSchema.package, VenueSrv)
 
 
+  debug('loaded service')
 
-  debug('partying')
+  debug('party db location', path)
 
-  const runner = new Dataparty.ServiceRunner({
+  const runner = new Dataparty.ServiceRunnerNode({
     party, service,
-    sendFullErrors: true
+    sendFullErrors: true,
+    useNative: false,
+    prefix: 'api/'
   })
   
-  const host = new Dataparty.ServiceHost({runner, trust_proxy: true})
+  let runnerRouter = new Dataparty.RunnerRouter(runner)
+
+  const ssl_key  = fs.readFileSync( Path.join(__dirname,'key.pem'), 'utf8')
+  const ssl_cert = fs.readFileSync( Path.join(__dirname,'cert.pem'), 'utf8')
+  
+  const host = new Dataparty.ServiceHost({
+    runner: runnerRouter,
+    trust_proxy: true,
+    wsEnabled: true,
+    ssl_key, ssl_cert,
+    listenUri: 'https://0.0.0.0:443',
+    staticPath: Path.join(__dirname,'public'),
+    staticPrefix: '/venue/',
+    ipFilter: CloudFlareIpFilter
+  })
 
   await party.start()
   await runner.start()
   await host.start()
 
-  console.log('started')
-  
-  //process.exit()
+  debug('started')
+  console.log('partying')
 }
-
 
 
 main().catch(err=>{

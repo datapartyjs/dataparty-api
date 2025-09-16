@@ -57,7 +57,9 @@
     "build-test": "node ./examples/party/example-build.js",
     "watch-test": "DEBUG=* nodemon --ignore service test/test-service-compile.js",
     "build-docs": "./scripts/build-docs.sh",
-    "generate-docs": "npx jsdoc --configure jsdoc.json --verbose"
+    "build-venue": "node ./src/venue/build.js",
+    "generate-docs": "npx jsdoc --configure jsdoc.json --verbose",
+    "mkssl": "openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem"
   },
   "dependencies": {
     "@dataparty/bouncer-db": "1.0.1",
@@ -79,6 +81,7 @@
     "dom-storage": "^2.1.0",
     "eventemitter3": "^4.0.7",
     "express": "^4.17.1",
+    "express-ipfilter": "^1.3.2",
     "express-list-routes": "^1.1.9",
     "git-repo-info": "^2.1.1",
     "joi": "^17.9.1",

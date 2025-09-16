@@ -100,10 +100,10 @@ class RunnerRouter {
    * @param {Express.Response} res 
    * @returns 
    */
-  onRequest(req, res){
+  onRequest(req, res, next){
     const runner = this.getRunnerByDomain(req.hostname)
 
-    return runner.onRequest.bind(runner)(req,res)
+    return runner.onRequest.bind(runner)(req,res, next)
   }
 }
 

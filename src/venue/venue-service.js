@@ -4,24 +4,27 @@ const debug = require('debug')('venue.service')
 const Path = require('path')
 
 class VenueService extends DatapartySrv.IService {
-  constructor(opts){
-    super(opts)
+  constructor(opts, build){
+    super(opts, build)
 
-    //this.addSchema(Path.join(__dirname, './schema/ban_list.js'))
-    this.addSchema(Path.join(__dirname, './schema/venue_service.js'))
+    if(build){ return }
 
-    this.addMiddleware(DatapartySrv.middleware_paths.pre.decrypt)
-    this.addMiddleware(DatapartySrv.middleware_paths.pre.validate)
+    let builder = new DatapartySrv.ServiceBuilder(this)
 
-    this.addMiddleware(DatapartySrv.middleware_paths.post.validate)
-    this.addMiddleware(DatapartySrv.middleware_paths.post.encrypt)
+    builder.addSchema(Path.join(__dirname, './schema/venue_service.js'))
 
-    this.addEndpoint(DatapartySrv.endpoint_paths.identity)
-    this.addEndpoint(DatapartySrv.endpoint_paths.version)
+    builder.addMiddleware(DatapartySrv.middleware_paths.pre.decrypt)
+    builder.addMiddleware(DatapartySrv.middleware_paths.pre.validate)
 
-    this.addEndpoint(Path.join(__dirname, './endpoints/create-service.js'))
+    builder.addMiddleware(DatapartySrv.middleware_paths.post.validate)
+    builder.addMiddleware(DatapartySrv.middleware_paths.post.encrypt)
+
+    builder.addEndpoint(DatapartySrv.endpoint_paths.identity)
+    builder.addEndpoint(DatapartySrv.endpoint_paths.version)
+
+    builder.addEndpoint(Path.join(__dirname, './endpoints/create-service.js'))
+    builder.addAuth(Path.join(__dirname, './auth.js'))
   }
-
 }
 
 module.exports = VenueService

@@ -1,0 +1,248 @@
+'use strict'
+
+const debug = require('debug')('dataparty.peer-invite')
+const EventEmitter = require('eventemitter3')
+
+const PeerParty = require('./peer-party')
+const RTCSocketComms = require('../../comms/rtc-socket-comms')
+
+async function delay(ms){
+  return new Promise((resolve,reject)=>{
+    setTimeout(resolve, ms)
+  })
+}
+
+class PeerInvite extends EvetEmitter {
+  constructor(inviteDoc, toIdentity, matchMakerClient, fromIdentity){
+    super()
+
+    this.peerParty = null
+    this.toIdentity = toIdentity
+    this.fromIdentity = fromIdentity
+    this.matchMaker = matchMakerClient
+    this.inviteDoc = inviteDoc
+    this.latestDoc = null
+    this.payload = null
+
+    this.topicSub = null
+    this.topicPub = null
+
+    this.connected = false
+
+    // host only
+    this.offers = []
+
+    /*if(!this.isSender()){
+      this.inviteDoc.
+    }*/
+  }
+
+  get id(){
+    return this.inviteDoc.$meta.id
+  }
+
+  get to(){ return this.toIdentity }
+  get from(){ return this.fromIdentity }
+
+  isSender(doc){
+
+    if(doc){
+      if(doc.toHash == matchMaker.identity.key.hash){return false }
+      else { return true }
+    }
+
+    if(this.inviteDoc.toHash == matchMaker.identity.key.hash){return false }
+    else { return true }
+  }
+
+
+  async cancel(){
+    await this.matchMaker.setInviteState(this, 'cancelled')
+  }
+
+  async accept(mediaSrc){
+    debug('accepting invite')
+
+    if(this.inviteDoc.toHash == party.identity.key.hash){
+        otherIdentity = await this.matchMaker.lookupPublicKey(pendingCallInvite.fromHash)
+    } else {
+        otherIdentity = await this.matchMaker.lookupPublicKey(pendingCallInvite.toHash)
+    }
+
+    let changedInvite = await setInviteState(this, 'accepted')
+
+    //console.log('pendingCall', changedInvite)
+
+    let msgWorkAround = new dataparty_crypto.Message({})
+    msgWorkAround.fromJSON(JSON.parse(changedInvite.payload))
+
+    let payload = await this.matchMaker.wsParty.privateIdentity.decrypt(
+        msgWorkAround
+    )
+
+    this.payload = payload.msg
+
+    return await this.establish(mediaSrc)
+  }
+
+  async reject(){
+    await this.matchMaker.setInviteState(this, 'rejected')
+  }
+
+  async onAccepted(){}
+
+  async onInviteMsg(inviteMsg){
+
+    if(inviteMsg.state == this.inviteDoc.state){ return }
+    
+    this.latestDoc = inviteMsg
+    this.emit(inviteMsg.state, this)
+  }
+
+  async waitForAccepted(){
+    return new Promise((resolve,reject)=>{
+      this.once('accepted', ()=>{
+        resolve()
+      })
+
+      this.once('done', ()=>{
+        reject()
+      })
+    })
+  }
+
+  async establish({mediaSrc, hostParty, config}){
+
+    let host = this.isSender()
+    let actorField = this.isSender() ? 'from' : 'to'
+    let otherIdentity = this.isSender() ? this.to : this.from
+
+    let party = this.matchMaker.wsParty
+
+    this.topicSub = new party.ROSLIB.Topic({
+      ros : party.comms.ros,
+      name : '/invite/' + this.id + '/session/'+(actorField=='to'?'from':'to'),
+      messageType: 'SecureObject'
+    })
+
+    this.topicPub = new party.ROSLIB.Topic({
+      ros : party.comms.ros,
+      name : '/invite/' + this.id + '/session/'+actorField,
+      messageType: 'SecureObject'
+    })
+
+    this.topicSub.subscribe(async (msg)=>{
+      debug(this.topicSub.name, ' got message', msg)
+
+      let msgWorkAround = new dataparty_crypto.Message({})
+      msgWorkAround.fromJSON(msg.offer)
+
+      let offer = await party.privateIdentity.decrypt(msgWorkAround)
+      
+      if(offer.from.hash != otherIdentity.key.hash){
+        debug('BAD IDENTITY')
+        return
+      }
+      
+      //console.log(offer.msg)
+      if(!connected && this.peerParty){
+        this.peerParty.comms.socket.signal(offer.msg)
+      }
+    })
+
+    debug('subscribed to - ', this.topicSub.name)
+
+    this.peerParty = new PeerParty({
+      comms: new RTCSocketComms({
+        host: this.isSender(),
+        session: this.payload.session,
+        rtcOptions: {
+          initiator: this.isSender(),
+          stream: mediaSrc, //false,
+          trickle: true,
+          allowHalfTrickle: true,
+          config: {
+            iceServers: [
+              { urls: 'stun:st1.dataparty.xyz:3478'},
+              {
+                urls:'turns:st1.dataparty.xyz:5349',
+                credential: TURN_PASSWORD,
+                username: TURN_USERNAME
+              }
+            ]
+          }
+        },
+        trickle: true,
+        discoverRemoteIdentity: false,
+        remoteIdentity: otherIdentity
+      }),
+      hostParty: this.isSender() ? hostParty : undefined,
+      config: config ? config : hostParty.config
+    })
+
+
+    console.log('rtc settings', this.peerParty.comms.rtcSettings)
+
+    await this.peerParty.start()
+
+    this.peerParty.comms.socket.on('connect', connect => {
+      this.connected = true
+      this.emit('connected')
+    })
+
+    this.peerParty.comms.socket.on('signal', async (data)=>{
+
+      if(pthis.eerParty.comms.authed){ return }
+
+      debug(' >> offer signal trickle', data)
+
+
+      const secureOffer = await party.privateIdentity.encrypt(data, otherIdentity)
+
+      if(host){
+        //console.log('am host')
+        this.offers.push({offer: secureOffer.toJSON()})
+      } else {
+        //console.log('am client')
+        this.topicPub.publish({offer: secureOffer.toJSON()})
+      }
+    })
+
+
+    if(host){
+      console.log('delay')
+      await delay(2500)
+
+      console.log('have offers', offers)
+
+      for(let i=0; i < offers.length; i++){
+
+        if(this.peerParty.comms.authed || this.connected){ break }
+
+        this.topicPub.publish( offers[i] )
+
+        await delay(1000)
+
+      }
+    } else {
+
+    }
+
+    try{
+      debug('waiting for authorized . . .')
+      await this.peerParty.comms.authorized()
+      debug('authorized!')
+
+      this.emit('authorized', this)
+
+
+      return this.peerParty
+
+    } catch (err){
+      console.log(err)
+    }
+  }
+
+}
+
+module.exports = PeerInvite

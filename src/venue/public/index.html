@@ -1,0 +1,96 @@
+<html>
+  <head>
+    <title>venue manager</title>
+
+    <script src="dist/dataparty-browser.js"></script>
+    <script src="node_modules/argon2-browser/dist/argon2-bundled.min.js"></script>
+
+    <style>
+
+    body {
+      background-color: black;
+      color:aliceblue;
+    }
+
+    .bordered {
+      border: 1px solid rgb(230, 230, 230);
+      padding: 10px;
+      margin: 0 auto;
+      max-width: 320px;
+      background-color: #141414cc;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+    }
+
+    p {
+      color: #666;
+      line-height: 1.6;
+    }
+    </style>
+  </head>
+  <body>
+
+    <div id="account-create-div" class="bordered">
+        <h2>Admin Account Setup</h2>
+        Public Key: <input type="text" id="user-key-public" disabled><br>
+        Passowrd: <input type="password" id="user-key-password"><br>
+        <button id="user-load-seed-phrase">Set Seed Pharse</button><br>
+        <button>Load Key</button>
+    </div>
+
+    <br>
+
+    <div id="" class="bordered">
+      <h2>Server</h2>
+      Host: <input type="text" id="host-address-input"><br>
+      Public Key: <input type="text" id="user-key-public" disabled><br>
+      <button>Load Key</button>
+    </div>
+
+    <div id="" class="bordered">
+      <h2>Rest Explorer</h2>
+    </div>
+
+    <!-- <div id="account-create-div" class="bordered">
+        <h2>Account Load</h2><br><br>
+        Public Key: <input type="text" id="user-key-public" disabled><br>
+        Passowrd: <input type="password" id="user-key-password"><br>
+    </div> -->
+
+    <!--
+    
+    ## Admin account setup 
+
+    1. Generate identity (generate mnemonic phrases with password)
+    2. Store identity in secure local storage
+    3. Export local storage
+
+    ## Server connection
+
+    1. enter host address
+    2. pull server identity
+    3. save ideneity
+
+
+    ## Rest explorer
+
+    0. Select rest / websocket / webrtc
+    1. select party identity to explore
+    2. If webrtc is selected enter match-maker location (or maybe select it from list)
+    3. Enter path and query params
+    4. send
+    5. show results
+
+    ## Topic explorer
+
+    1. enter path
+
+
+    ## DB explorer
+
+    1. code editor
+    2. run query
+
+    -->
+  </body>
+</html>

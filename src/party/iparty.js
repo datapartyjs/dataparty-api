@@ -168,7 +168,15 @@ class IParty {
    */
   get identity(){
     if (!this.hasIdentity()){ return undefined }
-    return dataparty_crypto.Identity.fromString(this._identity.toString())
+    return dataparty_crypto.Identity.fromBSON(this._identity.toBSON())
+  }
+
+  async setIdentity(newIdentity){
+    this._identity = newIdentity
+
+    const identityBson = this._identity.toBSON(true)
+    const identityBase64 = dataparty_crypto.Routines.Utils.base64.encode(identityBson)
+    await this.config.write(path, identityBase64)
   }
 
   /**
@@ -251,8 +259,14 @@ class IParty {
       
       await this.resetIdentity()
     } else {
-      debug('loaded identity')
-      this._identity = dataparty_crypto.Identity.fromString(JSON.stringify(cfgIdenStr))
+      try{
+        const identityBson = dataparty_crypto.Routines.Utils.base64.decode(cfgIdenStr)
+        this._identity = dataparty_crypto.Identity.fromBSON(identityBson)
+        debug('loaded identity (bson)')
+      } catch (err){
+        this._identity = dataparty_crypto.Identity.fromString( JSON.stringify(cfgIdenStr) )
+        debug('loaded identity (json)')
+      }
     }
   }
 
@@ -266,7 +280,10 @@ class IParty {
 
     this._identity = new dataparty_crypto.Identity({id: 'primary'})
     await this._identity.initialize()
-    await this.config.write(path, this._identity.toJSON(true))
+
+    const identityBson = this._identity.toBSON(true)
+    const identityBase64 = dataparty_crypto.Routines.Utils.base64.encode(identityBson)
+    await this.config.write(path, identityBase64)
 
     await this.loadIdentity()
   }

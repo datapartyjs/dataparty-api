@@ -1,3 +1,4 @@
+const Path = require('path')
 const CORS = require('cors')
 const {URL} = require('url')
 //const mdns = require('mdns')
@@ -6,6 +7,8 @@ const https = require('https')
 const morgan = require('morgan')
 const express = require('express')
 const bodyParser = require('body-parser')
+const Ipfilter = require('express-ipfilter').IpFilter
+const IpDeniedError = require('express-ipfilter').IpDeniedError
 const expressListRoutes = require('express-list-routes')
 const debug = require('debug')('dataparty.service.host')
 const objectHasher = require('node-object-hash').hasher()
@@ -41,6 +44,8 @@ class ServiceHost {
    * @param {string}  [options.wsUpgradePath=/ws]   The path within the http server to host an upgradeable websocket. Defaults to `/ws`
    * @param {boolean} [options.mdnsEnabled=true]     When true, the server will publish mDNS records advertising the service and party identity
    * @param {module:Service.ServiceRunner}  options.runner  A pre-configured runner
+   * @param {string}  [options.staticPath='']
+   * @param {Object}  [options.ipFilter=null]  Ip filter. {ips: [], options: {}}
    */
 
   constructor({
@@ -59,7 +64,10 @@ class ServiceHost {
     wsPort = null,
     wsUpgradePath = '/ws',
     mdnsEnabled = false,
-    runner
+    runner,
+    staticPath='',
+    staticPrefix='/',
+    ipFilter=null
   }={}){
 
     /**
@@ -90,7 +98,17 @@ class ServiceHost {
 
     this.ssl_cert = ssl_cert
     this.ssl_key = ssl_key
-    
+
+    this.staticPath = staticPath
+    this.staticPrefix = staticPrefix
+    this.ipFilter = ipFilter
+
+    if(this.ipFilter){
+      this.apiApp.use(Ipfilter(
+        this.ipFilter.ips,
+        this.ipFilter.options
+      ))
+    }
 
     if(debug.enabled){ this.apiApp.use(morgan('combined')) }
 
@@ -156,6 +174,15 @@ class ServiceHost {
       this.apiApp.use(this.runner.onRequest.bind(this.runner))
 
       if(debug.enabled){ expressListRoutes(this.router ) }
+
+
+      if(this.staticPath && this.staticPath.length > 0){
+
+        //let staticFullPath = Path.join(this.staticPrefix, this.staticPath)
+
+        debug('staticPath - ', this.staticPath)
+        this.apiApp.use(this.staticPrefix, express.static(this.staticPath ))
+      }
     }
 
     let backlog = 511
@@ -166,6 +193,8 @@ class ServiceHost {
 
       debug('http server')
 
+      if(!listenPort){ listenPort = 80 }
+
       //! Handle http
       this.apiServer = http.createServer(this.apiApp)
 
@@ -173,10 +202,13 @@ class ServiceHost {
 
       debug('https server')
 
+      if(!listenPort){ listenPort = 443 }
+
       //! Handle https
       this.apiServer = https.createServer({
         key: this.ssl_key,
-        cert: this.ssl_cert
+        cert: this.ssl_cert,
+
       }, this.apiApp)
 
     } else if(this.apiServerUri.protocol == 'file:'){
@@ -189,6 +221,7 @@ class ServiceHost {
       this.apiServer = http.createServer(this.apiApp)
 
     }
+
 
 
     await new Promise((resolve,reject)=>{
@@ -271,6 +304,16 @@ class ServiceHost {
       this.mdnsAd = mdns.createAdvertisement(mdns.tcp('party'), parseInt(listenPort), {txtRecord: txt_record})
     }
 
+    this.apiApp.use((err, req, res, _next) => {
+      console.log('Error handler', err)
+      if (err instanceof IpDeniedError) {
+        //res.status(401)
+      } else {
+        res.status(err.status || 500)
+      }
+
+      res.end()
+    })
   }
 
   /**

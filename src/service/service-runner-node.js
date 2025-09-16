@@ -54,6 +54,7 @@ class ServiceRunnerNode {
 
     this.started = true
 
+    debug('loading auth')
     await this.loadAuth()
 
     const taskMap = Hoek.reach(this.service, 'compiled.tasks')
@@ -69,7 +70,6 @@ class ServiceRunnerNode {
 
     await this.taskRunner.start()
 
-
     debug('starting endpoints')
 
     const eps = Hoek.reach(this.service, 'compiled.endpoints')
@@ -83,7 +83,7 @@ class ServiceRunnerNode {
     //await Promise.all(endpointsLoading)
     debug('endpoints ready:')
     for(let name in this.endpoint){
-      debug('\t', Path.join('/', name))
+      debug('\t', Path.join('/venue/api', this.prefix, name))
     }
 
     debug('starting topics')
@@ -128,7 +128,7 @@ class ServiceRunnerNode {
     })
 
 
-    debug('auth info', AuthClass.info)
+    debug('auth info', AuthClass.Name, '-', AuthClass.Description)
 
     this.auth = authInstance
 
@@ -309,11 +309,11 @@ class ServiceRunnerNode {
 
     if(!this.useNative){
       const build = Hoek.reach(this.service, `compiled.endpoints.${name}`)
-      debug('build', build.code)
+      //debug('build', build.code)
       var self={}
       eval(build.code, build.map)
       endpoint = self.Lib
-      debug('obj Lib', self)
+      //debug('obj Lib', self)
     }
     else{
       endpoint = this.service.constructors.endpoints[name]
@@ -429,7 +429,7 @@ class ServiceRunnerNode {
    * @param {Express.Response} res 
    * @returns 
    */
-  async onRequest(req, res){
+  async onRequest(req, res, next){
     debug('onRequest')
 
     debug('req', req.method, req.hostname,'-', req.url, req.ips, req.body)
@@ -437,12 +437,12 @@ class ServiceRunnerNode {
 
     let route = await this.router.route(req, res)
 
-    debug('req done')
+    debug('req done - is null', route == null)
 
 
     if(!route){
-      res.status(404).end()
-      return
+      //res.status(404).end()
+      return next()
     }
   }
 
