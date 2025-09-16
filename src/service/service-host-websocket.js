@@ -102,7 +102,7 @@ class ServiceHostWebsocket{
     debug('creating peer party')
 
     
-    let hostRunner = this.runner.party ? this.runner : this.runner.getRunnerByDomain(req.hostname)
+    let hostRunner = this.runner.party ? this.runner : this.runner.getRunnerByDomain(req.headers.host)
     let hostParty = hostRunner.party
 
     let peer = new PeerParty({

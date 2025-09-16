@@ -9,6 +9,46 @@ const VenueServiceSchema = require('./dataparty/@dataparty-venue.dataparty-schem
 const VenueSrv = require('./dataparty/@dataparty-venue.dataparty-service.json')
 
 
+async function loadService(runnerRouter, settings, serviceFilePath){
+
+  debug('addService', settings, serviceFilePath)
+
+  const { enabled, workspace, domain, prefix, sendFullErrors, useNative, defaultConfig } = settings
+
+  if(!enabled){ return }
+
+  const serviceFile = JSON.parse( fs.readFileSync( serviceFilePath ) )
+
+  let party = new Dataparty.TingoParty({
+    path: workspace+'/db',
+    model: serviceFile.schemas,
+    config: new Dataparty.Config.JsonFileConfig({basePath: workspace+'/config', ...defaultConfig}),
+    noCache: false
+  })
+  
+  party.topics = new Dataparty.LocalTopicHost()
+  
+  const service = new Dataparty.IService(serviceFile.package, serviceFile)
+
+  debug('loaded service')
+
+  debug('party db location', workspace)
+
+  let runner = new Dataparty.ServiceRunnerNode({
+    party, service,
+    sendFullErrors,
+    useNative,
+    prefix
+  })
+
+  await party.start()
+  await runner.start()
+  
+  await runnerRouter.addRunner({domain, runner})
+
+}
+
+
 async function main(){
 
   const path = '/data/dataparty/venue-service'
@@ -86,7 +126,18 @@ async function main(){
 
   debug('started')
   console.log('partying')
+
+  await loadService(runnerRouter, {
+    enabled: true,
+    domain: 'postquantum.one',
+    prefix: 'api',
+    workspace: '/data/dataparty/match-maker-service',
+    sendFullErrors: true,
+    useNative: false
+
+  }, '/home/ubuntu/match-maker/dataparty/@datapartyjs-match-maker.dataparty-service.json')
 }
+
 
 
 main().catch(err=>{

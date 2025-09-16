@@ -9,7 +9,7 @@ const WebsocketComms = require('../../comms/websocket-comms')
 const PeerInvite = require('./peer-invite')
 
 class MatchMakerClient extends EventEmitter {
-  constructor(identity, contacts, urlOrParty = 'https://postquantum.one/api/', wsUrlOrParty = 'https://postquantum.one/api/ws'){
+  constructor(identity, contacts, urlOrParty = 'https://postquantum.one/api/', wsUrlOrParty = 'https://postquantum.one/ws'){
 
     super()
 
@@ -97,7 +97,7 @@ class MatchMakerClient extends EventEmitter {
       debug('waiting for websocket authorization')
       await this.wsParty.comms.authorized()
 
-      this.invitesRx = this.wsParty.ROSLIB.Topic({
+      this.invitesRx = new this.wsParty.ROSLIB.Topic({
         ros : this.wsParty.comms.ros,
         name : '/invites/' + encodeURIComponent(this.restParty.identity.key.hash) + '/rx',
         messageType: 'Object'
@@ -106,7 +106,7 @@ class MatchMakerClient extends EventEmitter {
       this.invitesRx.subscribe( this.handleInviteRxMsg.bind(this) )
 
 
-      this.invitesTx = this.wsParty.ROSLIB.Topic({
+      this.invitesTx = new this.wsParty.ROSLIB.Topic({
         ros : this.wsParty.comms.ros,
         name : '/invites/' + encodeURIComponent(this.restParty.identity.key.hash) + '/tx',
         messageType: 'Object'
