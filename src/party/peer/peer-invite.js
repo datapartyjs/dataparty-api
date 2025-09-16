@@ -19,7 +19,7 @@ async function delay(ms){
   })
 }
 
-class PeerInvite extends EvetEmitter {
+class PeerInvite extends EventEmitter {
   constructor(inviteDoc, toIdentity, matchMakerClient, fromIdentity){
     super()
 

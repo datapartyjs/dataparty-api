@@ -34,7 +34,7 @@ class IParty {
     
     this._actor = {id: undefined, type: undefined}
     this._actors = []
-    this._identity = undefined
+    this._identity = null
     this.started = false
 
     /**
@@ -167,7 +167,9 @@ class IParty {
    * @type {module:dataparty/Types.Identity}
    */
   get identity(){
-    if (!this.hasIdentity()){ return undefined }
+    if (!this.hasIdentity()){ return null }
+
+
     return dataparty_crypto.Identity.fromBSON(this._identity.toBSON())
   }
 
@@ -234,7 +236,7 @@ class IParty {
    * @method module:Party.IParty.hasIdentity
    */
   hasIdentity(){
-    return this._identity != undefined
+    return !this._identity ? false : true
   }
 
   /**
@@ -251,11 +253,14 @@ class IParty {
    * @method module:Party.IParty.loadIdentity
    */
   async loadIdentity(){
+    debug('loadIdentity')
     const path = 'identity'
     const cfgIdenStr = await this.config.read(path)
 
+    debug('cfgStr', cfgIdenStr)
+
     if (!cfgIdenStr){
-      debug('generated new identity')
+      debug('generating new identity')
       
       await this.resetIdentity()
     } else {
@@ -264,6 +269,7 @@ class IParty {
         this._identity = dataparty_crypto.Identity.fromBSON(identityBson)
         debug('loaded identity (bson)')
       } catch (err){
+        console.log(err)
         this._identity = dataparty_crypto.Identity.fromString( JSON.stringify(cfgIdenStr) )
         debug('loaded identity (json)')
       }
@@ -275,11 +281,13 @@ class IParty {
    * @method module:Party.IParty.resetIdentity
    */
   async resetIdentity(){
+    debug('resetIdentity')
     const path = 'identity'
     await this.config.write(path, null)
 
-    this._identity = new dataparty_crypto.Identity({id: 'primary'})
-    await this._identity.initialize()
+    this._identity = await dataparty_crypto.Identity.fromRandomSeed({id: 'primary'})
+
+    //await this._identity.initialize()
 
     const identityBson = this._identity.toBSON(true)
     const identityBase64 = dataparty_crypto.Routines.Utils.base64.encode(identityBson)

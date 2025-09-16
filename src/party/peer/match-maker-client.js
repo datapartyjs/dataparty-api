@@ -67,6 +67,13 @@ class MatchMakerClient extends EventEmitter {
       debug('starting restParty')
       await this.restParty.start()
 
+      if(!this.restParty.comms){
+        this.restParty.comms = new Dataparty.Comms.RestComms({
+          party:this.restParty,
+          config: this.restParty.config
+        })
+      }
+
       await this.announcePublicKeys()
     }
 

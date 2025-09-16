@@ -1,0 +1,57 @@
+<html>
+<head>
+  <script src="dist/dataparty-browser.js"></script>
+  <script src="node_modules/argon2-browser/dist/argon2-bundled.min.js"></script>
+
+  <title>p2p tester</title>
+</head>
+
+<body>
+
+  <div>
+    <input type="text" id="user-hash" placeholder="your user hash" readonly>
+    <input type="text" id="user-call-hash" placeholder="user to call">
+    <select id="invite-role">
+      <option value="host">Host</option>
+      <option vlaue="client">Client</option>
+    </select>
+    <button onclick="callUser()">Start Call</button>
+    <button onclick="cancelCall()">Cancel Call</button>
+  </div>
+
+  <br>
+
+  <div>
+    <input type="text" id="invite-id" placeholder="invite id" readonly>
+    <button onclick="answerCall()">Answer Call</button>
+    <button onclick="rejectCall()">Reject Call</button>
+  </div>
+
+  <div>
+    <h2>Local</h2>
+    <video id="local-video"></video>
+  </div>
+
+  <div>
+    <h2>Remote</h2>
+    <video id="remote-video"></video>
+  </div>
+
+
+<script>
+
+let matchMaker = null
+
+async function init(){
+  matchMaker = new Dataparty.MatchMakerClient(null, null)
+}
+
+init().catch((err)=>{
+  console.error('crashed', err)
+})
+
+</script>
+
+
+  </body>
+</html>
