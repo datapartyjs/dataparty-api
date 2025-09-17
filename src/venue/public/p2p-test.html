@@ -42,8 +42,58 @@
 
 let matchMaker = null
 
+let userHashInput = document.getElementById('user-hash')
+let userCallHashInput = document.getElementById('user-call-hash')
+let inviteIdInput = document.getElementById('invite-id')
+
+let pendingInvite = null
+
+async function callUser(){
+  if(pendingInvite){ return }
+
+  pendingInvite = await matchMaker.createInvite( userCallHashInput.value, {
+    type: 'webrtc',
+    service: '@dataparty/video-chat',
+    role: 'client'
+  }, {
+    roomId: '',
+    action: 'call'
+  })
+
+  pendingInvite.on('state-change', (invite)=>{
+    console.log('state-change', invite.state, invite)
+  })
+}
+
+async function cancelCall() {
+  if(!pendingInvite){ return }
+
+  await pendingInvite.cancel()
+}
+
+async function rejectCall(){
+  if(!pendingInvite){ return }
+
+  await pendingInvite.reject()
+}
+
 async function init(){
   matchMaker = new Dataparty.MatchMakerClient(null, null)
+
+  await matchMaker.start()
+
+  let myHash = matchMaker.restParty.identity.key.hash
+
+  userHashInput.value = myHash
+
+  matchMaker.on('invited', invite=>{
+    console.log('invited', invite)
+
+    pendingInvite = invite
+
+
+    inviteIdInput.value = invite.id
+  })
 }
 
 init().catch((err)=>{

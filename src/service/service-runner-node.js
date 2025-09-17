@@ -284,7 +284,7 @@ class ServiceRunnerNode {
 
     this.topics[name] = topic
 
-    const routablePath = Path.join(this.prefix, Path.normalize(name))
+    const routablePath = Path.normalize(name)
 
     let route = this.topicsRouter.add(name, routablePath/*, this.topicHandler(topic)*/)
 
@@ -447,30 +447,53 @@ class ServiceRunnerNode {
   }
 
   async getTopic(path){
-    debug('looking up route', path)
+    debug('looking up topic', path)
 
     let p = new Promise(async (resolve,reject)=>{
 
-      let route = await this.topicsRouter.route(path, (event)=>{
+      //debug('\tcalling route', path)
+      //debug('\t', Object.keys(this.topics))
 
-        //debug(event)
-        //debug('topic route callback')
+      try{
 
+        //debug('tryin', this.topicsRouter.route)
+        let routed = false
+        
+        let route = await this.topicsRouter.route(path, (event)=>{
+          
+          //debug(event)
+          //debug('topic route callback - ', path)
+          
+          
+          if(!event.route){
+            debug('no such topic', path)
+            //reject('no such topic')
+            routed = true
+            resolve(null)
+          } else {
+            debug('found route', event.route.name)
+          }
 
-        if(!event.route){
-          debug('no such topic', path)
-          //reject('no such topic')
-          resolve(null)
-        } else {
-          debug('found route', event.route.name)
+          routed = true
+          
+          return resolve({ route: event.route, topic: event.route.data, arguments: event.arguments })
+          
+        })
+
+        debug('\trouting done', routed)
+
+        if(!routed){
+          return reject(null)
         }
+        
+      } catch(err){
 
-        return resolve({ route: event.route, topic: event.route.data, arguments: event.arguments })
+        debug(err)
 
-      })
-
+        return reject(err)
+      }
     })
-
+      
     return await p
   }
 

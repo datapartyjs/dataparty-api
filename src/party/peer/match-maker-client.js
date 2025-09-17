@@ -186,7 +186,7 @@ class MatchMakerClient extends EventEmitter {
 
     const lookupData = { hash }
 
-    const lookupResult = await restParty.comms.call('key/lookup', lookupData, {
+    const lookupResult = await this.restParty.comms.call('key/lookup', lookupData, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
       useSessions: false
@@ -211,8 +211,8 @@ class MatchMakerClient extends EventEmitter {
 
     let toIdentity = null
     if(typeof toHashOrIdentity == 'string'){
-      const toIdentity = await lookupPublicKey(userCallHashInput.value)
-      thisotherIdentity = toIdentity
+      toIdentity = await this.lookupPublicKey(toHashOrIdentity)
+      //this.otherIdentity = toIdentity
     } else {
       toIdentity = toHashOrIdentity
     }
@@ -239,7 +239,7 @@ class MatchMakerClient extends EventEmitter {
 
     const invitePostData = {
       to: toIdentity.key.hash,
-      from: party.identity.key.hash,
+      from: this.wsParty.identity.key.hash,
       payload: JSON.stringify(secureInvite.toJSON())
     }
 

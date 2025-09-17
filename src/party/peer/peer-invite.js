@@ -28,7 +28,7 @@ class PeerInvite extends EventEmitter {
     this.fromIdentity = fromIdentity
     this.matchMaker = matchMakerClient
     this.inviteDoc = inviteDoc
-    this.latestDoc = null
+    this.inviteMsg = null //this.latestDoc = null
     this.payload = null
 
     this.topicSub = null
@@ -101,6 +101,10 @@ class PeerInvite extends EventEmitter {
     this.emit('done', this)
   }
 
+  get state(){
+    return (this.inviteMsg || this.inviteDoc).state
+  }
+
   async onInviteMsg(inviteMsg){
 
     debug('onInviteMsg', inviteMsg)
@@ -110,6 +114,8 @@ class PeerInvite extends EventEmitter {
 
     debug('\t', 'invite.state = ', inviteMsg.state)
     this.emit(inviteMsg.state, this)
+
+    this.emit('state-change', this)
 
     if(this.inviteMsg && END_STATES.indexOf(this.inviteMsg.state) ){
       this.emit('done', this)

@@ -4,7 +4,7 @@ const debug = require('debug')('dataparty.service.host-websocket')
 const ws = require('ws')
 const WebSocketServer = ws.WebSocketServer
 
-const WATCHDOG_INTERVAL = 5*60*1000
+const WATCHDOG_INTERVAL = 60*1000
 
 const Comms = require('../comms')
 const PeerParty = require('../party/peer/peer-party')
@@ -29,7 +29,6 @@ class ServiceHostWebsocket{
 
     if(!server){
       settings = { port: this.port, ...this.wsSettings }
-      
     } else {
       settings = { noServer: true, ...this.wsSettings }
     }
