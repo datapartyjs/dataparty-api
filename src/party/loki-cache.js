@@ -133,10 +133,15 @@ module.exports = class LokiCache extends EventEmitter {
 
           // check if msg is already in cache
           if (cachedMsg) {
-            collection.remove(cachedMsg)
-            //collection.findAndRemove({
-            //  '$meta.id': id,
-            //})
+            try{
+              collection.remove(cachedMsg)
+              //collection.findAndRemove({
+              //  '$meta.id': id,
+              //})
+            }
+            catch(err){
+              debug('WARN', err)
+            }
           }
 
           // clone msg on insert - cache should follow backend

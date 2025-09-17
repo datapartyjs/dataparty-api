@@ -113,7 +113,7 @@ async function callUser(){
 
     video.play()
 
-    await establish({
+    await pendingInvite.establish({
       mediaSrc: localMediaSrc,
       hostParty: hostLocal
     })
@@ -127,7 +127,18 @@ async function acceptCall() {
     audio: true
   })
 
-  await pendingInvite.accept(localMediaSrc)
+  console.log('showing local video')
+  var video = document.getElementById('local-video')
+
+  if ('srcObject' in video) {
+    video.srcObject = localMediaSrc
+  } else {
+    video.src = window.URL.createObjectURL(localMediaSrc) // for older browsers
+  }
+
+  video.play()
+
+  await pendingInvite.accept(localMediaSrc, config)
 
   pendingInvite.on('stream', invite => {
     // got remote video stream, now let's show it in a video tag
@@ -144,20 +155,6 @@ async function acceptCall() {
   })
 }
 
-async function finalizeCall(){
-
-  localMediaSrc = await navigator.mediaDevices.getUserMedia({
-    video: true,
-    audio: true
-  })
-
-
-  await pendingInvite.establish({
-    mediaSrc: localMediaSrc,
-    config
-    //hostParty: hostLocal
-  })
-}
 
 async function cancelCall() {
   if(!pendingInvite){ return }

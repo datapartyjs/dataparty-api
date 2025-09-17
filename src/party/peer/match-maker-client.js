@@ -1,5 +1,8 @@
 const EventEmitter = require('eventemitter3')
 
+const debug = require('debug')('dataparty.match-maker-client')
+
+
 const dataparty_crypto = require('@dataparty/crypto')
 const LokiParty = require('../local/loki-party')
 const PeerParty = require('./peer-party')
@@ -136,7 +139,9 @@ class MatchMakerClient extends EventEmitter {
     } else if(this.pendingInvites.rx[inviteId]) {
 
       let invite = this.pendingInvites.rx[inviteId]
-      invite.onInviteMsg(msg.invite)
+
+      debug('calling onInviteMsg')
+      await invite.onInviteMsg(msg.invite)
     }
   }
 
@@ -146,12 +151,12 @@ class MatchMakerClient extends EventEmitter {
     const inviteId = msg.invite.$meta.id
     let pending = this.pendingInvites.tx[inviteId]
 
-    if( pending &&
-        //msg.invite.state == 'accepted' &&
-        pending.inviteDoc.id == msg.invite.$meta.id
+    if( pending 
     ){
 
-      pending.onInviteMsg(msg.invite)
+      debug('calling onInviteMsg')
+
+      await pending.onInviteMsg(msg.invite)
 
     }
   }

@@ -75,7 +75,7 @@ class PeerInvite extends EventEmitter {
     this.emit('done', this)
   }
 
-  async accept(mediaSrc){
+  async accept(mediaSrc, config){
     debug('accepting invite')
 
     /*if(this.inviteDoc.toHash == matchMaker.wsParty.identity.key.hash){
@@ -97,7 +97,7 @@ class PeerInvite extends EventEmitter {
 
     this.payload = payload.msg
 
-    return await this.establish(mediaSrc)
+    return await this.establish({mediaSrc, config})
   }
 
   async reject(){
@@ -158,35 +158,42 @@ class PeerInvite extends EventEmitter {
     this.topicSub = new party.ROSLIB.Topic({
       ros : party.comms.ros,
       name : '/invite/' + this.id + '/session/'+(actorField=='to'?'from':'to'),
-      messageType: 'SecureObject'
+      messageType: 'Object'
     })
 
     this.topicPub = new party.ROSLIB.Topic({
       ros : party.comms.ros,
       name : '/invite/' + this.id + '/session/'+actorField,
-      messageType: 'SecureObject'
+      messageType: 'Object'
     })
 
     this.topicSub.subscribe(async (msg)=>{
       debug(this.topicSub.name, ' got message', msg)
 
-      let msgWorkAround = new dataparty_crypto.Message({})
-      msgWorkAround.fromJSON(msg.offer)
+      for(let i=0; i<msg.offers.length; i++){
 
-      let offer = await party.privateIdentity.decrypt(msgWorkAround)
-      
-      if(offer.from.hash != otherIdentity.key.hash){
-        debug('BAD IDENTITY')
-        return
-      }
-      
-      //console.log(offer.msg)
-      if(!connected && this.peerParty){
-        this.peerParty.comms.socket.signal(offer.msg)
+        let msgWorkAround = new dataparty_crypto.Message({})
+        msgWorkAround.fromJSON(msg.offers[i])
+
+        let offer = await party.privateIdentity.decrypt(msgWorkAround)
+
+        if(offer.from.hash != otherIdentity.key.hash){
+          debug('BAD IDENTITY')
+          continue
+        }
+
+        debug('got webrtc offer', offer.msg)
+        if(!this.connected && this.peerParty){
+          this.peerParty.comms.socket.signal(offer.msg)
+        }
       }
     })
 
     debug('subscribed to - ', this.topicSub.name)
+
+    if(this.isSender()){
+      //await delay(500)
+    }
 
     this.peerParty = new PeerParty({
       comms: new RTCSocketComms({
@@ -194,7 +201,8 @@ class PeerInvite extends EventEmitter {
         session: this.payload.session,
         rtcOptions: {
           initiator: this.isSender(),
-          stream: mediaSrc, //false,
+          stream: mediaSrc,
+          //stream: this.isSender() ? mediaSrc : undefined, //false,
           trickle: true,
           allowHalfTrickle: true,
           config: {
@@ -233,6 +241,8 @@ class PeerInvite extends EventEmitter {
     })
     
 
+   let sendFreely = false
+
     this.peerParty.comms.socket.on('signal', async (data)=>{
 
       if(this.peerParty.comms.authed){ return }
@@ -242,31 +252,32 @@ class PeerInvite extends EventEmitter {
 
       const secureOffer = await party.privateIdentity.encrypt(data, otherIdentity)
 
-      if(host){
+      if(host && !sendFreely){
         //console.log('am host')
-        this.offers.push({offer: secureOffer.toJSON()})
+        this.offers.push( secureOffer.toJSON() )
       } else {
         //console.log('am client')
-        this.topicPub.publish({offer: secureOffer.toJSON()})
+        this.topicPub.publish( {offers: [secureOffer.toJSON()] } )
       }
     })
 
 
     if(host){
       console.log('delay')
-      await delay(2500)
+      await delay(250)
+      sendFreely = true
 
-      console.log('have offers', offers)
+      console.log('sending offers', this.offers)
 
-      for(let i=0; i < offers.length; i++){
+      //for(let i=0; i < this.offers.length; i++){
 
-        if(this.peerParty.comms.authed || this.connected){ break }
+        //if(this.peerParty.comms.authed || this.connected){ break }
 
-        this.topicPub.publish( offers[i] )
+        this.topicPub.publish( {offers: this.offers} )
 
-        await delay(1000)
+        //await delay(1000)
 
-      }
+      //}
     } else {
 
     }

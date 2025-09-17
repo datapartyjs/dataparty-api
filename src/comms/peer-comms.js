@@ -1,3 +1,4 @@
+
 const {Routines, Identity} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.comms.peercomms')
 const uuidv4 = require('uuid/v4')
@@ -10,7 +11,7 @@ const Joi = require('joi')
 const HostOp = require('./host/host-op')
 const HostProtocolScheme = require('./host/host-protocol-scheme')
 
-const AUTH_TIMEOUT_MS = 3000
+const AUTH_TIMEOUT_MS = 25000
 
 const HOST_SESSION_STATES = {
   AUTH_REQUIRED: 'AUTH_REQUIRED',
