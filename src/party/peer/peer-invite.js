@@ -147,7 +147,11 @@ class PeerInvite extends EventEmitter {
     })
   }
 
-  async establish({mediaSrc, hostParty, config}){
+  async establish({mediaSrc, hostParty, config, rtcSettings}){
+
+    if(!rtcSettings){
+      rtcSettings = {}
+    }
 
     let host = this.isSender()
     let actorField = this.isSender() ? 'from' : 'to'
@@ -185,6 +189,11 @@ class PeerInvite extends EventEmitter {
         debug('got webrtc offer', offer.msg)
         if(!this.connected && this.peerParty){
           this.peerParty.comms.socket.signal(offer.msg)
+
+          this.emit('signal', {
+            invite: this,
+            data: offer.msg
+          })
         }
       }
     })
@@ -203,8 +212,10 @@ class PeerInvite extends EventEmitter {
           initiator: this.isSender(),
           stream: mediaSrc,
           //stream: this.isSender() ? mediaSrc : undefined, //false,
-          trickle: true,
-          allowHalfTrickle: true,
+          trickle: rtcSettings.trickle? rtcSettings.trickle : true,
+          iceTransportPolicy : rtcSettings.iceTransportPolicy  ? rtcSettings.iceTransportPolicy  : 'all',
+          allowHalfTrickle: rtcSettings.allowHalfTrickle? rtcSettings.allowHalfTrickle :  true,
+          iceCompleteTimeout: 30*1000,
           config: {
             iceServers: [
               { urls: 'stun:st1.dataparty.xyz:3478'},
@@ -216,7 +227,7 @@ class PeerInvite extends EventEmitter {
             ]
           }
         },
-        trickle: true,
+        trickle: rtcSettings.trickle? rtcSettings.trickle : true,
         discoverRemoteIdentity: false,
         remoteIdentity: otherIdentity
       }),
@@ -246,6 +257,11 @@ class PeerInvite extends EventEmitter {
     this.peerParty.comms.socket.on('signal', async (data)=>{
 
       if(this.peerParty.comms.authed){ return }
+
+      this.emit('offer', {
+        invite: this,
+        data
+      })
 
       debug(' >> offer signal trickle', data)
 

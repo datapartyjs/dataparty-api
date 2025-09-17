@@ -4,9 +4,52 @@
   <script src="node_modules/argon2-browser/dist/argon2-bundled.min.js"></script>
 
   <title>p2p tester</title>
+
+  <style>
+
+    body {
+      background-color: rgb(95, 95, 95);
+      color:aliceblue;
+    }
+
+    .bordered {
+      border: 1px solid rgb(230, 230, 230);
+      padding: 10px;
+      margin: 0 auto;
+      max-width: 320px;
+      background-color: #141414cc;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+    }
+
+    p {
+      color: #666;
+      line-height: 1.6;
+    }
+
+    video {
+      height: 20vh
+    }
+
+    textarea {
+      width: 100vw;
+      height: 20vh;
+      white-space: pre;
+      overflow-wrap: normal;
+      overflow-x: scroll;
+      background-color: #666;
+      color: white;
+    }
+  </style>
 </head>
 
 <body>
+
+  <div>
+    Trickle: <input type="checkbox" id="trickle-checkbox">
+    HalfTrickle: <input type="checkbox" id="half-trickle-checkbox">
+    TURN only: <input type="checkbox" id="turn-checkbox">
+  </div>
 
   <div>
     <input type="text" id="user-hash" placeholder="your user hash" readonly>
@@ -37,6 +80,16 @@
     <video id="remote-video"></video>
   </div>
 
+  <div>
+    <h2>Offers Sent</h2>
+    <textarea id="offerArea"></textarea>
+  </div>
+
+
+  <div>
+    <h2>Offers recieved</h2>
+    <textarea id="answerArea"></textarea>
+  </div>
 
 <script>
 
@@ -63,19 +116,28 @@ let hostLocal = new Dataparty.LokiParty({
   config: config
 })
 
-async function callUser(){
-  if(pendingInvite){ return }
+async function setupDebug(active){
+  // id="trickle-checkbox">
+  // id="half-trickle-checkbox">
+  // id="turn-checkbox">
 
-  pendingInvite = await matchMaker.createInvite( userCallHashInput.value, {
-    type: 'webrtc',
-    service: '@dataparty/video-chat',
-    role: 'client'
-  }, {
-    roomId: '',
-    action: 'call'
+  let offerArea = document.getElementById('offerArea')
+  let answerArea = document.getElementById('answerArea')
+
+//  let trickleCheckbox = document.getElementById('trickle-checkbox')
+//  let halfTrickleCheckbox = document.getElementById('half-trickle-checkbox')
+//  let turnCheckbox = document.getElementById('turn-checkbox')
+
+  active.on('signal', ({invite, data})=>{
+    answerArea.value += '\n' + JSON.stringify(data)
   })
 
-  pendingInvite.on('stream', invite => {
+
+  active.on('offer', ({invite, data})=>{
+    offerArea.value += '\n' + JSON.stringify(data)
+  })
+
+  active.on('stream', invite => {
     // got remote video stream, now let's show it in a video tag
     console.log('showing remote video')
     var video = document.getElementById('remote-video')
@@ -88,6 +150,33 @@ async function callUser(){
 
     video.play()
   })
+}
+
+async function callUser(){
+  if(pendingInvite){ return }
+
+  pendingInvite = await matchMaker.createInvite( userCallHashInput.value, {
+    type: 'webrtc',
+    service: '@dataparty/video-chat',
+    role: 'client'
+  }, {
+    roomId: '',
+    action: 'call'
+  })
+
+/*  pendingInvite.on('stream', invite => {
+    // got remote video stream, now let's show it in a video tag
+    console.log('showing remote video')
+    var video = document.getElementById('remote-video')
+
+    if ('srcObject' in video) {
+      video.srcObject = invite.incomingStream
+    } else {
+      video.src = window.URL.createObjectURL(invite.incomingStream) // for older browsers
+    }
+
+    video.play()
+  })*/
 
   pendingInvite.on('state-change', (invite)=>{
     console.log('state-change', invite.state, invite)
@@ -96,6 +185,8 @@ async function callUser(){
   pendingInvite.once('accepted', async (invite)=>{
 
     console.log('accepted')
+
+    setupDebug(pendingInvite)
 
     localMediaSrc = await navigator.mediaDevices.getUserMedia({
       video: true,
@@ -122,6 +213,8 @@ async function callUser(){
 
 async function acceptCall() {
 
+  setupDebug(pendingInvite)
+
   localMediaSrc = await navigator.mediaDevices.getUserMedia({
     video: true,
     audio: true
@@ -139,20 +232,6 @@ async function acceptCall() {
   video.play()
 
   await pendingInvite.accept(localMediaSrc, config)
-
-  pendingInvite.on('stream', invite => {
-    // got remote video stream, now let's show it in a video tag
-    console.log('showing remote video')
-    var video = document.getElementById('remote-video')
-
-    if ('srcObject' in video) {
-      video.srcObject = invite.incomingStream
-    } else {
-      video.src = window.URL.createObjectURL(invite.incomingStream) // for older browsers
-    }
-
-    video.play()
-  })
 }
 
 
