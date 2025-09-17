@@ -3,6 +3,8 @@
 const debug = require('debug')('dataparty.peer-invite')
 const EventEmitter = require('eventemitter3')
 
+const dataparty_crypto = require('@dataparty/crypto')
+
 const PeerParty = require('./peer-party')
 const RTCSocketComms = require('../../comms/rtc-socket-comms')
 
@@ -39,6 +41,8 @@ class PeerInvite extends EventEmitter {
     // host only
     this.offers = []
 
+    this.incomingStream = null
+
     /*if(!this.isSender()){
       this.inviteDoc.
     }*/
@@ -74,13 +78,13 @@ class PeerInvite extends EventEmitter {
   async accept(mediaSrc){
     debug('accepting invite')
 
-    if(this.inviteDoc.toHash == party.identity.key.hash){
-        otherIdentity = await this.matchMaker.lookupPublicKey(pendingCallInvite.fromHash)
+    /*if(this.inviteDoc.toHash == matchMaker.wsParty.identity.key.hash){
+        otherIdentity = await this.matchMaker.lookupPublicKey(this.inviteDoc.fromHash)
     } else {
-        otherIdentity = await this.matchMaker.lookupPublicKey(pendingCallInvite.toHash)
-    }
+        otherIdentity = await this.matchMaker.lookupPublicKey(this.inviteDoc.toHash)
+    }*/
 
-    let changedInvite = await setInviteState(this, 'accepted')
+    let changedInvite = await this.matchMaker.setInviteState(this, 'accepted')
 
     //console.log('pendingCall', changedInvite)
 
@@ -222,9 +226,16 @@ class PeerInvite extends EventEmitter {
       this.emit('connected')
     })
 
+
+    this.peerParty.comms.socket.on('stream', stream => {
+      this.incomingStream = stream
+      this.emit('stream', this)
+    })
+    
+
     this.peerParty.comms.socket.on('signal', async (data)=>{
 
-      if(pthis.eerParty.comms.authed){ return }
+      if(this.peerParty.comms.authed){ return }
 
       debug(' >> offer signal trickle', data)
 

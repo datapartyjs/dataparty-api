@@ -23,7 +23,7 @@
 
   <div>
     <input type="text" id="invite-id" placeholder="invite id" readonly>
-    <button onclick="answerCall()">Answer Call</button>
+    <button onclick="acceptCall()">Answer Call</button>
     <button onclick="rejectCall()">Reject Call</button>
   </div>
 
@@ -48,6 +48,21 @@ let inviteIdInput = document.getElementById('invite-id')
 
 let pendingInvite = null
 
+let localMediaSrc = null
+
+let config = new Dataparty.Config.LocalStorageConfig({
+  basePath:'',
+  cloud: {
+    uri: 'https://' + window.location.hostname + ':3000'
+  }
+})
+
+let hostLocal = new Dataparty.LokiParty({
+  path: 'call-test',
+  dbAdapter: new Dataparty.LokiParty.Loki.LokiMemoryAdapter(),
+  config: config
+})
+
 async function callUser(){
   if(pendingInvite){ return }
 
@@ -60,8 +75,87 @@ async function callUser(){
     action: 'call'
   })
 
+  pendingInvite.on('stream', invite => {
+    // got remote video stream, now let's show it in a video tag
+    console.log('showing remote video')
+    var video = document.getElementById('remote-video')
+
+    if ('srcObject' in video) {
+      video.srcObject = invite.incomingStream
+    } else {
+      video.src = window.URL.createObjectURL(invite.incomingStream) // for older browsers
+    }
+
+    video.play()
+  })
+
   pendingInvite.on('state-change', (invite)=>{
     console.log('state-change', invite.state, invite)
+  })
+
+  pendingInvite.once('accepted', async (invite)=>{
+
+    console.log('accepted')
+
+    localMediaSrc = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true
+    })
+
+    console.log('showing local video')
+    var video = document.getElementById('local-video')
+
+    if ('srcObject' in video) {
+      video.srcObject = localMediaSrc
+    } else {
+      video.src = window.URL.createObjectURL(localMediaSrc) // for older browsers
+    }
+
+    video.play()
+
+    await establish({
+      mediaSrc: localMediaSrc,
+      hostParty: hostLocal
+    })
+  })
+}
+
+async function acceptCall() {
+
+  localMediaSrc = await navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: true
+  })
+
+  await pendingInvite.accept(localMediaSrc)
+
+  pendingInvite.on('stream', invite => {
+    // got remote video stream, now let's show it in a video tag
+    console.log('showing remote video')
+    var video = document.getElementById('remote-video')
+
+    if ('srcObject' in video) {
+      video.srcObject = invite.incomingStream
+    } else {
+      video.src = window.URL.createObjectURL(invite.incomingStream) // for older browsers
+    }
+
+    video.play()
+  })
+}
+
+async function finalizeCall(){
+
+  localMediaSrc = await navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: true
+  })
+
+
+  await pendingInvite.establish({
+    mediaSrc: localMediaSrc,
+    config
+    //hostParty: hostLocal
   })
 }
 
@@ -78,7 +172,10 @@ async function rejectCall(){
 }
 
 async function init(){
-  matchMaker = new Dataparty.MatchMakerClient(null, null)
+
+  await hostLocal.start()
+
+  matchMaker = new Dataparty.MatchMakerClient(hostLocal.privateIdentity, null)
 
   await matchMaker.start()
 

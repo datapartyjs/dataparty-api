@@ -71,6 +71,7 @@ class PeerComms extends ISocketComms {
 
   setState(state) {
     this.state = state
+    debug('state -', state)
     this.emit('state', this.state)
   }
 

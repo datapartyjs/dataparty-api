@@ -148,7 +148,7 @@ class MatchMakerClient extends EventEmitter {
 
     if( pending &&
         //msg.invite.state == 'accepted' &&
-        pending.$meta.id == msg.invite.$meta.id
+        pending.inviteDoc.id == msg.invite.$meta.id
     ){
 
       pending.onInviteMsg(msg.invite)

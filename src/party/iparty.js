@@ -178,7 +178,7 @@ class IParty {
 
     const identityBson = this._identity.toBSON(true)
     const identityBase64 = dataparty_crypto.Routines.Utils.base64.encode(identityBson)
-    await this.config.write(path, identityBase64)
+    await this.config.write('identity', identityBase64)
   }
 
   /**
