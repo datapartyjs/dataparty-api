@@ -19,17 +19,49 @@ module.exports = class CreateSrvEndpoint extends IEndpoint {
   static get MiddlewareConfig(){
     return {
       pre: {
-        decrypt: false,
-        validate: Joi.object().keys(null)
+        decrypt: true,
+        validate: Joi.object().keys({
+          settings: Joi.object().keys({
+            enabled: Joi.boolean().default(true).required(),
+            domain: Joi.string().required(),
+            prefix: Joi.string().default('').required(),
+            sendFullErrors: Joi.boolean().default(false).required(),
+            useNative: Joi.boolean().default(false).required()
+          }).required(),
+          service: Joi.object().keys({
+            package: Joi.object().keys({
+              name: Joi.string().required(),
+              version: Joi.string().required(),
+              githash: Joi.string().required(),
+              branch: Joi.string().required()
+            }).required(),
+            schemas: Joi.object().keys(null),
+            documents: Joi.object().keys(null),
+            endpoints: Joi.object().keys(null),
+            middleware: Joi.object().keys(null),
+            middleware_order: Joi.object().keys(null),
+            tasks: Joi.object().keys(null),
+            topics: Joi.object().keys(null),
+            auth: Joi.object().keys(null),
+            compileSettings: Joi.object().keys(null)
+          }).required(),
+          signature: Joi.object().keys({
+            timestamp: Joi.number().required(),
+            type: Joi.string().required(),
+            value: Joi.string().required()
+          }).required()
+        })
       },
       post: {
-        encrypt: false,
+        encrypt: true,
         validate: Joi.object().keys(null).description('any output allowed')
       }
     }
   }
 
   static async run(ctx){
+
+    //verify sender is admin
 
     ctx.debug('hello')
     debug('echo')

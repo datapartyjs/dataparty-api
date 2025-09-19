@@ -9,6 +9,8 @@ class HostTopic {
     this.type = type
     this.created = Date.now()
 
+    this.throttle = false
+
     debug('new topic', path, '(', type, ')')
 
     this.lastMessage = null
@@ -57,6 +59,7 @@ class HostTopic {
       throw new Error('published called before advertise')
     }
 
+    /*
     if(!this.sending && this.sendRequest){
       
       this.sendRequest=false
@@ -72,11 +75,11 @@ class HostTopic {
 
       return
 
-    }else if(!this.sendRequest && !this.sending) {
+    }else if(!this.sendRequest && !this.sending) {*/
 
       this.lastMessage = data
       this.lastMessageTime = Date.now()
-    }
+    //}
 
     
 

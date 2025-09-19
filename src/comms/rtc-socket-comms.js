@@ -14,6 +14,8 @@ class RTCSocketComms extends PeerComms {
   constructor({remoteIdentity, host, party, rtcOptions, trickle = false, ...options}){
     super({remoteIdentity, host, party, ...options})
 
+    debug('starting host=',host, ' uuid=', this.uuid)
+
     this.rtcSettings = {
       trickle,
       initiator: host,

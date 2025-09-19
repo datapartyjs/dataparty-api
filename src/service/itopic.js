@@ -1,4 +1,4 @@
-const debug = require('debug')('dataparty.service.IAcl')
+const debug = require('debug')('dataparty.service.ITopic')
 
 module.exports = class ITopic {
 
@@ -17,7 +17,7 @@ module.exports = class ITopic {
 
   /**
    * @type {string}
-   * @member module:Service.ITask.Name
+   * @member module:Service.ITopic.Name
    */
   static get Name(){
     throw new Error('not implemented')
@@ -25,7 +25,7 @@ module.exports = class ITopic {
 
   /**
    * @type {string}
-   * @member module:Service.ITask.Description
+   * @member module:Service.ITopic.Description
    */
   static get Description(){
     throw new Error('not implemented')
@@ -44,16 +44,15 @@ module.exports = class ITopic {
   }
 
   /**
-   * @typedef {Object} module:Service.ITask.TaskInfo
+   * @typedef {Object} module:Service.ITopic.Info
    * @property {string} Name
    * @property {string} Description
-   * @property {module:Service.ITask.TaskConfig} Config
    */
 
   /**
    * Returns the task's `Name`, `Description`, and `Config`
-   * @type module:Service.ITask.TaskInfo
-   * @member module:Service.ITask.info
+   * @type module:Service.ITopic.Info
+   * @member module:Service.ITopic.info
    */
   static get info(){
     return {

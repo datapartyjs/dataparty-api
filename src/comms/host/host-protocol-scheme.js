@@ -19,7 +19,31 @@ const OP_HEADER = Joi.object().keys({
 const AUTH_OP = Joi.object().keys({
   id: ID_SCHEME.required(),
   op: Joi.string().valid('auth').required(),
-  session: Joi.string().required(), //Joi.objectId().required(),
+  session: Joi.string().required(),
+  offer: Joi.object().keys({
+    sender: Joi.object().keys({
+      id: Joi.string(),
+      key: Joi.object().keys({
+        type: Joi.string().required(),
+        hash: Joi.string().required(),
+        public: Joi.object().keys({
+          box: Joi.string().required(),
+          sign: Joi.string().required(),
+          pqkem: Joi.string().required(),
+          pqsign_ml: Joi.string().required(),
+          pqsign_slh: Joi.string().required()
+        }).required()
+      }).required(),
+      seed: Joi.allow(null)
+    }).required(),
+    pqCipherText: Joi.string().required(),
+    streamNonce: Joi.string().required()
+  }).required(),
+  signature: Joi.object().keys({
+    timestamp: Joi.number().required(),
+    type: Joi.string().required(),
+    value: Joi.string().required()
+  }).required()
 })
 
 const CALL_OP = Joi.object().keys({

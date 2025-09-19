@@ -1,0 +1,294 @@
+<html>
+<head>
+  <script src="node_modules/argon2-browser/dist/argon2-bundled.min.js"></script>
+
+  <title>p2p tester</title>
+
+  <style>
+
+    body {
+      background-color: rgb(95, 95, 95);
+      color:aliceblue;
+    }
+
+    .bordered {
+      border: 1px solid rgb(230, 230, 230);
+      padding: 10px;
+      margin: 0 auto;
+      max-width: 320px;
+      background-color: #141414cc;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+    }
+
+    p {
+      color: #666;
+      line-height: 1.6;
+    }
+
+    video {
+      height: 20vh
+    }
+
+    textarea {
+      width: 95vw;
+      height: 20vh;
+      white-space: pre;
+      overflow-wrap: normal;
+      overflow-x: scroll;
+      background-color: #666;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div>
+    Trickle: <input type="checkbox" id="trickle-checkbox">
+    HalfTrickle: <input type="checkbox" id="half-trickle-checkbox">
+    TURN only: <input type="checkbox" id="turn-checkbox">
+  </div>
+
+  <div>
+    <input type="text" id="user-hash" placeholder="your user hash" readonly>
+    <input type="text" id="user-call-hash" placeholder="user to call">
+    <select id="invite-role">
+      <option value="host">Host</option>
+      <option vlaue="client">Client</option>
+    </select>
+    <button onclick="callUser()">Start Call</button>
+    <button onclick="cancelCall()">Cancel Call</button>
+  </div>
+
+  <br>
+
+  <div>
+    <input type="text" id="invite-id" placeholder="invite id" readonly>
+    <button onclick="acceptCall()">Answer Call</button>
+    <button onclick="rejectCall()">Reject Call</button>
+  </div>
+
+  <div>
+    <h2>Local</h2>
+    <video id="local-video"></video>
+  </div>
+
+  <div>
+    <h2>Remote</h2>
+    <video id="remote-video"></video>
+  </div>
+
+  <div>
+    <h2>Offers Sent</h2>
+    <textarea id="offerArea"></textarea>
+  </div>
+
+
+  <div>
+    <h2>Offers recieved</h2>
+    <textarea id="answerArea"></textarea>
+  </div>
+
+  <div id="log">
+
+  </div>
+
+
+
+  <!--<script>
+    var log = document.querySelector('#log');
+    ['log', 'debug', 'info', 'warn', 'error'].forEach(function (verb) {
+        console[verb] = (function (method, verb, log) {
+            return function () {
+                method.apply(console, arguments);
+                var msg = document.createElement('div');
+                msg.classList.add(verb);
+
+                  msg.textContent = verb + ': ' + Array.prototype.slice.call(arguments).join(' ')
+
+                //}
+                log.appendChild(msg);
+            };
+        })(console[verb], verb, log);
+    });
+  </script> -->
+
+  <script src="dist/dataparty-browser.js"></script>
+
+<script>
+
+let matchMaker = null
+
+let userHashInput = document.getElementById('user-hash')
+let userCallHashInput = document.getElementById('user-call-hash')
+let inviteIdInput = document.getElementById('invite-id')
+
+let pendingInvite = null
+
+let localMediaSrc = null
+
+let config = new Dataparty.Config.LocalStorageConfig({
+  basePath:'',
+  cloud: {
+    uri: 'https://' + window.location.hostname + ':3000'
+  }
+})
+
+let hostLocal = new Dataparty.LokiParty({
+  path: 'call-test',
+  dbAdapter: new Dataparty.LokiParty.Loki.LokiMemoryAdapter(),
+  config: config
+})
+
+async function setupDebug(active){
+
+  let offerArea = document.getElementById('offerArea')
+  let answerArea = document.getElementById('answerArea')
+
+
+  active.on('signal', ({invite, data})=>{
+    answerArea.value += '\n' + JSON.stringify(data)
+  })
+
+
+  active.on('offer', ({invite, data})=>{
+    offerArea.value += '\n' + JSON.stringify(data)
+  })
+
+  active.on('stream', invite => {
+    // got remote video stream, now let's show it in a video tag
+    console.log('showing remote video')
+    var video = document.getElementById('remote-video')
+
+    if ('srcObject' in video) {
+      video.srcObject = invite.incomingStream
+    } else {
+      video.src = window.URL.createObjectURL(invite.incomingStream) // for older browsers
+    }
+
+    video.play()
+  })
+}
+
+async function callUser(){
+  if(pendingInvite){ return }
+
+  pendingInvite = await matchMaker.createInvite( userCallHashInput.value, {
+    type: 'webrtc',
+    service: '@dataparty/video-chat',
+    role: 'client'
+  }, {
+    roomId: '',
+    action: 'call'
+  })
+
+  pendingInvite.on('state-change', (invite)=>{
+    console.log('state-change', invite.state, invite)
+  })
+
+  pendingInvite.once('accepted', async (invite)=>{
+
+    console.log('accepted')
+
+    setupDebug(pendingInvite)
+
+    localMediaSrc = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true
+    })
+
+    console.log('showing local video')
+    var video = document.getElementById('local-video')
+
+    if ('srcObject' in video) {
+      video.srcObject = localMediaSrc
+    } else {
+      video.src = window.URL.createObjectURL(localMediaSrc) // for older browsers
+    }
+
+    video.play()
+
+    await pendingInvite.establish({
+      mediaSrc: localMediaSrc,
+      hostParty: hostLocal
+    })
+  })
+}
+
+async function acceptCall() {
+
+  setupDebug(pendingInvite)
+
+  localMediaSrc = await navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: true
+  })
+
+  console.log('showing local video')
+  var video = document.getElementById('local-video')
+
+  if ('srcObject' in video) {
+    video.srcObject = localMediaSrc
+  } else {
+    video.src = window.URL.createObjectURL(localMediaSrc) // for older browsers
+  }
+
+  video.play()
+
+  await pendingInvite.accept(localMediaSrc, config)
+}
+
+
+async function cancelCall() {
+  if(!pendingInvite){ return }
+
+  await pendingInvite.cancel()
+}
+
+async function rejectCall(){
+  if(!pendingInvite){ return }
+
+  await pendingInvite.reject()
+}
+
+async function init(){
+
+  await hostLocal.start()
+
+  matchMaker = new Dataparty.MatchMakerClient(hostLocal.privateIdentity, null)
+
+  await matchMaker.start()
+
+  let myHash = matchMaker.restParty.identity.key.hash
+
+  userHashInput.value = myHash
+
+  matchMaker.on('invited', invite=>{
+    console.log('invited', invite)
+
+    pendingInvite = invite
+
+
+    inviteIdInput.value = invite.id
+  })
+}
+
+function start(){
+  init().catch((err)=>{
+    console.error('crashed', err)
+  })
+
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  localStorage.setItem('debug','*')
+    start()
+});
+   
+
+</script>
+
+
+  </body>
+</html>

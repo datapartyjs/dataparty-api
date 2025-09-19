@@ -5,6 +5,7 @@ const Path = require('path')
  */
 
 
+exports.IAuth = require('./iauth')
 exports.IContext= require('./icontext')
 exports.IService= require('./iservice')
 exports.IEndpoint= require('./iendpoint')

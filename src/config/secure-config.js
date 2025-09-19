@@ -372,7 +372,8 @@ class SecureConfig extends IConfig {
 
         this.content = await this.config.read(this.id+'.content')
 
-        const contentMsg = new dataparty_crypto.Message( this.content )
+        const contentMsg = new dataparty_crypto.Message( {} )
+        contentMsg.fromJSON(this.content)
 
         //! Verify message
         await contentMsg.decrypt(pwIdentity)
@@ -467,7 +468,8 @@ class SecureConfig extends IConfig {
         
         this.updateTimeout()
 
-        const decryptedContent = new dataparty_crypto.Message( this.content )
+        const decryptedContent = new dataparty_crypto.Message( {} )
+        decryptedContent.fromJSON(this.content)
         await decryptedContent.decrypt(this.identity)
 
         return decryptedContent.msg

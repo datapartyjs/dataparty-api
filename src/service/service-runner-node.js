@@ -35,6 +35,7 @@ class ServiceRunnerNode {
     this.endpoint = {}
     this.tasks = {}
     this.topics = {}
+    this.auth = null
 
     this.prefix=prefix
     this.router = router
@@ -53,6 +54,9 @@ class ServiceRunnerNode {
 
     this.started = true
 
+    debug('loading auth')
+    await this.loadAuth()
+
     const taskMap = Hoek.reach(this.service, 'compiled.tasks')
     for(let name in taskMap){
       debug('\t',name)
@@ -65,7 +69,6 @@ class ServiceRunnerNode {
     }
 
     await this.taskRunner.start()
-
 
     debug('starting endpoints')
 
@@ -80,7 +83,7 @@ class ServiceRunnerNode {
     //await Promise.all(endpointsLoading)
     debug('endpoints ready:')
     for(let name in this.endpoint){
-      debug('\t', Path.join('/', name))
+      debug('\t', Path.join('/venue/api', this.prefix, name))
     }
 
     debug('starting topics')
@@ -91,6 +94,50 @@ class ServiceRunnerNode {
       await this.loadTopic(name)
     }
   }
+
+
+  async loadAuth(){
+    if(this.auth){ return }
+
+    let name = 'auth'
+    debug('loadAuth', name, 'useNative =',this.useNative)
+
+    let dt = new DeltaTime().start()
+    
+
+    "use strict"
+    let authInstance=null
+
+    let AuthClass = null
+
+    if(!this.useNative){
+      var self={}
+      const build = Hoek.reach(this.service, `compiled.auth`)
+      eval(build.code/*, build.map*/)
+      AuthClass = self.Lib
+    }
+    else{
+      AuthClass = this.service.constructors.auth
+    }
+
+    authInstance = new AuthClass({
+      context:{
+        party: this.party,
+        serviceRunner: this
+      }
+    })
+
+
+    debug('auth info', AuthClass.Name, '-', AuthClass.Description)
+
+    this.auth = authInstance
+
+
+    dt.end()
+    debug('loaded auth','in',dt.deltaMs,'ms')
+  }
+
+
 
   assertTaskIsValid(name){
     if(!this.tasks[name]){
@@ -237,7 +284,7 @@ class ServiceRunnerNode {
 
     this.topics[name] = topic
 
-    const routablePath = Path.join(this.prefix, Path.normalize(name))
+    const routablePath = Path.normalize(name)
 
     let route = this.topicsRouter.add(name, routablePath/*, this.topicHandler(topic)*/)
 
@@ -262,11 +309,11 @@ class ServiceRunnerNode {
 
     if(!this.useNative){
       const build = Hoek.reach(this.service, `compiled.endpoints.${name}`)
-      debug('build', build.code)
+      //debug('build', build.code)
       var self={}
       eval(build.code, build.map)
       endpoint = self.Lib
-      debug('obj Lib', self)
+      //debug('obj Lib', self)
     }
     else{
       endpoint = this.service.constructors.endpoints[name]
@@ -382,7 +429,7 @@ class ServiceRunnerNode {
    * @param {Express.Response} res 
    * @returns 
    */
-  async onRequest(req, res){
+  async onRequest(req, res, next){
     debug('onRequest')
 
     debug('req', req.method, req.hostname,'-', req.url, req.ips, req.body)
@@ -390,40 +437,63 @@ class ServiceRunnerNode {
 
     let route = await this.router.route(req, res)
 
-    debug('req done')
+    debug('req done - is null', route == null)
 
 
     if(!route){
-      res.status(404).end()
-      return
+      //res.status(404).end()
+      return next()
     }
   }
 
   async getTopic(path){
-    debug('looking up route', path)
+    debug('looking up topic', path)
 
     let p = new Promise(async (resolve,reject)=>{
 
-      let route = await this.topicsRouter.route(path, (event)=>{
+      //debug('\tcalling route', path)
+      //debug('\t', Object.keys(this.topics))
 
-        //debug(event)
-        //debug('topic route callback')
+      try{
 
+        //debug('tryin', this.topicsRouter.route)
+        let routed = false
+        
+        let route = await this.topicsRouter.route(path, (event)=>{
+          
+          //debug(event)
+          //debug('topic route callback - ', path)
+          
+          
+          if(!event.route){
+            debug('no such topic', path)
+            //reject('no such topic')
+            routed = true
+            resolve(null)
+          } else {
+            debug('found route', event.route.name)
+          }
 
-        if(!event.route){
-          debug('no such topic', path)
-          //reject('no such topic')
-          resolve(null)
-        } else {
-          debug('found route', event.route.name)
+          routed = true
+          
+          return resolve({ route: event.route, topic: event.route.data, arguments: event.arguments })
+          
+        })
+
+        debug('\trouting done', routed)
+
+        if(!routed){
+          return reject(null)
         }
+        
+      } catch(err){
 
-        return resolve({ route: event.route, topic: event.route.data, arguments: event.arguments })
+        debug(err)
 
-      })
-
+        return reject(err)
+      }
     })
-
+      
     return await p
   }
 

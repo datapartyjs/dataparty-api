@@ -29,7 +29,8 @@ module.exports = class IService {
         post: {}
       },
       tasks: {},
-      topics: {}
+      topics: {},
+      auth: {}
     }
 
     this.middleware_order = {
@@ -46,7 +47,8 @@ module.exports = class IService {
         post: {}
       },
       tasks: {},
-      topics: {}
+      topics: {},
+      auth: null
     }
 
     this.compiled = {
@@ -67,7 +69,8 @@ module.exports = class IService {
         post: []
       },
       tasks: {},
-      topics: {}
+      topics: {},
+      auth: {}
     }
 
     this.compileSettings = {

@@ -1,3 +1,5 @@
+
+const {Routines, Identity} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.comms.peercomms')
 const uuidv4 = require('uuid/v4')
 const HttpMocks = require('node-mocks-http')
@@ -9,7 +11,7 @@ const Joi = require('joi')
 const HostOp = require('./host/host-op')
 const HostProtocolScheme = require('./host/host-protocol-scheme')
 
-const AUTH_TIMEOUT_MS = 3000
+const AUTH_TIMEOUT_MS = 25000
 
 const HOST_SESSION_STATES = {
   AUTH_REQUIRED: 'AUTH_REQUIRED',
@@ -70,6 +72,7 @@ class PeerComms extends ISocketComms {
 
   setState(state) {
     this.state = state
+    debug('state -', state)
     this.emit('state', this.state)
   }
 
@@ -359,8 +362,66 @@ class PeerComms extends ISocketComms {
   }
 
   async handleAuthOp(op){
+
+    debug('handleAuthOp -', op)
+
+    const offerBSON = Routines.BSON.serializeBSONWithoutOptimiser( op.input.offer )
+    const offer = {
+      sender: new Identity(op.input.offer.sender),
+      pqCipherText: op.input.offer.pqCipherText,
+      streamNonce: op.input.offer.streamNonce
+    }
+
+    const signature = {
+      timestamp: op.input.signature.timestamp,
+      type: op.input.signature.type,
+      value: Routines.Utils.base64.decode( op.input.signature.value )
+    }
+
+    const computedHash = await Routines.hashKey( offer.sender.key )
+    debug('computed hash -', computedHash)
+    if(computedHash != offer.sender.key.hash){ throw new Error('DENY - sender key hash is not valid!') }
+
+    if(this.party.hostRunner){
+      const actor = await this.party.hostRunner.auth.lookupIdentity(offer.sender)
+      const verified = await Routines.verifyDataPQ(actor, signature, offerBSON)
+      
+      if(!verified){
+        throw new Error('DENY(hostRunner) - auth op signature is not valid')
+      }
+
+      if(this.discoverRemoteIdentity){ this.remoteIdentity = actor }
+      
+      const authorized = await this.party.hostRunner.auth.isSocketConnectionAllowed(actor)
+      if(!authorized){
+
+        clearTimeout(this._host_auth_timeout)
+        this._host_auth_timeout = null
+
+        this.authed = false
+        this.setState(PeerComms.STATES.SERVER_CLOSED)
+        op.setState(HostOp.STATES.Finished_Success)
+
+        await this.stop()
+
+        debug('DENY - client not allowed - ', this.remoteIdentity)
+      }
+    } else {
+      const actor = offer.sender
+      const verified = await Routines.verifyDataPQ(actor, signature, offerBSON)
+      
+      if(!verified){ throw new Error('DENY - auth op signature is not valid') }
+
+      if(this.discoverRemoteIdentity){
+        this.remoteIdentity = actor
+      } else if(this.remoteIdentity.key.hash != actor.key.hash){
+        throw new Error('DENY - auth op sender does not match expected remote')
+      }
+    }
     
-    debug('allowing client - ', this.remoteIdentity)
+    debug('ALLOW - allowing client - ', this.remoteIdentity)
+
+    this.aesStream = await this.party.privateIdentity.recoverStream(offer, true)
 
     clearTimeout(this._host_auth_timeout)
     this._host_auth_timeout = null
@@ -380,7 +441,7 @@ class PeerComms extends ISocketComms {
 
       debug('calling runner')
 
-      if(op.input.endpoint == 'api-v2-peer-bouncer'){
+      if(op.input.endpoint == 'api-v2-peer-bouncer' && await this.party.hostRunner.auth.isAdmin(this.remoteIdentity)){
         debug('ask->', truncateString(op.input.data, 1024))
         op.result = {result: await this.party.handleCall(op.input.data) }
 
@@ -418,7 +479,7 @@ class PeerComms extends ISocketComms {
       op.setState(HostOp.STATES.Finished_Success)
       return
 
-    } else if(op.input.endpoint == 'api-v2-peer-bouncer'){
+    } else if(op.input.endpoint == 'api-v2-peer-bouncer' && await this.party.hostRunner.auth.isAdmin(this.remoteIdentity)){
       
       debug('ask->',op.input.data)
       op.result = {result: await this.party.handleCall(op.input.data) }

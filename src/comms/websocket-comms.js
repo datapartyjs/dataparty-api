@@ -20,6 +20,8 @@ class WebsocketComms extends PeerComms {
     this.uri = uri
     this.connection = connection
 
+    debug('starting host=',host, ' uuid=', this.uuid, ' uri=', this.uri)
+
     if(this.host && !this.connection){
       throw new Error('existing connection expected')
     }

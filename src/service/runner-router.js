@@ -56,8 +56,11 @@ class RunnerRouter {
     debug('getRunnerByDomain -', domain)
     const runner = this.runnersByDomain.get(domain)
     if(!runner){
+      debug('\t', 'failed to locate domain runner, using default')
       return this.defaultRunner
     }
+
+    return runner
   }
 
   /**
@@ -84,11 +87,13 @@ class RunnerRouter {
     debug('addRunner - ', partyId, domain)
 
     if(!this.runnersByHost.has(partyId)){
+      debug('adding to runnersByHost')
       this.runnersByHost.set(partyId, runner)
     }
 
     
     if(domain && !this.runnersByDomain.has(domain)){
+      debug('adding to runnersByDomain map')
       this.runnersByDomain.set(domain, runner)
     }
   }
@@ -100,10 +105,10 @@ class RunnerRouter {
    * @param {Express.Response} res 
    * @returns 
    */
-  onRequest(req, res){
+  onRequest(req, res, next){
     const runner = this.getRunnerByDomain(req.hostname)
 
-    return runner.onRequest.bind(runner)(req,res)
+    return runner.onRequest.bind(runner)(req,res, next)
   }
 }
 
