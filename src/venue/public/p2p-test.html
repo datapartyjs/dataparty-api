@@ -1,6 +1,5 @@
 <html>
 <head>
-  <script src="dist/dataparty-browser.js"></script>
   <script src="node_modules/argon2-browser/dist/argon2-bundled.min.js"></script>
 
   <title>p2p tester</title>
@@ -32,7 +31,7 @@
     }
 
     textarea {
-      width: 100vw;
+      width: 95vw;
       height: 20vh;
       white-space: pre;
       overflow-wrap: normal;
@@ -91,6 +90,32 @@
     <textarea id="answerArea"></textarea>
   </div>
 
+  <div id="log">
+
+  </div>
+
+
+
+  <!--<script>
+    var log = document.querySelector('#log');
+    ['log', 'debug', 'info', 'warn', 'error'].forEach(function (verb) {
+        console[verb] = (function (method, verb, log) {
+            return function () {
+                method.apply(console, arguments);
+                var msg = document.createElement('div');
+                msg.classList.add(verb);
+
+                  msg.textContent = verb + ': ' + Array.prototype.slice.call(arguments).join(' ')
+
+                //}
+                log.appendChild(msg);
+            };
+        })(console[verb], verb, log);
+    });
+  </script> -->
+
+  <script src="dist/dataparty-browser.js"></script>
+
 <script>
 
 let matchMaker = null
@@ -117,16 +142,10 @@ let hostLocal = new Dataparty.LokiParty({
 })
 
 async function setupDebug(active){
-  // id="trickle-checkbox">
-  // id="half-trickle-checkbox">
-  // id="turn-checkbox">
 
   let offerArea = document.getElementById('offerArea')
   let answerArea = document.getElementById('answerArea')
 
-//  let trickleCheckbox = document.getElementById('trickle-checkbox')
-//  let halfTrickleCheckbox = document.getElementById('half-trickle-checkbox')
-//  let turnCheckbox = document.getElementById('turn-checkbox')
 
   active.on('signal', ({invite, data})=>{
     answerArea.value += '\n' + JSON.stringify(data)
@@ -163,20 +182,6 @@ async function callUser(){
     roomId: '',
     action: 'call'
   })
-
-/*  pendingInvite.on('stream', invite => {
-    // got remote video stream, now let's show it in a video tag
-    console.log('showing remote video')
-    var video = document.getElementById('remote-video')
-
-    if ('srcObject' in video) {
-      video.srcObject = invite.incomingStream
-    } else {
-      video.src = window.URL.createObjectURL(invite.incomingStream) // for older browsers
-    }
-
-    video.play()
-  })*/
 
   pendingInvite.on('state-change', (invite)=>{
     console.log('state-change', invite.state, invite)
@@ -269,9 +274,18 @@ async function init(){
   })
 }
 
-init().catch((err)=>{
-  console.error('crashed', err)
-})
+function start(){
+  init().catch((err)=>{
+    console.error('crashed', err)
+  })
+
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  localStorage.setItem('debug','*')
+    start()
+});
+   
 
 </script>
 

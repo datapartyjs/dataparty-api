@@ -12,7 +12,7 @@ const WebsocketComms = require('../../comms/websocket-comms')
 const PeerInvite = require('./peer-invite')
 
 class MatchMakerClient extends EventEmitter {
-  constructor(identity, contacts, urlOrParty = 'https://postquantum.one/api/', wsUrlOrParty = 'https://postquantum.one/ws'){
+  constructor(identity, contacts, urlOrParty = 'https://postquantum.one/api/', wsUrlOrParty = 'wss://postquantum.one/ws'){
 
     super()
 
