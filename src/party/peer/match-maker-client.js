@@ -16,7 +16,9 @@ class MatchMakerClient extends EventEmitter {
 
     super()
 
+    
     this.contacts = contacts
+    this.sessionKey = null
     this.identity = identity
     this.wsParty = null
     this.restParty = null
@@ -47,9 +49,7 @@ class MatchMakerClient extends EventEmitter {
 
 
   async start(){
-    /*
-     *  
-     */
+    this.sessionKey = await dataparty_crypto.Identity.fromRandomSeed({id:'ephemeral-session-key'})
 
     if(!this.restParty){
       let config = new MemoryConfig({
@@ -65,7 +65,7 @@ class MatchMakerClient extends EventEmitter {
         config
       })
 
-      if(this.identity){ await this.restParty.setIdentity(this.identity) }
+      await this.restParty.setIdentity(this.sessionKey) 
 
       debug('starting restParty')
       await this.restParty.start()
@@ -102,7 +102,7 @@ class MatchMakerClient extends EventEmitter {
 
       this.invitesRx = new this.wsParty.ROSLIB.Topic({
         ros : this.wsParty.comms.ros,
-        name : '/invites/' + encodeURIComponent(this.restParty.identity.key.hash) + '/rx',
+        name : '/invites/' + encodeURIComponent(this.identity.key.hash) + '/rx',
         messageType: 'Object'
       })
 
@@ -111,7 +111,7 @@ class MatchMakerClient extends EventEmitter {
 
       this.invitesTx = new this.wsParty.ROSLIB.Topic({
         ros : this.wsParty.comms.ros,
-        name : '/invites/' + encodeURIComponent(this.restParty.identity.key.hash) + '/tx',
+        name : '/invites/' + encodeURIComponent(this.identity.key.hash) + '/tx',
         messageType: 'Object'
       })
 
@@ -161,12 +161,58 @@ class MatchMakerClient extends EventEmitter {
     }
   }
 
+
+/*
+
+annoucement: {
+    created: {
+      type: Number,
+      required: true
+    },
+    expiry: {
+      type: Number,
+      index: true,
+      required: true
+    },
+    sessionKey: PublicKeySchema(true),
+    actorKey: PublicKeySchema(false)
+  },
+  trust: {
+    actorSig: {required: true, type: String},   //! base64 of BSON signature
+    sessionSig: {required: true, type: String}  //! base64 of BSON signature
+  }
+}
+
+*/
+
+
   async announcePublicKeys(){
     const announceData = {
-      type: this.restParty.identity.key.type,
-      hash: this.restParty.identity.key.hash,
-      public: this.restParty.identity.key.public
+      annoucement: {
+        created: Date.now(),
+        expiry: Date.now() + 24*60*60*1000,  //! Set session expiry to 24hr from now
+        sessionKey: {
+          type: this.sessionKey.key.type,
+          hash: this.sessionKey.key.hash,
+          public: this.sessionKey.key.public
+        },
+        actorKey: {
+          type: this.identity.key.type,
+          hash: this.identity.key.hash,
+          public: this.identity.key.public
+        }
+      },
+      trust: {
+        actorSig: null,
+        sessionSig: null
+      }
     }
+
+    const actorSigMsg = await this.identity.sign(announceData.annoucement, true)
+    const sessionSigMsg = await this.sessionKey.sign(announceData.annoucement, true)
+
+    announceData.trust.actorSig =  dataparty_crypto.Routines.Utils.base64.encode( actorSigMsg.sig )
+    announceData.trust.sessionSig = dataparty_crypto.Routines.Utils.base64.encode( sessionSigMsg.sig )
 
     debug('announcePublicKeys', announceData)
 
@@ -181,8 +227,8 @@ class MatchMakerClient extends EventEmitter {
   async lookupPublicKey(hash){
     debug('lookupPublicKey - hash:', hash)
 
-    if(hash == this.restParty.identity.key.hash){
-      return this.restParty.identity
+    if(hash == this.identity.key.hash){
+      return this.identity
     }
 
     if(this.contacts){
@@ -229,7 +275,7 @@ class MatchMakerClient extends EventEmitter {
       service: service ? service : '@dataparty/video-chat',
       role: role ? role : 'client',
       timestamp: (new Date()).getTime(),
-      from: this.wsParty.identity.key.hash,
+      from: this.identity.key.hash,
       to: toIdentity.key.hash,
       session: session ? session : Math.random().toString(36).slice(2),
       info: info ? info : {
@@ -238,13 +284,13 @@ class MatchMakerClient extends EventEmitter {
       }
     }
 
-    const secureInvite = await this.wsParty.privateIdentity.encrypt(invitePayload, toIdentity)
+    const secureInvite = await this.identity.encrypt(invitePayload, toIdentity)
 
     debug('secure-invite', secureInvite)
 
     const invitePostData = {
       to: toIdentity.key.hash,
-      from: this.wsParty.identity.key.hash,
+      from: this.identity.key.hash,
       payload: JSON.stringify(secureInvite.toJSON())
     }
 
@@ -258,7 +304,7 @@ class MatchMakerClient extends EventEmitter {
 
     if(!inviteDoc){ return }
 
-    let invite = new PeerInvite(inviteResult.invite, toIdentity, this, this.restParty.identity)
+    let invite = new PeerInvite(inviteResult.invite, toIdentity, this, this.identity)
 
     invite.payload = invitePayload
 
@@ -270,10 +316,11 @@ class MatchMakerClient extends EventEmitter {
   }
 
   async lookupInvites({createdAfter, type='to', id, actorHash  }){
-    let actor = this.wsParty.identity.key.hash
+    let actor = this.identity.key.hash
 
     const lookup = {
-      invite:id, actor:actorHash ? actorHash : this.restParty.identity.key.hash,
+      invite: id,
+      actor: actorHash ? actorHash : this.identity.key.hash,
       createdAfter,
       type: !type ? 'to' : type
     }
@@ -336,7 +383,7 @@ class MatchMakerClient extends EventEmitter {
   async setInviteState(invite, newState){
 
     debug('setInviteState')
-    let actor = this.restParty.identity.key.hash
+    let actor = this.identity.key.hash
 
     const inviteState = {
       invite: invite.inviteDoc.$meta.id,

@@ -15,6 +15,17 @@ const END_STATES = [
 const TURN_PASSWORD='somethingsimple'
 const TURN_USERNAME='srs_demo'
 
+const DEFAULT_ICE_SERVERS={
+  iceServers: [
+    { urls: 'stun:st1.dataparty.xyz:3478'},
+    {
+      urls:'turns:st1.dataparty.xyz:5349',
+      credential: TURN_PASSWORD,
+      username: TURN_USERNAME
+    }
+  ]
+}
+
 async function delay(ms){
   return new Promise((resolve,reject)=>{
     setTimeout(resolve, ms)
@@ -58,11 +69,11 @@ class PeerInvite extends EventEmitter {
   isSender(doc){
 
     if(doc){
-      if(doc.toHash == matchMaker.wsParty.identity.key.hash){return false }
+      if(doc.toHash == matchMaker.identity.key.hash){return false }
       else { return true }
     }
 
-    if(this.inviteDoc.toHash == matchMaker.wsParty.identity.key.hash){return false }
+    if(this.inviteDoc.toHash == matchMaker.identity.key.hash){return false }
     else { return true }
   }
 
@@ -91,7 +102,7 @@ class PeerInvite extends EventEmitter {
     let msgWorkAround = new dataparty_crypto.Message({})
     msgWorkAround.fromJSON(JSON.parse(changedInvite.payload))
 
-    let payload = await this.matchMaker.wsParty.privateIdentity.decrypt(
+    let payload = await this.matchMaker.identity.decrypt(
         msgWorkAround
     )
 
@@ -179,7 +190,7 @@ class PeerInvite extends EventEmitter {
         let msgWorkAround = new dataparty_crypto.Message({})
         msgWorkAround.fromJSON(msg.offers[i])
 
-        let offer = await party.privateIdentity.decrypt(msgWorkAround)
+        let offer = await this.matchMaker.identity.decrypt(msgWorkAround)
 
         if(offer.from.hash != otherIdentity.key.hash){
           debug('BAD IDENTITY')
@@ -200,9 +211,9 @@ class PeerInvite extends EventEmitter {
 
     debug('subscribed to - ', this.topicSub.name)
 
-    if(this.isSender()){
-      //await delay(500)
-    }
+    /*if(this.isSender()){
+      await delay(500)
+    }*/
 
     this.peerParty = new PeerParty({
       comms: new RTCSocketComms({
@@ -215,17 +226,8 @@ class PeerInvite extends EventEmitter {
           trickle: rtcSettings.trickle? rtcSettings.trickle : true,
           iceTransportPolicy : rtcSettings.iceTransportPolicy  ? rtcSettings.iceTransportPolicy  : 'all',
           allowHalfTrickle: rtcSettings.allowHalfTrickle? rtcSettings.allowHalfTrickle :  true,
-          iceCompleteTimeout: 30*1000,
-          config: {
-            iceServers: [
-              { urls: 'stun:st1.dataparty.xyz:3478'},
-              {
-                urls:'turns:st1.dataparty.xyz:5349',
-                credential: TURN_PASSWORD,
-                username: TURN_USERNAME
-              }
-            ]
-          }
+          iceCompleteTimeout: rtcSettings.iceCompleteTimeout ? rtcSettings.iceCompleteTimeout : 30*1000,
+          config: DEFAULT_ICE_SERVERS
         },
         trickle: rtcSettings.trickle? rtcSettings.trickle : true,
         discoverRemoteIdentity: false,
@@ -266,7 +268,7 @@ class PeerInvite extends EventEmitter {
       debug(' >> offer signal trickle', data)
 
 
-      const secureOffer = await party.privateIdentity.encrypt(data, otherIdentity)
+      const secureOffer = await this.matchMaker.identity.encrypt(data, otherIdentity)
 
       if(host && !sendFreely){
         //console.log('am host')
