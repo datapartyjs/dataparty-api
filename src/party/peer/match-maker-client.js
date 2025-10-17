@@ -75,6 +75,8 @@ class MatchMakerClient extends EventEmitter {
           party:this.restParty,
           config: this.restParty.config
         })
+
+        this.restParty.comms.sessionId = this.sessionKey.key.hash
       }
 
       await this.announcePublicKeys()
@@ -86,7 +88,7 @@ class MatchMakerClient extends EventEmitter {
           uri: this.wsUrl,
           discoverRemoteIdentity: false,
           remoteIdentity: await this.restParty.comms.getServiceIdentity(),
-          session: Math.random().toString(36).slice(2)
+          session: this.sessionKey.key.hash
         }),
         config: this.restParty.config
       })
@@ -208,8 +210,12 @@ annoucement: {
       }
     }
 
+
     const actorSigMsg = await this.identity.sign(announceData.annoucement, true)
     const sessionSigMsg = await this.sessionKey.sign(announceData.annoucement, true)
+
+    debug('actorSigMsg', actorSigMsg)
+    debug('sessionSigMsg', sessionSigMsg)
 
     announceData.trust.actorSig =  dataparty_crypto.Routines.Utils.base64.encode( actorSigMsg.sig )
     announceData.trust.sessionSig = dataparty_crypto.Routines.Utils.base64.encode( sessionSigMsg.sig )
@@ -240,7 +246,7 @@ annoucement: {
     const lookupResult = await this.restParty.comms.call('key/lookup', lookupData, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
-      useSessions: false
+      useSessions: true
     })
 
     if(!lookupResult.done){
@@ -297,7 +303,7 @@ annoucement: {
     const inviteResult = await this.restParty.comms.call('invite/create', invitePostData, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
-      useSessions: false
+      useSessions: true
     })
 
     const inviteDoc = inviteResult.invite
@@ -328,7 +334,7 @@ annoucement: {
     const lookupResult = await this.restParty.comms.call('invite/lookup', lookup, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
-      useSessions: false
+      useSessions: true
     })
 
     if(!lookupResult.done){
@@ -387,14 +393,14 @@ annoucement: {
 
     const inviteState = {
       invite: invite.inviteDoc.$meta.id,
-      actor,
+      //actor,
       state: newState
     }
 
     const inviteStateResult = await this.restParty.comms.call('invite/set-state', inviteState, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
-      useSessions: false
+      useSessions: true
     })
 
     console.log('setInviteState result', inviteStateResult)
@@ -404,6 +410,35 @@ annoucement: {
     }
 
     return inviteStateResult.invite
+  }
+
+  async createShortCode(uses=3, expiry){
+    debug('setInviteState')
+    let actor = this.identity.key.hash
+
+    const request = {
+      invite: invite.inviteDoc.$meta.id,
+      actor,
+      state: newState
+    }
+
+    const result = await this.restParty.comms.call('short-code/create', request, {
+      expectClearTextReply: false,
+      sendClearTextRequest: false,
+      useSessions: true
+    })
+
+    console.log('setInviteState result', result)
+
+    if(!result.done){
+      return null
+    }
+
+    return result.invite
+  }
+
+  async lookupPublicKeyByShortCode( code ){
+    //
   }
 }
 

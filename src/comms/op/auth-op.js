@@ -19,7 +19,14 @@ class AuthOp extends SocketOp {
     this.stream = aesStreamOffer.stream
 
     const offer = {
-      sender: aesStreamOffer.sender,
+      sender: {
+        id: aesStreamOffer.sender.key.id,
+        key: {
+          type: aesStreamOffer.sender.key.type,
+          hash: aesStreamOffer.sender.key.hash,
+          public: aesStreamOffer.sender.key.public
+        }
+      },
       pqCipherText: aesStreamOffer.pqCipherText,
       streamNonce: aesStreamOffer.streamNonce
     }
