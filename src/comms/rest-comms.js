@@ -49,20 +49,20 @@ class RestComms extends EventEmitter {
     await this.loadCloud()
     await this.party.loadIdentity()
     await this.party.loadActor()
-    await this.loadSession()
+    //await this.loadSession()
 
     if (this.authed) {
       return
     }
 
     if (this.party.hasActor() && this.party.hasIdentity()) {
-      if (this.hasSession()) {
+      /*if (this.hasSession()) {
         debug('RECOVERING SESSION')
         return this.authRecover().catch(this.allocateSession.bind(this))
       }
 
       debug('ALLOCATING SESSION')
-      return this.allocateSession()
+      return this.allocateSession()*/
     }
 
     throw new Error('client needs to be enrolled')

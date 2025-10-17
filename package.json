@@ -62,8 +62,9 @@
     "mkssl": "openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem"
   },
   "dependencies": {
+    "@babel/runtime": "^7.28.4",
     "@dataparty/bouncer-db": "1.0.1",
-    "@dataparty/crypto": "github:datapartyjs/dataparty-crypto#postquantum-bson",
+    "@dataparty/crypto": "github:datapartyjs/dataparty-crypto",
     "@dataparty/tasker": "^0.0.3",
     "@diva.exchange/i2p-sam": "^4.1.8",
     "@markwylde/liferaft": "^1.3.4",

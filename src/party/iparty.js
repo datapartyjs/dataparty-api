@@ -170,7 +170,7 @@ class IParty {
     if (!this.hasIdentity()){ return null }
 
 
-    return dataparty_crypto.Identity.fromBSON(this._identity.toBSON())
+    return dataparty_crypto.Identity.fromBSON(this._identity.toBSON(false))
   }
 
   async setIdentity(newIdentity){

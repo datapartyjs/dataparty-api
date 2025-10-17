@@ -260,7 +260,7 @@ async function init(){
 
   await matchMaker.start()
 
-  let myHash = matchMaker.restParty.identity.key.hash
+  let myHash = matchMaker.identity.key.hash
 
   userHashInput.value = myHash
 
