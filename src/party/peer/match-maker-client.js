@@ -412,14 +412,12 @@ annoucement: {
     return inviteStateResult.invite
   }
 
-  async createShortCode(uses=3, expiry){
-    debug('setInviteState')
-    let actor = this.identity.key.hash
+  async createShortCode(use_limit=3, expiry){
+    debug('createShortCode')
 
     const request = {
-      invite: invite.inviteDoc.$meta.id,
-      actor,
-      state: newState
+      use_limit,
+      expiry: !expiry ? Date.now()+24*60*60*3 : expiry
     }
 
     const result = await this.restParty.comms.call('short-code/create', request, {
@@ -428,13 +426,13 @@ annoucement: {
       useSessions: true
     })
 
-    console.log('setInviteState result', result)
+    console.log('createShortCode result', result)
 
     if(!result.done){
       return null
     }
 
-    return result.invite
+    return result.short_code
   }
 
   async lookupPublicKeyByShortCode( code ){
