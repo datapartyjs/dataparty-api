@@ -93,8 +93,6 @@ class MatchMakerClient extends EventEmitter {
         config: this.restParty.config
       })
 
-      //if(this.identity){ await this.wsParty.setIdentity(this.identity) }
-
       await this.wsParty.start()
 
       debug('starting wsParty')
@@ -163,29 +161,6 @@ class MatchMakerClient extends EventEmitter {
     }
   }
 
-
-/*
-
-annoucement: {
-    created: {
-      type: Number,
-      required: true
-    },
-    expiry: {
-      type: Number,
-      index: true,
-      required: true
-    },
-    sessionKey: PublicKeySchema(true),
-    actorKey: PublicKeySchema(false)
-  },
-  trust: {
-    actorSig: {required: true, type: String},   //! base64 of BSON signature
-    sessionSig: {required: true, type: String}  //! base64 of BSON signature
-  }
-}
-
-*/
 
 
   async announcePublicKeys(){
@@ -269,7 +244,6 @@ annoucement: {
     let toIdentity = null
     if(typeof toHashOrIdentity == 'string'){
       toIdentity = await this.lookupPublicKey(toHashOrIdentity)
-      //this.otherIdentity = toIdentity
     } else {
       toIdentity = toHashOrIdentity
     }
@@ -393,7 +367,6 @@ annoucement: {
 
     const inviteState = {
       invite: invite.inviteDoc.$meta.id,
-      //actor,
       state: newState
     }
 
@@ -436,7 +409,23 @@ annoucement: {
   }
 
   async lookupPublicKeyByShortCode( code ){
-    //
+    debug('lookupPublicKeyByShortCode')
+
+    const request = { code }
+
+    const result = await this.restParty.comms.call('short-code/lookup', request, {
+      expectClearTextReply: false,
+      sendClearTextRequest: false,
+      useSessions: true
+    })
+
+    console.log('lookupPublicKeyByShortCode result', result)
+
+    if(!result.done){
+      return null
+    }
+
+    return result.short_code
   }
 }
 
