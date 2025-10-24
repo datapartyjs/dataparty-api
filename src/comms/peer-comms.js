@@ -231,8 +231,8 @@ class PeerComms extends ISocketComms {
     this.close()
   }
 
-  async close(){
-    debug('close', this.uuid)
+  async close(event){
+    debug('close', this.uuid, event)
 
     if(this.party.topics){
       await this.party.topics.destroyNode(this)
