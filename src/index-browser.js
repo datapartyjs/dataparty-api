@@ -1,3 +1,9 @@
+var Buffer = require('buffer/').Buffer
+
+if(!window.Buffer){
+  window.Buffer = Buffer
+}
+
 const Comms = require('./comms')
 const Party = require('./party/index-browser')
 const Topics = require('./topics')
@@ -27,3 +33,4 @@ let lib = {
 
 module.exports = lib
 window.Dataparty = lib
+

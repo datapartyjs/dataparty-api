@@ -15,6 +15,13 @@ const OP_HEADER = Joi.object().keys({
   ).required()
 })
 
+const validateUint8Array = (value, helpers)=>{
+  if(value instanceof Uint8Array){
+    return value
+  }
+
+  throw new Error('expected Uint8Arry but got ['+typeof value+'] instead')
+}
 
 const AUTH_OP = Joi.object().keys({
   id: ID_SCHEME.required(),
@@ -37,7 +44,8 @@ const AUTH_OP = Joi.object().keys({
       seed: Joi.allow(null)
     }).required(),
     pqCipherText: Joi.string().required(),
-    streamNonce: Joi.string().required()
+    streamNonce: Joi.any().custom(validateUint8Array, 'Uint8Array validation').required(),
+    mode: Joi.string().required()
   }).required(),
   signature: Joi.object().keys({
     timestamp: Joi.number().required(),
