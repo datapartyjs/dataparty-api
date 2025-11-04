@@ -18,8 +18,8 @@ class LocalTopicHost {
    */
   constructor(){
     debug('constructor')
-    this.nodesByUuid = new Map()
-    this.topicsByPath = new Map()
+    this.nodesByUuid = new Map()    // <string, PeerNode>
+    this.topicsByPath = new Map()   // <string, HostTopic>
     this.party = null
   }
 
@@ -142,6 +142,18 @@ class LocalTopicHost {
 
     if(topic){
       await topic.publish(data)
+    }
+
+  }
+
+  async subscribeInternal(path, cb, create=false){
+    const topic = this.getTopic(path, create)
+
+    debug('subscribeInternal', path)
+
+    if(topic){
+
+      topic.on('publish', cb)
     }
 
   }
