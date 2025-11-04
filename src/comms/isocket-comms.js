@@ -100,11 +100,6 @@ class ISocketComms extends EventEmitter {
         console.log(reply, typeof reply)
         console.log(typeof reply.data)
 
-        debug('aesStream nonce', this.aesStream.rxNonce)
-
-        debug('aesStream key', this.aesStream.key)
-
-
         let buf = reply.data
 
         if(buf instanceof Blob){
@@ -113,8 +108,6 @@ class ISocketComms extends EventEmitter {
         } else {
           //buf = reply.data
         }
-
-        debug('decrypt-', buf)
 
         const contentBSON = await this.aesStream.decrypt( new Uint8Array(buf) )
         const content = Routines.BSON.parseObject(new Routines.BSON.BaseParser( contentBSON ))

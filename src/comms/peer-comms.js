@@ -423,8 +423,6 @@ class PeerComms extends ISocketComms {
     debug('clienr auth op offer -', offer)
     debug('ALLOW - allowing client - ', this.remoteIdentity)
 
-    //this.aesStream = await this.party.privateIdentity.recoverStream(offer, true)
-
     this.aesStream = await AESStream.recoverStream(
       this.party.privateIdentity,
       offer,
