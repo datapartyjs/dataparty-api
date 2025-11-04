@@ -33,7 +33,7 @@ class PeerNode {
         op: 'publish',
         id: 'publish:'+this.peer.opId,
         topic: topic.path,
-        sender: sender ? { uuid: this.sender.uuid, identity: this.sender.peer.remoteIdentity } : {system: true},
+        sender: sender ? { uuid: sender.uuid, identity: sender.peer.remoteIdentity } : {system: true},
         msg: data
       })
 
