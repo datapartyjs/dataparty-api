@@ -169,7 +169,7 @@ class ISocketComms extends EventEmitter {
     async send(input){
       debug('send - ', typeof input, input)
 
-      if(typeof input != 'object'){
+      if(typeof input == 'string'){
         input = JSON.parse(input)
       }
 

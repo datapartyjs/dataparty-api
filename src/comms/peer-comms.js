@@ -1,5 +1,5 @@
 
-const {Routines, Identity} = require('@dataparty/crypto')
+const {Routines, Identity, AESStream} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.comms.peercomms')
 const uuidv4 = require('uuid/v4')
 const HttpMocks = require('node-mocks-http')
@@ -231,8 +231,8 @@ class PeerComms extends ISocketComms {
     this.close()
   }
 
-  async close(){
-    debug('close', this.uuid)
+  async close(event){
+    debug('close', this.uuid, event)
 
     if(this.party.topics){
       await this.party.topics.destroyNode(this)
@@ -369,7 +369,8 @@ class PeerComms extends ISocketComms {
     const offer = {
       sender: new Identity(op.input.offer.sender),
       pqCipherText: op.input.offer.pqCipherText,
-      streamNonce: op.input.offer.streamNonce
+      streamNonce: op.input.offer.streamNonce,
+      mode: op.input.offer.mode
     }
 
     const signature = {
@@ -419,9 +420,16 @@ class PeerComms extends ISocketComms {
       }
     }
     
+    debug('clienr auth op offer -', offer)
     debug('ALLOW - allowing client - ', this.remoteIdentity)
 
-    this.aesStream = await this.party.privateIdentity.recoverStream(offer, true)
+    this.aesStream = await AESStream.recoverStream(
+      this.party.privateIdentity,
+      offer,
+      true
+    )
+
+    debug('aes-stream', this.aesStream)
 
     clearTimeout(this._host_auth_timeout)
     this._host_auth_timeout = null

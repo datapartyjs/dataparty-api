@@ -85,7 +85,7 @@
     "express-ipfilter": "^1.3.2",
     "express-list-routes": "^1.1.9",
     "git-repo-info": "^2.1.1",
-    "joi": "^17.9.1",
+    "joi": "^17.13.3",
     "joi-objectid": "^4.0.2",
     "jshashes": "^1.0.8",
     "jsonpath-plus": "^0.20.1",

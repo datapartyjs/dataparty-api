@@ -1,7 +1,7 @@
 const debug = require('debug')('dataparty.op.auth-op')
 const SocketOp = require('./socket-op')
 
-const {Routines} = require('@dataparty/crypto')
+const {Routines, AESStream} = require('@dataparty/crypto')
 
 
 class AuthOp extends SocketOp {
@@ -14,9 +14,9 @@ class AuthOp extends SocketOp {
 
   async run(){
     const actor = this.socket.party.privateIdentity
-    const aesStreamOffer = await actor.createStream( this.socket.remoteIdentity )
-
-    this.stream = aesStreamOffer.stream
+    this.stream = await AESStream.createStream( actor, this.socket.remoteIdentity, true, 'random' )
+    const aesStreamOffer = this.stream.offer
+    
 
     const offer = {
       sender: {
@@ -28,7 +28,8 @@ class AuthOp extends SocketOp {
         }
       },
       pqCipherText: aesStreamOffer.pqCipherText,
-      streamNonce: aesStreamOffer.streamNonce
+      streamNonce: aesStreamOffer.streamNonce,
+      mode: aesStreamOffer.mode
     }
 
     const offerBSON = Routines.BSON.serializeBSONWithoutOptimiser( offer )
