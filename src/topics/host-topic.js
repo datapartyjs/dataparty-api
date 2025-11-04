@@ -2,9 +2,12 @@
 
 const Path = require('path')
 const debug = require('debug')('dataparty.topics.host-topic')
+const EventEmitter = require('eventemitter3')
 
-class HostTopic {
+
+class HostTopic extends EventEmitter {
   constructor(path, type){
+    super()
     this.path = Path.normalize(path)
     this.type = type
     this.created = Date.now()
@@ -94,6 +97,12 @@ class HostTopic {
 
       sends.push(node[1].send(this, this.lastMessage, sender))
     }
+
+    this.emit('publish', {
+      topic: this,
+      data: this.lastMessage,
+      sender: sender
+    })
 
     if(sends.length > 0){
       debug('publishing', this.path)
