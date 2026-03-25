@@ -12,7 +12,7 @@ const WebsocketComms = require('../../comms/websocket-comms')
 const PeerInvite = require('./peer-invite')
 
 class MatchMakerClient extends EventEmitter {
-  constructor(identity, contacts, urlOrParty = 'https://postquantum.one/api/', wsUrlOrParty = 'wss://postquantum.one/ws'){
+  constructor(identity, contacts, urlOrParty = 'https://postquantum.one/api/', wsUrlOrParty = 'wss://postquantum.one/ws', billingIdentity=null){
 
     super()
 
@@ -22,6 +22,7 @@ class MatchMakerClient extends EventEmitter {
     this.identity = identity
     this.wsParty = null
     this.restParty = null
+    this.billingIdentity = null
 
     if(typeof urlOrParty == 'string'){
       this.restUrl = urlOrParty
@@ -157,15 +158,23 @@ class MatchMakerClient extends EventEmitter {
       debug('calling onInviteMsg')
 
       await pending.onInviteMsg(msg.invite)
-
+   
     }
   }
 
+  async announceBillingKey({stripeCheckoutSession}={}){
+    this.announcePublicKeys(true, {
+      stripe: stripeCheckoutSession
+    })
+  }
 
+  async announcePublicKeys(useBillingKeyAsActor=false, billingMethodDetails=null){
 
-  async announcePublicKeys(){
+    let currentActor = useBillingKeyAsActor == true ? this.billingIdentity : this.identity
+    
     const announceData = {
       annoucement: {
+        type: useBillingKeyAsActor ? 'billing_identity' : 'user_identity'
         created: Date.now(),
         expiry: Date.now() + 24*60*60*1000,  //! Set session expiry to 24hr from now
         sessionKey: {
@@ -174,9 +183,9 @@ class MatchMakerClient extends EventEmitter {
           public: this.sessionKey.key.public
         },
         actorKey: {
-          type: this.identity.key.type,
-          hash: this.identity.key.hash,
-          public: this.identity.key.public
+          type: currentActor.key.type,
+          hash: currentActor.key.hash,
+          public: currentActor.key.public
         }
       },
       trust: {
@@ -185,8 +194,10 @@ class MatchMakerClient extends EventEmitter {
       }
     }
 
+    if(
 
-    const actorSigMsg = await this.identity.sign(announceData.annoucement, true)
+
+    const actorSigMsg = await currentActor.sign(announceData.annoucement, true)
     const sessionSigMsg = await this.sessionKey.sign(announceData.annoucement, true)
 
     debug('actorSigMsg', actorSigMsg)
