@@ -174,7 +174,7 @@ class MatchMakerClient extends EventEmitter {
     
     const announceData = {
       annoucement: {
-        type: useBillingKeyAsActor ? 'billing_identity' : 'user_identity'
+        //type: 'guest',//useBillingKeyAsActor ? 'billing_identity' : 'user_identity',
         created: Date.now(),
         expiry: Date.now() + 24*60*60*1000,  //! Set session expiry to 24hr from now
         sessionKey: {
@@ -194,8 +194,6 @@ class MatchMakerClient extends EventEmitter {
       }
     }
 
-    if(
-
 
     const actorSigMsg = await currentActor.sign(announceData.annoucement, true)
     const sessionSigMsg = await this.sessionKey.sign(announceData.annoucement, true)
@@ -208,7 +206,9 @@ class MatchMakerClient extends EventEmitter {
 
     debug('announcePublicKeys', announceData)
 
-    const announceResult = await this.restParty.comms.call('key/announce', announceData, {
+    let callPath = useBillingKeyAsActor ? 'billing/key/announce' : 'key/announce'
+
+    const announceResult = await this.restParty.comms.call(callPath, announceData, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
       useSessions: false

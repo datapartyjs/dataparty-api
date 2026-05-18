@@ -11,6 +11,9 @@ class VenueService extends DatapartySrv.IService {
 
     let builder = new DatapartySrv.ServiceBuilder(this)
 
+
+    builder.addSchema(Path.join(__dirname, './schema/public-key.js'))
+    builder.addSchema(Path.join(__dirname, './schema/session-key.js'))
     builder.addSchema(Path.join(__dirname, './schema/venue_service.js'))
 
     builder.addMiddleware(DatapartySrv.middleware_paths.pre.decrypt)
@@ -21,6 +24,8 @@ class VenueService extends DatapartySrv.IService {
 
     builder.addEndpoint(DatapartySrv.endpoint_paths.identity)
     builder.addEndpoint(DatapartySrv.endpoint_paths.version)
+
+    builder.addEndpoint(Path.join(__dirname, './endpoints/key-announce.js'))
 
     builder.addEndpoint(Path.join(__dirname, './endpoints/create-service.js'))
     builder.addAuth(Path.join(__dirname, './auth.js'))
