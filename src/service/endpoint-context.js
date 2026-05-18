@@ -15,7 +15,7 @@ class EndpointContext {
    * @param {Debug} options.debug           Debug constructor (defaults to npm:Debug)
    * @param {boolean} options.sendFullErrors  Enables sending full stack traces to client (defaults to false)
    */
-  constructor({party, endpoint, req, res, input, debug=Debug, sendFullErrors=false}){
+  constructor({party, endpoint, runner, req, res, input, debug=Debug, sendFullErrors=false}){
 
     /**
      * @member module:Service.EndpointContext.debug
@@ -26,6 +26,11 @@ class EndpointContext {
      * @member module:Service.EndpointContext.endpoint
      */
     this.endpoint = endpoint
+
+    /**
+     * @member module:Service.EndpointContext.runner
+     */
+    this.runner = runner
 
     /**
      * @member module:Service.EndpointContext.MiddlewareConfig

@@ -516,6 +516,7 @@ class ServiceRunnerNode {
         req: event.request, res: event.response,
         endpoint,
         party: this.party,
+        runner: this,
         input: event.request.body, 
         debug: Debug,
         sendFullErrors: this.sendFullErrors
