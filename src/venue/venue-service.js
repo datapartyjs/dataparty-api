@@ -28,6 +28,10 @@ class VenueService extends DatapartySrv.IService {
     builder.addEndpoint(Path.join(__dirname, './endpoints/key-announce.js'))
 
     builder.addEndpoint(Path.join(__dirname, './endpoints/create-service.js'))
+
+
+    builder.addTask(Path.join(__dirname,'./tasks/cleanup-ephemeral-sessions.js'))
+
     builder.addAuth(Path.join(__dirname, './auth.js'))
   }
 }
