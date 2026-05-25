@@ -1,26 +1,24 @@
 'use strict'
 
-const debug = require('debug')('venue.venue_srv')
+const debug = require('debug')('venue.venue_pkg')
 
 const ISchema = require('../../bouncer/ischema')
 
 const Utils = ISchema.Utils
 
 
-class VenueSrv extends ISchema {
+class VenuePkg extends ISchema {
 
-  static get Type () { return 'venue_srv' }
+  static get Type () { return 'venue_pkg' }
 
   static get Schema(){
     return {
       owner: {type: String, required: true, index: true},  //public_key.key.hash
-      party: {type: String, required: true, index: true},  //party's public key hash
       created: {type: Number, required: true},
+      changed: {type: Number},
+      venue: {type: String},
       settings: {
         enabled: {type: Boolean, required: true},
-        workspace: {type: String, required: true},
-        domain: {type: String, required: true, index: true},
-        prefix: {type: String, required: true},
         sendFullErrors: {type: Boolean, required: true},
         useNative: {type: Boolean, required: true},
         defaultConfig: {type: Object}
@@ -55,4 +53,4 @@ class VenueSrv extends ISchema {
 }
 
 
-module.exports = VenueSrv
+module.exports = VenuePkg

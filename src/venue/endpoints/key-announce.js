@@ -93,6 +93,7 @@ module.exports = class KeyAnnounceEndpoint extends IEndpoint {
       return {done: false}
     }
 
+
     // ensure sender is connected using session key mentioned in annoucement
     if(computedSessionHash == inputSessionKey.hash &&
        inputSessionKey.public.sign == ctx.senderKey.public.sign &&
@@ -121,6 +122,19 @@ module.exports = class KeyAnnounceEndpoint extends IEndpoint {
       //verify actor & session signature. Require postquantum signing
       await actorSigMsg.assertVerified( actorIdentity, true )
       await sessionSigMsg.assertVerified( sessionIdentity, true )
+
+      // verify key-hash is an admin
+      //const admins = (await ctx.party.config.read('admins')) || []
+
+      //if(admins.indexOf(computedActorHash) == -1){
+      const isAdmin = await ctx.runner.auth.isAdmin(actorIdentity)
+      if(!isAdmin){
+        ctx.debug('non-admin user')
+        return {done: false}
+
+        process.exit(1)
+      }
+
 
       let sessionKeyDoc = (await ctx.party.find()
         .type('session_key')
@@ -172,7 +186,7 @@ module.exports = class KeyAnnounceEndpoint extends IEndpoint {
 
       let publicKey = (await ctx.party.find()
         .type('public_key')
-        .where('annoucement.actorKey.hash').equals(computedActorHash)
+        .where('hash').equals(computedActorHash)
         .exec())[0]
 
       if(!publicKey){

@@ -55,7 +55,8 @@ async function main(){
 
   const CloudFlareIpFilter = {
     options: {
-      mode: 'allow'
+      mode: 'allow',
+      //trustProxy: true
     },
     ips: [
       '173.245.48.0/20',
@@ -79,7 +80,8 @@ async function main(){
       '2405:b500::/32',
       '2405:8100::/32',
       '2a06:98c0::/29',
-      '2c0f:f248::/32'
+      '2c0f:f248::/32',
+      '10.115.68.55/32'
     ]
   }
 
@@ -114,7 +116,7 @@ async function main(){
     trust_proxy: true,
     wsEnabled: true,
     ssl_key, ssl_cert,
-    listenUri: 'https://0.0.0.0:443',
+    listenUri: 'https://0.0.0.0:3000',
     staticPath: Path.join(__dirname,'public'),
     staticPrefix: '/venue/',
     ipFilter: CloudFlareIpFilter
@@ -126,7 +128,7 @@ async function main(){
 
   debug('started')
   console.log('partying')
-
+/*
   await loadService(runnerRouter, {
     enabled: true,
     domain: 'postquantum.one',
@@ -135,7 +137,7 @@ async function main(){
     sendFullErrors: true,
     useNative: false
 
-  }, '/home/ubuntu/match-maker/dataparty/@datapartyjs-match-maker.dataparty-service.json')
+  }, '/home/ubuntu/match-maker/dataparty/@datapartyjs-match-maker.dataparty-service.json')*/
 }
 
 

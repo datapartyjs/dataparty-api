@@ -385,13 +385,13 @@ class PeerComms extends ISocketComms {
 
     if(this.party.hostRunner){
       const actor = await this.party.hostRunner.auth.lookupIdentity(offer.sender)
-      const verified = await Routines.verifyDataPQ(actor, signature, offerBSON)
+      const verified = await Routines.verifyDataPQ(offer.sender, signature, offerBSON)
       
       if(!verified){
         throw new Error('DENY(hostRunner) - auth op signature is not valid')
       }
 
-      if(this.discoverRemoteIdentity){ this.remoteIdentity = actor }
+      if(this.discoverRemoteIdentity){ this.remoteIdentity = offer.sender }
       
       const authorized = await this.party.hostRunner.auth.isSocketConnectionAllowed(actor)
       if(!authorized){
@@ -406,6 +406,7 @@ class PeerComms extends ISocketComms {
         await this.stop()
 
         debug('DENY - client not allowed - ', this.remoteIdentity)
+        throw new Error('DENY - client not allowed')
       }
     } else {
       const actor = offer.sender
@@ -420,7 +421,7 @@ class PeerComms extends ISocketComms {
       }
     }
     
-    debug('clienr auth op offer -', offer)
+    debug('client auth op offer -', offer)
     debug('ALLOW - allowing client - ', this.remoteIdentity)
 
     this.aesStream = await AESStream.recoverStream(

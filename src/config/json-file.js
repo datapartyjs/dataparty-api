@@ -22,6 +22,7 @@ class JsonFileConfig extends IConfig {
     this.path = this.basePath +'/config.json'
     this.defaults = defaults || {}
     this.content = Object.assign({}, this.defaults)
+    this.writing = false
   }
 
   async load(){
@@ -49,6 +50,8 @@ class JsonFileConfig extends IConfig {
   async start () {
     await this.touchDir('')
     await this.load()
+
+    fs.watchFile(this.path, this.handleFileChange.bind(this))
     logger('started')
   }
 
@@ -79,7 +82,9 @@ class JsonFileConfig extends IConfig {
   }
 
   async save(){
+    this.writing = true
     fs.writeFileSync(this.path, JSON.stringify(this.content, null, 2))
+    this.writing = false
   }
 
   async touchDir (path) {
@@ -97,6 +102,14 @@ class JsonFileConfig extends IConfig {
         resolve(basedPath)
       })
     })
+  }
+
+  async handleFileChange(current, previous){
+    if(this.writing){ return }
+
+    logger('config changed, reloading')
+
+    await this.load()
   }
 }
 

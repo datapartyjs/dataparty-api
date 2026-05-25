@@ -83,7 +83,7 @@ class MatchMakerClient extends EventEmitter {
       await this.announcePublicKeys()
     }
 
-    if(!this.wsParty){
+    if(!this.wsParty && this.wsUrl){
       this.wsParty = new PeerParty({
         comms: new WebsocketComms({
           uri: this.wsUrl,
@@ -213,6 +213,10 @@ class MatchMakerClient extends EventEmitter {
       sendClearTextRequest: false,
       useSessions: false
     })
+
+    if(announceResult.done != true){
+      throw new Error('annoucement request failed - '+callPath)
+    }
   }
 
 
