@@ -23,6 +23,7 @@ class JsonFileConfig extends IConfig {
     this.defaults = defaults || {}
     this.content = Object.assign({}, this.defaults)
     this.writing = false
+    this.started = false
   }
 
   async load(){
@@ -48,11 +49,16 @@ class JsonFileConfig extends IConfig {
   }
 
   async start () {
+
+    if(this.started){return}
+
     await this.touchDir('')
     await this.load()
 
     fs.watchFile(this.path, this.handleFileChange.bind(this))
     logger('started')
+
+    this.started = true
   }
 
   async clear () {
