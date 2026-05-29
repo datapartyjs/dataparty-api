@@ -1,19 +1,83 @@
 const Joi = require('joi')
 const Hoek = require('@hapi/hoek')
 const {Message, Routines} = require('@dataparty/crypto')
-const debug = require('debug')('dataparty.endpoint.create-service')
+const debug = require('debug')('dataparty.endpoint.create-package')
 
 const IEndpoint = require('../../service/iendpoint')
 
-module.exports = class CreateSrvEndpoint extends IEndpoint {
+module.exports = class CreatePkgEndpoint extends IEndpoint {
 
   static get Name(){
-    return 'create-service'
+    return 'create-package'
   }
 
 
   static get Description(){
-    return 'Create venue service'
+    return 'Create venue package'
+  }
+
+  {
+    venue_package: {
+      package:{
+        owner: String,
+        info: {
+          name, version, githash, branch
+        },
+        files: [      //package, service, static.tgz, 
+          {hash: String, name: String, size: Number, signature}
+        ],
+        statics: {
+          PREFIX: [localPathGlob]
+        }
+      },
+      trust: {
+        owner: signature
+      }
+      
+    }
+  }
+
+  {
+    venue_project: {
+
+      project:{
+
+        owner: String,
+        domain: String,
+        venue: String,
+
+        parties: {
+          NAME: {
+            keys: {public, private: Secret(private)},
+            defaultConfig: Object,
+            files: [      //static.tgz, 
+              {hash: String, name: String, signature}
+            ],
+            statics: {prefix, [localPath]}
+          }
+        },
+
+
+        
+        
+        routes: {
+          PREFIX: [{
+            party: String,
+            package: {
+              owner: String,
+              info: {name, version, branch, githash},
+              settings: {
+                sendFullErrors,
+                useNative
+              }
+            }
+          }]
+        }
+      },
+      trust: {
+        owner: signature
+      }
+    }
   }
 
   static get MiddlewareConfig(){
@@ -21,13 +85,13 @@ module.exports = class CreateSrvEndpoint extends IEndpoint {
       pre: {
         decrypt: true,
         validate: Joi.object().keys({
-          settings: Joi.object().keys({
+          /*settings: Joi.object().keys({
             enabled: Joi.boolean().default(true).required(),
-            domain: Joi.string().required(),
-            prefix: Joi.string().default('').required(),
+            //domain: Joi.string().required(),
+            staticPrefix: Joi.string().default('/'),
             sendFullErrors: Joi.boolean().default(false).required(),
             useNative: Joi.boolean().default(false).required()
-          }).required(),
+          }).required(),*/
           service: Joi.object().keys({
             package: Joi.object().keys({
               name: Joi.string().required(),

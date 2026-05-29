@@ -30,12 +30,6 @@ class VenueSrv extends ISchema {
         version: {type: String, required: true},
         githash: {type: String, required: true},
         branch: {type: String, required: true}
-      },
-      compressedBuild: {type: String, required: true}, //! zlib compressed
-      signature: {
-        timestamp: {type: Number, required: true},
-        type: {type: String, required: true, maxlength: 10},
-        value: {type: String, required: true}
       }
     }
   }

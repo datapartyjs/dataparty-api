@@ -19,6 +19,7 @@ class VenuePkg extends ISchema {
       venue: {type: String},
       settings: {
         enabled: {type: Boolean, required: true},
+        staticPrefix: String,
         sendFullErrors: {type: Boolean, required: true},
         useNative: {type: Boolean, required: true},
         defaultConfig: {type: Object}

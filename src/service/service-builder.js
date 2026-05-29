@@ -8,6 +8,15 @@ const BouncerDb = require('@dataparty/bouncer-db')
 const mongoose = BouncerDb.mongoose()
 const debug = require('debug')('dataparty.service.ServiceBuilder')
 
+const dataparty_crypto = require('@dataparty/crypto')
+
+const {
+  globSync
+} = require('glob')
+const { isArray } = require('lodash')
+
+const tar = require('tar')
+
 //const IService = require('../iservice')
 
 
@@ -27,7 +36,7 @@ module.exports = class ServiceBuilder {
    * @param {boolean} writeFile   When true, files will be written. Defaults to `true`
    * @returns 
    */
-  async compile(outputPath, writeFile=true){
+  async compile(outputPath, writeFile=true, owner){
 
     if(!outputPath){
       throw new Error('no output path')
@@ -48,18 +57,34 @@ module.exports = class ServiceBuilder {
       this.compileList('tasks'),
       this.compileList('topics'),
       this.compileFile('auth'),
-      this.compileSchemas()
+      this.compileSchemas(),
+      this.compressFiles(outputPath, writeFile)
     ])
+
+
 
     this.service.compiled.middleware_order = this.service.middleware_order
 
     this.service.compiled.compileSettings = this.service.compileSettings
 
+    if(owner){
+      this.service.compiled.package.owner = owner.key.hash
+      const ownerSig = await owner.sign(this.service.compiled, true)
+
+      console.log('sign keys', Object.keys(this.service.compiled))
+      console.log(this.service.compiled.signature)
+
+      this.service.compiled.signatures = {
+       [owner.key.hash]: dataparty_crypto.Routines.Utils.base64.encode(ownerSig.sig)
+      }
+    }
+    
+
     if(writeFile){
-      const buildOutput = outputPath+'/'+ this.service.compiled.package.name.replace('/', '-') +'.dataparty-service.json'
+      const buildOutput = outputPath+'/'+ this.service.compiled.package.name.replace('/', '-') +'.service.venue.json'
       fs.writeFileSync(buildOutput, JSON.stringify(this.service.compiled, null,2))
 
-      const schemaOutput = outputPath+'/'+ this.service.compiled.package.name.replace('/', '-') +'.dataparty-schema.json'
+      const schemaOutput = outputPath+'/'+ this.service.compiled.package.name.replace('/', '-') +'.schema.venue.json'
       fs.writeFileSync(schemaOutput, JSON.stringify({
         package: this.service.compiled.package,
         ...this.service.compiled.schemas
@@ -314,5 +339,51 @@ module.exports = class ServiceBuilder {
 
     this.service.sources.auth = auth_path
     this.service.constructors.auth = TopicClass
+  }
+
+  addFiles(root, pattern, options){
+
+    let result = globSync(pattern, {
+      dotRelative: true,
+      cwd:root,
+      ...options
+    })
+
+    if(!this.service.files){
+      this.service.sources.files = result
+    } else {
+      this.service.sources.files = this.service.sources.files.concat(result)
+    }
+    
+    this.service.sources.files_root = root
+
+    debug('addFiles',result)
+
+  }
+
+  async compressFiles(outputPath, writeFile){
+
+    let fileMap={}
+
+    let files = this.service.sources.files.map(file=>{
+      //
+      const content = fs.readFileSync(file)
+      const hash = dataparty_crypto.Routines.Utils.base64.encode(
+        dataparty_crypto.Routines.Utils.hash(content)
+      )
+
+      fileMap[file] = { hash, size: content.length }
+
+      return hash
+    })
+
+    this.service.compiled.files = fileMap
+
+    await tar.create({
+      cwd: this.service.sources.files_root,
+      gzip: true,
+      file: Path.join(outputPath, this.service.compiled.package.name.replace('/', '-')+'.files.venue.tgz')
+    }, this.service.sources.files)
+
   }
 }

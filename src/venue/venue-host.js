@@ -103,7 +103,7 @@ async function main(){
     party, service,
     sendFullErrors: true,
     useNative: false,
-    prefix: 'api/'
+    prefix: 'venue/'
   })
   
   let runnerRouter = new Dataparty.RunnerRouter(runner)

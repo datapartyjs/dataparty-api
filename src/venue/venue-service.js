@@ -19,6 +19,8 @@ class VenueService extends DatapartySrv.IService {
     builder.addMiddleware(DatapartySrv.middleware_paths.pre.decrypt)
     builder.addMiddleware(DatapartySrv.middleware_paths.pre.validate)
 
+    builder.addMiddleware(Path.join(__dirname, './middleware/pre/ephemeral-session.js'))
+
     builder.addMiddleware(DatapartySrv.middleware_paths.post.validate)
     builder.addMiddleware(DatapartySrv.middleware_paths.post.encrypt)
 
@@ -27,12 +29,18 @@ class VenueService extends DatapartySrv.IService {
 
     builder.addEndpoint(Path.join(__dirname, './endpoints/key-announce.js'))
 
-    builder.addEndpoint(Path.join(__dirname, './endpoints/create-service.js'))
+    //builder.addEndpoint(Path.join(__dirname, './endpoints/create-service.js'))
 
 
     builder.addTask(Path.join(__dirname,'./tasks/cleanup-ephemeral-sessions.js'))
 
     builder.addAuth(Path.join(__dirname, './auth.js'))
+
+    builder.addFiles(__dirname, [
+      'public/*',
+      'public/dist/dataparty-browser.*',
+      'public/node_modules/argon2-browser/dist/*'
+    ], { nodir: true, follow: true })
   }
 }
 
