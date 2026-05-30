@@ -5,8 +5,8 @@ const Dataparty = require('../index')
 
 const VenueService = require('./venue-service')
 
-const VenueServiceSchema = require('./dataparty/@dataparty-venue.dataparty-schema.json')
-const VenueSrv = require('./dataparty/@dataparty-venue.dataparty-service.json')
+const VenueServiceSchema = require('./dataparty/@dataparty-venue.schema.venue.json')
+const VenueSrv = require('./dataparty/@dataparty-venue.service.venue.json')
 
 
 async function loadService(runnerRouter, settings, serviceFilePath){

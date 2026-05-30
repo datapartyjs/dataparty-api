@@ -2,20 +2,19 @@ const EventEmitter = require('eventemitter3')
 
 const debug = require('debug')('dataparty.match-maker-client')
 
-
 const dataparty_crypto = require('@dataparty/crypto')
 const LokiParty = require('../local/loki-party')
 const PeerParty = require('./peer-party')
 const MemoryConfig = require('../../config/memory')
+const RestComms = require('../../comms/rest-comms')
 const WebsocketComms = require('../../comms/websocket-comms')
 
 const PeerInvite = require('./peer-invite')
 
 class MatchMakerClient extends EventEmitter {
-  constructor(identity, contacts, urlOrParty = 'https://postquantum.one/api/', wsUrlOrParty = 'wss://postquantum.one/ws', billingIdentity=null){
+  constructor(identity, contacts, urlOrParty = 'https://api.dataparty.xyz/api', wsUrlOrParty = 'wss://api.dataparty.xyz/ws', billingIdentity=null){
 
     super()
-
     
     this.contacts = contacts
     this.sessionKey = null
@@ -72,7 +71,7 @@ class MatchMakerClient extends EventEmitter {
       await this.restParty.start()
 
       if(!this.restParty.comms){
-        this.restParty.comms = new Dataparty.Comms.RestComms({
+        this.restParty.comms = new RestComms({
           party:this.restParty,
           config: this.restParty.config
         })

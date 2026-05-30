@@ -123,16 +123,11 @@ module.exports = class KeyAnnounceEndpoint extends IEndpoint {
       await actorSigMsg.assertVerified( actorIdentity, true )
       await sessionSigMsg.assertVerified( sessionIdentity, true )
 
-      // verify key-hash is an admin
-      //const admins = (await ctx.party.config.read('admins')) || []
-
-      //if(admins.indexOf(computedActorHash) == -1){
+      // verify actor is an admin
       const isAdmin = await ctx.runner.auth.isAdmin(actorIdentity)
       if(!isAdmin){
         ctx.debug('non-admin user')
         return {done: false}
-
-        process.exit(1)
       }
 
 

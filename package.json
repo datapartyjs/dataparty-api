@@ -86,7 +86,7 @@
     "express-list-routes": "^1.1.9",
     "git-repo-info": "^2.1.1",
     "glob": "^13.0.6",
-    "joi": "^17.13.3",
+    "joi": "^18.2.1",
     "joi-objectid": "^4.0.2",
     "jshashes": "^1.0.8",
     "jsonpath-plus": "^0.20.1",

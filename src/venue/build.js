@@ -1,3 +1,4 @@
+const fs = require('fs')
 const Path = require('path')
 const debug = require('debug')('build')
 
@@ -118,18 +119,62 @@ async function buildVenuePackage({authorIdentity, venueIdentity, outputPath, exi
  * 4. venue package push - c
  */
 
+async function pushService(devId, build){
+
+  let client = new Dataparty.MatchMakerClient(
+    devId,
+    null,
+    'https://api.dataparty.xyz/venue',
+    'wss://api.dataparty.xyz/ws'
+  )
+
+  await client.start()
+
+  const staticTar = fs.readFileSync('./dataparty/@dataparty-venue.files.venue.tgz')
+
+  console.log('is staticTar a buffer? ', staticTar instanceof Buffer); // true
+
+  let uploadResult = await client.restParty.comms.call('create-package', {build, staticTar: staticTar}, {
+    expectClearTextReply: false,
+    sendClearTextRequest: false,
+    useSessions: false
+  })
+
+  console.log('result', uploadResult)
+}
+
 async function main(){
   const service = new VenueService({
     name: '@dataparty/venue',
     version: Pkg.version
   })
 
-  let a = await dataparty_crypto.Identity.fromRandomSeed();
+  const path = Path.join(process.env.HOME, '.venue-admin')
 
+  let config = new Dataparty.Config.JsonFileConfig({
+    basePath: path+'/config'
+  })
+
+  let party = new Dataparty.TingoParty({
+    path: path+'/db',
+    config,
+    noCache: false
+  })
+
+  await party.start()
+
+  console.log( 'identity - ', party.identity.key.hash )
+  
   const builder = new Dataparty.ServiceBuilder(service)
-  const build = await builder.compile(Path.join(__dirname,'./dataparty'), true, a)
+  const build = await builder.compile(Path.join(__dirname,'./dataparty'), true, party.privateIdentity)
 
   debug('compiled')
+
+  await pushService( party.privateIdentity, build )
+
+  
+
+
 }
 
 main().catch(err=>{

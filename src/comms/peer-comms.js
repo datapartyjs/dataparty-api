@@ -458,10 +458,18 @@ class PeerComms extends ISocketComms {
         return
       }
 
+      debug('input type', typeof op.input.data, Object.keys(op.input.data))
+      debug('op.msg type', typeof op.msg, Object.keys(op.msg), Buffer.isBuffer(op.msg))
+
+      let bodyValue = Buffer.isBuffer(op.msg) ?
+        op.input.data :
+        //Routines.BSON.parseObject(new Routines.BSON.BaseParser( op.msg )) :
+        JSON.parse(op.msg.toString())
+
       const req = HttpMocks.createRequest({
         method: 'GET',
         url: '/'+op.input.endpoint,
-        body: (op.input.data) ? JSON.parse(op.msg.toString()) : undefined
+        body: bodyValue
       })
 
       const res = HttpMocks.createResponse()
@@ -473,6 +481,9 @@ class PeerComms extends ISocketComms {
       const route = this.party.hostRunner.router.get(op.input.endpoint)
 
       debug('route',route)
+
+      req.peer = this
+      req.source = 'PeerComms'
 
       debug('call route', await route._events.route({
         method: req.method,

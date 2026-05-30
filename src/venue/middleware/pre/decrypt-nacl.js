@@ -32,7 +32,7 @@ module.exports = class DecryptNaCl extends IMiddleware {
     if (!Config){ return }
 
     if(!context.input || !context.input.enc){
-      throw new Error('insecure message')
+      throw new Error('insecure message - here')
     }
 
     context.debug('input', context.input, typeof context.input)

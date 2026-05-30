@@ -16,6 +16,7 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
     return 'Create venue package'
   }
 
+  /*
   {
     venue_package: {
       package:{
@@ -80,10 +81,14 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
     }
   }
 
+  */
+
   static get MiddlewareConfig(){
     return {
       pre: {
         decrypt: true,
+        ephemeral_session: true,
+        //validate: Joi.object().keys(null)
         validate: Joi.object().keys({
           /*settings: Joi.object().keys({
             enabled: Joi.boolean().default(true).required(),
@@ -92,8 +97,9 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
             sendFullErrors: Joi.boolean().default(false).required(),
             useNative: Joi.boolean().default(false).required()
           }).required(),*/
-          service: Joi.object().keys({
+          build: Joi.object().keys({
             package: Joi.object().keys({
+              owner: Joi.string(),
               name: Joi.string().required(),
               version: Joi.string().required(),
               githash: Joi.string().required(),
@@ -107,13 +113,11 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
             tasks: Joi.object().keys(null),
             topics: Joi.object().keys(null),
             auth: Joi.object().keys(null),
+            files: Joi.object().keys(null),
+            signatures: Joi.object().keys(null).required(),
             compileSettings: Joi.object().keys(null)
           }).required(),
-          signature: Joi.object().keys({
-            timestamp: Joi.number().required(),
-            type: Joi.string().required(),
-            value: Joi.string().required()
-          }).required()
+          staticTar: Joi.binary()
         })
       },
       post: {
@@ -125,11 +129,30 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
 
   static async run(ctx){
 
-    //verify sender is admin
+    
 
     ctx.debug('hello')
     debug('echo')
     ctx.debug('ctx.input', ctx.input)
+
+
+    //verify sender is admin
+    const isAdmin = await ctx.runner.auth.isAdmin(actorIdentity)
+    if(!isAdmin){
+      ctx.debug('non-admin user')
+      return {done: false}
+    }
+
+    // verify build signature
+
+
+    // untar listed files
+
+    // verify static file checksums match verified signatures
+
+    // create db entry
+
+    /*
 
     const compiledSrv = JSON.parse(ctx.input.service)
     const serviceId = compiledSrv.package.name + '-' + compiledSrv.package.version
@@ -182,8 +205,10 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
         console.log(err)
       }
       debug('updated service')
-    }
+    }*/
 
-    return {srv:srvDoc.data}
+      return {done: true}
+
+    //return {srv:srvDoc.data}
   }
 }

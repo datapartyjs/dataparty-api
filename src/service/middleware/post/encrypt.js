@@ -30,7 +30,11 @@ module.exports = class Encrypt extends IMiddleware {
   static async run(ctx, {Config}){
 
     if (!Config){ return }
-  
+
+    if(ctx.req.source && ctx.req.source == 'PeerComms'){
+      ctx.setOutput(ctx.output)
+      return
+    }  
 
     const senderStr = JSON.stringify({key: ctx.senderKey})
 
