@@ -119,7 +119,7 @@ async function buildVenuePackage({authorIdentity, venueIdentity, outputPath, exi
  * 4. venue package push - c
  */
 
-async function pushService(devId, build){
+async function pushService(devId, build, staticTar){
 
   let client = new Dataparty.MatchMakerClient(
     devId,
@@ -130,9 +130,6 @@ async function pushService(devId, build){
 
   await client.start()
 
-  const staticTar = fs.readFileSync('./dataparty/@dataparty-venue.files.venue.tgz')
-
-  console.log('is staticTar a buffer? ', staticTar instanceof Buffer); // true
 
   let uploadResult = await client.restParty.comms.call('create-package', {build, staticTar: staticTar}, {
     expectClearTextReply: false,
@@ -170,7 +167,10 @@ async function main(){
 
   debug('compiled')
 
-  await pushService( party.privateIdentity, build )
+  const staticTar = fs.readFileSync('./dataparty/@dataparty-venue.files.venue.tgz')
+
+  debug('is staticTar a buffer? ', staticTar instanceof Buffer); // true
+  //await pushService( party.privateIdentity, build, staticTar )
 
   
 

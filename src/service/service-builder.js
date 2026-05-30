@@ -377,13 +377,27 @@ module.exports = class ServiceBuilder {
       return hash
     })
 
-    this.service.compiled.files = fileMap
+    const tarFileName = this.service.compiled.package.name.replace('/', '-')+'.files.venue.tgz'
+    const tarPath = Path.join(outputPath, tarFileName)
 
     await tar.create({
       cwd: this.service.sources.files_root,
       gzip: true,
-      file: Path.join(outputPath, this.service.compiled.package.name.replace('/', '-')+'.files.venue.tgz')
+      file: tarPath
     }, this.service.sources.files)
 
+    const staticTar = fs.readFileSync(tarPath)
+
+    let tarHash = dataparty_crypto.Routines.Utils.hash( staticTar )
+    let tarHash64 = dataparty_crypto.Routines.Utils.base64.encode(tarHash)
+
+    this.service.compiled.files = {
+      [tarFileName]: {
+        tar: tarFileName,
+        hash:tarHash64,
+        size: staticTar.length,
+        files: fileMap
+      }
+    }
   }
 }
