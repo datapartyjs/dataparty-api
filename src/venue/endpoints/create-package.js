@@ -208,7 +208,7 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
       )
     )
 
-    const safeBuildHash = buildHash.replace('/', '-')
+    const safeBuildHash = buildHash.replace(/\//g, "-")
 
     debug('\t'+'hash', buildHash)
 
@@ -222,20 +222,7 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
     debug('\t'+'workspace - local', buildWorkspace)
     debug('\t'+'workspace - global', workspacePath)
     
-    fs.writeFileSync(
-      Path.join(workspacePath, tarFileName),
-      ctx.input.staticTar
-    )
 
-    /*fs.writeFileSync(
-      Path.join(workspacePath, safeFileName+'.service.venue.bson'),
-      Routines.BSON.serializeBSONWithoutOptimiser(ctx.input.build)
-    )*/
-
-    fs.writeFileSync(
-      Path.join(workspacePath, safeFileName+'.service.venue.json'),
-      JSON.stringify(ctx.input.build, null, 2)
-    )
 
     const compressedBrotliBuild = zlib.brotliCompressSync(JSON.stringify(ctx.input.build))
     
@@ -271,6 +258,21 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
     } else {
       debug('need to update service')
     }
+
+    fs.writeFileSync(
+      Path.join(workspacePath, tarFileName),
+      ctx.input.staticTar
+    )
+
+    /*fs.writeFileSync(
+      Path.join(workspacePath, safeFileName+'.service.venue.bson'),
+      Routines.BSON.serializeBSONWithoutOptimiser(ctx.input.build)
+    )*/
+
+    fs.writeFileSync(
+      Path.join(workspacePath, safeFileName+'.service.venue.json'),
+      JSON.stringify(ctx.input.build, null, 2)
+    )
     
     // verify build signature
 
