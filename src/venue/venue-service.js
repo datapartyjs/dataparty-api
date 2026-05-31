@@ -14,7 +14,7 @@ class VenueService extends DatapartySrv.IService {
 
     builder.addSchema(Path.join(__dirname, './schema/public-key.js'))
     builder.addSchema(Path.join(__dirname, './schema/session-key.js'))
-    builder.addSchema(Path.join(__dirname, './schema/venue_service.js'))
+    builder.addSchema(Path.join(__dirname, './schema/venue_package.js'))
 
     builder.addMiddleware(DatapartySrv.middleware_paths.pre.decrypt)
     builder.addMiddleware(DatapartySrv.middleware_paths.pre.validate)

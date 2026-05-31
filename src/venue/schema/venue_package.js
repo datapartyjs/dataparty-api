@@ -17,8 +17,10 @@ class VenuePkg extends ISchema {
       created: {type: Number, required: true},
       changed: {type: Number},
       venue: {type: String},
+      workspace: {type: String, required: true},
+      hash: {type: String, required: true, index: true},
       settings: {
-        enabled: {type: Boolean, required: true},
+        //enabled: {type: Boolean, required: true},
         staticPrefix: String,
         sendFullErrors: {type: Boolean, required: true},
         useNative: {type: Boolean, required: true},
@@ -26,16 +28,11 @@ class VenuePkg extends ISchema {
       },
       package: {
         name: {type: String, required: true, index: true},
-        version: {type: String, required: true},
+        version: {type: String, required: true, index: true},
         githash: {type: String, required: true},
-        branch: {type: String, required: true}
+        branch: {type: String, required: true},
       },
-      compressedBuild: {type: String, required: true}, //! zlib compressed
-      signature: {
-        timestamp: {type: Number, required: true},
-        type: {type: String, required: true, maxlength: 10},
-        value: {type: String, required: true}
-      }
+      compressedBuild: {type: String, required: true} //! brotli compressed
     }
   }
 

@@ -3,7 +3,7 @@ const Joi = require('joi')
 const Hoek = require('@hapi/hoek')
 const {Message, Routines, Identity} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.endpoint.create-package')
-
+const zlib = require('zlib')
 
 const IEndpoint = require('../../service/iendpoint')
 
@@ -105,7 +105,8 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
             //domain: Joi.string().required(),
             staticPrefix: Joi.string().default('/'),
             sendFullErrors: Joi.boolean().default(false),
-            useNative: Joi.boolean().default(false)
+            useNative: Joi.boolean().default(false),
+            defaultConfig: Joi.object().keys(null)
           }),
           build: Joi.object().keys({
             package: Joi.object().keys({
@@ -199,7 +200,7 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
 
     debug('verified package - '+ctx.input.build.package.name+'@'+ctx.input.build.package.version)
 
-    const buildBSON = Routines.BSON.serializeBSONWithoutOptimiser(buildWithoutSig)
+    const buildBSON = Routines.BSON.serializeBSONWithoutOptimiser(/*ctx.input.build*/buildWithoutSig)
 
     const buildHash = Routines.Utils.base64.encode(
       Routines.Utils.hash(
@@ -235,6 +236,41 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
       Path.join(workspacePath, safeFileName+'.service.venue.json'),
       JSON.stringify(ctx.input.build, null, 2)
     )
+
+    const compressedBrotliBuild = zlib.brotliCompressSync(JSON.stringify(ctx.input.build))
+    
+    const build = ctx.input.build
+    const serviceId = build.package.name + '@' + build.package.version
+    debug('addService', serviceId)
+
+    let srvDoc = (await ctx.party.find()
+    .type('venue_pkg')
+    .where('package.name').equals(build.package.name)
+    .where('package.version').equals(build.package.version)
+    .where('hash').equals(buildHash)
+    .exec())[0]
+
+
+    if(!srvDoc){
+      debug('creating service')
+
+      const {owner, ...pkgWithoutOwner} = build.package
+
+      srvDoc = await ctx.party.createDocument('venue_pkg', {
+        owner: build.package.owner,
+        'created': Date.now(),
+        venue: ctx.party.identity.key.hash,
+        hash: buildHash,
+        workspace: workspacePath,
+        settings: ctx.input.settings,
+        package: pkgWithoutOwner,
+        compressedBuild: Routines.Utils.base64.encode(compressedBrotliBuild)
+      })
+
+      debug('service created')
+    } else {
+      debug('need to update service')
+    }
     
     // verify build signature
 

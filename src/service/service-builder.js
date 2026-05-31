@@ -7,6 +7,7 @@ const gitRepoInfo = require('git-repo-info')
 const BouncerDb = require('@dataparty/bouncer-db')
 const mongoose = BouncerDb.mongoose()
 const debug = require('debug')('dataparty.service.ServiceBuilder')
+const zlib = require('zlib')
 
 const dataparty_crypto = require('@dataparty/crypto')
 
@@ -89,6 +90,16 @@ module.exports = class ServiceBuilder {
         package: this.service.compiled.package,
         ...this.service.compiled.schemas
       }, null, 2))
+
+      // Gzip compression (most common for HTTP)
+      const compressed = zlib.gzipSync(JSON.stringify(this.service.compiled, null,2));
+
+      // Brotli compression (better ratio, Node.js 10.5.0+)
+      const compressedBrotli = zlib.brotliCompressSync(JSON.stringify(this.service.compiled, null,2));
+
+      console.log('Original:', JSON.stringify(this.service.compiled, null,2).length, 'bytes');
+      console.log('Gzip:', compressed.length, 'bytes');
+      console.log('Brotli:', compressedBrotli.length, 'bytes');
     }
 
     return this.service.compiled
