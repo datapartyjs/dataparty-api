@@ -110,6 +110,16 @@ class JsonFileConfig extends IConfig {
     })
   }
 
+  fileExists(path){
+    var realPath = Path.join(this.basePath, Path.dirname(path), sanitize(Path.basename(path)))
+
+    return fs.existsSync(realPath)
+  }
+
+  filePath(path){
+    return Path.join(this.basePath, Path.dirname(path), sanitize(Path.basename(path)))
+  }
+
   async handleFileChange(current, previous){
     if(this.writing){ return }
 

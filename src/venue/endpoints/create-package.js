@@ -1,9 +1,20 @@
+const fs = require('fs')
 const Joi = require('joi')
 const Hoek = require('@hapi/hoek')
-const {Message, Routines} = require('@dataparty/crypto')
+const {Message, Routines, Identity} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.endpoint.create-package')
 
+
 const IEndpoint = require('../../service/iendpoint')
+
+const typedArraySchema = (value, helpers) => {
+  // 1. Ensure the value is an instance of a TypedArray (e.g., Uint8Array)
+  if (!(value instanceof Uint8Array)) {
+    return helpers.message({ custom: '"value" must be a Uint8Array' });
+  }
+
+  return value
+}
 
 module.exports = class CreatePkgEndpoint extends IEndpoint {
 
@@ -88,15 +99,14 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
       pre: {
         decrypt: true,
         ephemeral_session: true,
-        //validate: Joi.object().keys(null)
         validate: Joi.object().keys({
-          /*settings: Joi.object().keys({
-            enabled: Joi.boolean().default(true).required(),
+          settings: Joi.object().keys({
+            //enabled: Joi.boolean().default(true).required(),
             //domain: Joi.string().required(),
             staticPrefix: Joi.string().default('/'),
-            sendFullErrors: Joi.boolean().default(false).required(),
-            useNative: Joi.boolean().default(false).required()
-          }).required(),*/
+            sendFullErrors: Joi.boolean().default(false),
+            useNative: Joi.boolean().default(false)
+          }),
           build: Joi.object().keys({
             package: Joi.object().keys({
               owner: Joi.string(),
@@ -117,7 +127,8 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
             signatures: Joi.object().keys(null).required(),
             compileSettings: Joi.object().keys(null)
           }).required(),
-          staticTar: Joi.binary()
+          //staticTar: Joi.binary()
+          staticTar: Joi.any().custom(typedArraySchema)
         })
       },
       post: {
@@ -129,22 +140,105 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
 
   static async run(ctx){
 
-    
+    let {signatures, ...buildWithoutSig} = ctx.input.build
 
-    ctx.debug('hello')
-    debug('echo')
-    ctx.debug('ctx.input', ctx.input)
+    const pkgOwnerIdentityDoc = (await ctx.party.find()
+      .type('public_key')
+      .where('hash').equals( ctx.input.build.package.owner )
+      .exec()
+    )[0]
 
-
-    //verify sender is admin
-    const isAdmin = await ctx.runner.auth.isAdmin(actorIdentity)
-    if(!isAdmin){
-      ctx.debug('non-admin user')
-      return {done: false}
+    if(!pkgOwnerIdentityDoc){
+      throw new Error('package owner not authorized')
     }
 
+    debug('found pkg owner', pkgOwnerIdentityDoc.hash)
+
+    const pkgOwnerIdentity = Identity.fromJSON({
+      id: '',
+      key: {
+        type: pkgOwnerIdentityDoc.data.type,
+        hash: pkgOwnerIdentityDoc.data.hash,
+        public: pkgOwnerIdentityDoc.data.public
+      }
+    })
+
+
+    debug('inflated identity')
+
+    //debug('build', buildWithoutSig)
+    
+    const devSig = Routines.Utils.base64.decode(signatures[ctx.input.build.package.owner])
+
+    let signedBuildMsg = new Message({
+      msg: buildWithoutSig,
+      sig: devSig
+    })
+
+    debug('sigs', signatures)
+
+    debug('verifying package signature')
+
+    await signedBuildMsg.assertVerified(pkgOwnerIdentity, true)
+
+    debug('verified package signature')
+
+    const tarHash = Routines.Utils.hash(ctx.input.staticTar)
+    const tarHash64 = Routines.Utils.base64.encode( tarHash )
+
+    const safeFileName = ctx.input.build.package.name.replace('/', '-')
+    const tarFileName = safeFileName+'.files.venue.tgz'
+
+    const buildFiles = ctx.input.build.files[tarFileName]
+
+    if(buildFiles && buildFiles.hash != tarHash64){
+      throw new Error("staticTar hash doesn't match package definition")
+    }
+
+    debug('verified staticTar')
+
+    debug('verified package - '+ctx.input.build.package.name+'@'+ctx.input.build.package.version)
+
+    const buildBSON = Routines.BSON.serializeBSONWithoutOptimiser(buildWithoutSig)
+
+    const buildHash = Routines.Utils.base64.encode(
+      Routines.Utils.hash(
+        buildBSON
+      )
+    )
+
+    const safeBuildHash = buildHash.replace('/', '-')
+
+    debug('\t'+'hash', buildHash)
+
+    const buildWorkspace = 'packages/'+safeFileName+'/'+ctx.input.build.package.version+'/'+safeBuildHash
+
+    const config = ctx.party.config
+
+    const workspacePath = await config.touchDir(buildWorkspace)
+
+    
+    debug('\t'+'workspace - local', buildWorkspace)
+    debug('\t'+'workspace - global', workspacePath)
+    
+    fs.writeFileSync(
+      Path.join(workspacePath, tarFileName),
+      ctx.input.staticTar
+    )
+
+    /*fs.writeFileSync(
+      Path.join(workspacePath, safeFileName+'.service.venue.bson'),
+      Routines.BSON.serializeBSONWithoutOptimiser(ctx.input.build)
+    )*/
+
+    fs.writeFileSync(
+      Path.join(workspacePath, safeFileName+'.service.venue.json'),
+      JSON.stringify(ctx.input.build, null, 2)
+    )
+    
     // verify build signature
 
+    //ctx.input.
 
     // untar listed files
 

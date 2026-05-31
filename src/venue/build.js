@@ -131,10 +131,10 @@ async function pushService(devId, build, staticTar){
   await client.start()
 
 
-  let uploadResult = await client.restParty.comms.call('create-package', {build, staticTar: staticTar}, {
+  let uploadResult = await client.restParty.comms.call('create-package', {build, staticTar}, {
     expectClearTextReply: false,
     sendClearTextRequest: false,
-    useSessions: false
+    useSessions: true
   })
 
   console.log('result', uploadResult)
@@ -170,7 +170,7 @@ async function main(){
   const staticTar = fs.readFileSync('./dataparty/@dataparty-venue.files.venue.tgz')
 
   debug('is staticTar a buffer? ', staticTar instanceof Buffer); // true
-  //await pushService( party.privateIdentity, build, staticTar )
+  await pushService( party.privateIdentity, build, staticTar )
 
   
 

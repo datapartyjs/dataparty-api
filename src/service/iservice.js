@@ -74,7 +74,7 @@ module.exports = class IService {
       topics: {},
       auth: {},
       files: {},
-      signatures: []
+      //signatures: {}
     }
 
     this.compileSettings = {

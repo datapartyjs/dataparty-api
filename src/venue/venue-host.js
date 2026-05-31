@@ -88,7 +88,7 @@ async function main(){
   let party = new Dataparty.TingoParty({
     path: path+'/db',
     model: VenueServiceSchema,
-    config: new Dataparty.Config.JsonFileConfig({basePath: path+'/config'}),
+    config: new Dataparty.Config.JsonFileConfig({basePath: path}),
     noCache: false
   })
 
