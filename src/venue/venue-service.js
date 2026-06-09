@@ -12,22 +12,27 @@ class VenueService extends DatapartySrv.IService {
     let builder = new DatapartySrv.ServiceBuilder(this)
 
 
-    builder.addSchema(Path.join(__dirname, './schema/public-key.js'))
-    builder.addSchema(Path.join(__dirname, './schema/session-key.js'))
+    //builder.addSchema(Path.join(__dirname, './schema/public-key.js'))
+    //builder.addSchema(Path.join(__dirname, './schema/session-key.js'))
     builder.addSchema(Path.join(__dirname, './schema/venue_package.js'))
+
+    builder.addSchema(DatapartySrv.schema_paths.public_key)
+    builder.addSchema(DatapartySrv.schema_paths.session_key)
 
     builder.addMiddleware(DatapartySrv.middleware_paths.pre.decrypt)
     builder.addMiddleware(DatapartySrv.middleware_paths.pre.validate)
+    builder.addMiddleware(DatapartySrv.middleware_paths.pre.ephemeral_session)
 
-    builder.addMiddleware(Path.join(__dirname, './middleware/pre/ephemeral-session.js'))
+    //builder.addMiddleware(Path.join(__dirname, './middleware/pre/ephemeral-session.js'))
 
     builder.addMiddleware(DatapartySrv.middleware_paths.post.validate)
     builder.addMiddleware(DatapartySrv.middleware_paths.post.encrypt)
 
     builder.addEndpoint(DatapartySrv.endpoint_paths.identity)
     builder.addEndpoint(DatapartySrv.endpoint_paths.version)
+    builder.addEndpoint(DatapartySrv.endpoint_paths.key_announce)
 
-    builder.addEndpoint(Path.join(__dirname, './endpoints/key-announce.js'))
+    //builder.addEndpoint(Path.join(__dirname, './endpoints/key-announce.js'))
 
     builder.addEndpoint(Path.join(__dirname, './endpoints/create-package.js'))
 

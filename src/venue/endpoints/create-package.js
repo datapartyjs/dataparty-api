@@ -256,7 +256,7 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
 
       debug('service created')
     } else {
-      debug('need to update service')
+      debug('need to update service?')
     }
 
     fs.writeFileSync(

@@ -3,7 +3,7 @@ const Hoek = require('@hapi/hoek')
 const {Identity} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.middleware.pre.ephemeral-session')
 
-const IMiddleware = require('../../../service/imiddleware')
+const IMiddleware = require('../../imiddleware')
 
 module.exports = class Decrypt extends IMiddleware {
 
