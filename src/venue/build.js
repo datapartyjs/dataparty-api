@@ -59,6 +59,7 @@ venue: {
       - default-config.json
       - public/
   - package/NAME
+  - project/NAME
   - venue.json
     {
       projects: {

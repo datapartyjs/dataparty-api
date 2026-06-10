@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --trace-warnings
+#!/usr/bin/env node
 
 const Pkg = require('../../../package.json')
 const debug = require('debug')('venue')

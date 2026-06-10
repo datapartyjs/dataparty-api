@@ -17,6 +17,7 @@ class VenueProject extends ISchema {
       created: {type: Number, required: true},
       changed: {type: Number},
       venue: {type: String},
+      name: {type: String},
       domain: {type: String, index: true, unique: true},
 
       // i2p enable? 

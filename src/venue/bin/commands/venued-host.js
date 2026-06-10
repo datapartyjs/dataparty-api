@@ -266,11 +266,18 @@ class VenuedHost extends CmdTree.Command {
   
     debug('started')
     console.log('partying')
-    console.log(Path.join(__dirname,'../public'))
+    console.log('\t', parsed.listen)
+
+    const i2pAddress = await config.read('i2p.address')
+    if(i2pAddress){
+      console.log('\t', i2pAddress)
+    }
+
+    //console.log(Path.join(__dirname,'../public'))
 
     this.context.exiting = false
 
-    return {}
+    return
   }
 }
 

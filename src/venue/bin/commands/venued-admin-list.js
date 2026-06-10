@@ -41,7 +41,7 @@ class VenuedAdminList extends CmdTree.Command {
   static get Definition(){
     return {
       usage: `venued admin list [key-hash]`,
-      description: 'Add admin key',
+      description: 'List admin keys',
       definition: DEFINITION
     }
   }

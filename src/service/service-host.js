@@ -250,27 +250,32 @@ class ServiceHost {
 
     if(this.i2pEnabled && this.i2p == null){
       debug('starting i2p forward', this.i2pSettings)
-      const SAM = require('@diva.exchange/i2p-sam')
 
-      this.i2p = await SAM.createForward(this.i2pSettings)
-      this.i2pUri = this.i2p.getB32Address()
-      this.i2pSettings.sam.privateKey = null  // clear no longer needed
+      async function setup_i2p(){
+        const SAM = require('@diva.exchange/i2p-sam')
 
-      this.i2p.on('error', this.reportI2pError.bind(this))
+        this.i2p = await SAM.createForward(this.i2pSettings)
+        this.i2pUri = this.i2p.getB32Address()
+        this.i2pSettings.sam.privateKey = null  // clear no longer needed
+
+        this.i2p.on('error', this.reportI2pError.bind(this))
 
 
-      this.i2p.on('close', ()=>{
-        debug('i2p closed')
-      })
+        this.i2p.on('close', ()=>{
+          debug('i2p closed')
+        })
 
-      this.i2p.on('data', (data)=>{
-        debug('i2p data')
-        debug(data.toString())
-      })
+        this.i2p.on('data', (data)=>{
+          debug('i2p data')
+          debug(data.toString())
+        })
 
-      debug('i2p started')
-      debug('\t', 'address', this.i2pUri)
-      debug('\t', 'key', this.i2p.getPublicKey())
+        debug('i2p started')
+        debug('\t', 'address', this.i2pUri)
+        debug('\t', 'key', this.i2p.getPublicKey())
+      }
+
+      setup_i2p()
     }
 
     if(this.mdnsEnabled && this.apiServer && this.apiServerUri.protocol != 'file:'){
