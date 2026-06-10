@@ -174,8 +174,6 @@ async function main(){
   await pushService( party.privateIdentity, build, staticTar )
 
   
-
-
 }
 
 main().catch(err=>{

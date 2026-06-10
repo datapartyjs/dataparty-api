@@ -52,7 +52,7 @@ module.exports = class ServiceBuilder {
 
     debug('compiling sources',this.service.sources)
 
-    await Promise.all([
+    let results = await Promise.all([
       this.compileMiddleware('pre'),
       this.compileMiddleware('post'),
       this.compileList('documents'),
@@ -82,6 +82,7 @@ module.exports = class ServiceBuilder {
       }
     }
     
+    let files = []
 
     if(writeFile){
       const buildOutput = outputPath+'/'+ this.service.compiled.package.name.replace('/', '-') +'.service.venue.json'
@@ -100,11 +101,16 @@ module.exports = class ServiceBuilder {
       const compressedBrotli = zlib.brotliCompressSync(JSON.stringify(this.service.compiled, null,2));
 
       console.log('Original:', JSON.stringify(this.service.compiled, null,2).length, 'bytes');
-      console.log('Gzip:', compressed.length, 'bytes');
-      console.log('Brotli:', compressedBrotli.length, 'bytes');
+      console.log('Gzip:', compressed.length, 'bytes')
+      console.log('Brotli:', compressedBrotli.length, 'bytes')
+
+      let tarFile = results[ results.length - 1 ]
+      files.push(buildOutput)
+      files.push(schemaOutput)
+      if(tarFile){files.push(tarFile)}
     }
 
-    return this.service.compiled
+    return {build: this.service.compiled, files}
 
   }
 
@@ -384,6 +390,8 @@ module.exports = class ServiceBuilder {
 
   async compressFiles(outputPath, writeFile){
 
+    if(!this.service.sources.files){ return }
+
     let fileMap={}
 
     let files = this.service.sources.files.map(file=>{
@@ -397,6 +405,8 @@ module.exports = class ServiceBuilder {
 
       return hash
     })
+
+    if(!files || files.length < 1){ return }
 
     const tarFileName = this.service.compiled.package.name.replace('/', '-')+'.files.venue.tgz'
     const tarPath = Path.join(outputPath, tarFileName)
@@ -420,5 +430,7 @@ module.exports = class ServiceBuilder {
         files: fileMap
       }
     }
+
+    return tarPath
   }
 }
