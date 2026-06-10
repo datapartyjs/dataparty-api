@@ -4,7 +4,7 @@ const debug = require('debug')('venue.venue_pkg')
 
 const ISchema = require('../../bouncer/ischema')
 
-const Utils = ISchema.Utils
+//const Utils = ISchema.Utils
 
 
 class VenuePkg extends ISchema {

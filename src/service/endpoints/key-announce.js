@@ -5,7 +5,7 @@ const debug = require('debug')('dataparty.endpoint.key-announce')
 const {Identity, Message, Routines} = require('@dataparty/crypto')
 
 //const IEndpoint = require('@dataparty/api/src/service/iendpoint')
-const IEndpoint = require('../../service/iendpoint')
+const IEndpoint = require('../iendpoint')
 
 const KeyVerifier = Joi.object().keys({
   id: Joi.string().max(100),

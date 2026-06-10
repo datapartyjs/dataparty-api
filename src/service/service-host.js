@@ -58,8 +58,9 @@ class ServiceHost {
     i2pSamHost = '127.0.0.1',
     i2pSamPort = 7656,
     i2pKey = null,
-    i2pForwardHost = 'localhost',
+    i2pForwardHost = '127.0.0.1',
     i2pForwardPort = null,
+    i2pOptions = null,
     wsEnabled = true,
     wsPort = null,
     wsUpgradePath = '/ws',
@@ -146,6 +147,9 @@ class ServiceHost {
         forward: {
           host: i2pForwardHost ? i2pForwardHost : this.apiServerUri.hostname,
           port: i2pForwardPort ? i2pForwardPort : parseInt( this.apiServerUri.port )
+        },
+        session: {
+          options: i2pOptions
         }
       }
     }
@@ -250,9 +254,7 @@ class ServiceHost {
 
       this.i2p = await SAM.createForward(this.i2pSettings)
       this.i2pUri = this.i2p.getB32Address()
-      this.i2pSettings.privateKey = null  // clear no longer needed
-
-
+      this.i2pSettings.sam.privateKey = null  // clear no longer needed
 
       this.i2p.on('error', this.reportI2pError.bind(this))
 

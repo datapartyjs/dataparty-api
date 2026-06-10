@@ -9,6 +9,8 @@ const mongoose = BouncerDb.mongoose()
 const debug = require('debug')('dataparty.service.ServiceBuilder')
 const zlib = require('zlib')
 
+const safeStringify = require('fast-safe-stringify')
+
 const dataparty_crypto = require('@dataparty/crypto')
 
 const {
@@ -178,24 +180,32 @@ module.exports = class ServiceBuilder {
       this.service.compiled.schemas.Permissions[model.Type] = await model.permissions()
       this.service.compiled.schemas.JSONSchema.push(jsonSchema)
   
+      const safePaths = JSON.parse(safeStringify(schema.paths))
+
+      //debug(schema.paths)
       debug('\t','type',model.Type)
   
       let indexed = JSONPath({
         path: '$..options.index',
-        json: schema.paths,
+        json: safePaths,
         resultType: 'pointer'
-      }).map(p=>{return p.split('/')[1]})
+      }).map(p=>{
+        
+        debug('\t\t','p',p)
+        return p
+      })
+        //return p.split('.')[1]})
   
       debug('\t\tindexed', indexed)
   
       let unique = JSONPath({
         path: '$..options.unique',
-        json: schema.paths,
+        json: safePaths,
         resultType: 'pointer'
       }).map(p=>{
         debug(typeof p)
         if(typeof p == 'string'){
-          return p.split('/')[1]
+          return p.split('.')[1]
         }
         
         return p
