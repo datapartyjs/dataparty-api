@@ -142,9 +142,12 @@ class ServiceHost {
           host: i2pSamHost,
           portTCP: i2pSamPort,
           publicKey: reach(i2pKey, 'publicKey'),
-          privateKey: reach(i2pKey, 'privateKey')
+          privateKey: reach(i2pKey, 'privateKey'),
+          versionMin: '3.1',
+          versionMax: '3.3'
         },
         forward: {
+          silent: true,
           host: i2pForwardHost ? i2pForwardHost : this.apiServerUri.hostname,
           port: i2pForwardPort ? i2pForwardPort : parseInt( this.apiServerUri.port )
         },
@@ -275,7 +278,7 @@ class ServiceHost {
         debug('\t', 'key', this.i2p.getPublicKey())
       }
 
-      setup_i2p()
+      setup_i2p.bind(this)()
     }
 
     if(this.mdnsEnabled && this.apiServer && this.apiServerUri.protocol != 'file:'){

@@ -226,6 +226,7 @@ class VenuedHost extends CmdTree.Command {
         },
         session: {
           options: 'i2cp.leaseSetEncType=6,4'
+          //options: 'i2cp.leaseSetEncType=4'
         }
       }
 
@@ -254,9 +255,9 @@ class VenuedHost extends CmdTree.Command {
       i2pSamHost: parsed['i2p-host'],
       i2pSamPort: parsed['i2p-port'],
       i2pForwardHost: '127.0.0.1',
-      i2pForwardPort: 3000,
-      //i2pOptions: 'i2cp.leaseSetEncType=6,4',
-      i2pOptions: 'i2cp.leaseSetEncType=4,0',
+      i2pForwardPort: '3000',
+      i2pOptions: 'i2cp.leaseSetEncType=6,4',
+      //i2pOptions: 'i2cp.leaseSetEncType=4',
       i2pKey: await config.read('i2p.sam')
     })
 
