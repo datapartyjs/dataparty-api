@@ -197,8 +197,8 @@ module.exports = class ServiceBuilder {
         resultType: 'pointer'
       }).map(p=>{
         
-        debug('\t\t','p',p)
-        return p
+        debug('\t\t','indexed p',p)
+        return p.replace('/options/index', '').replace('/','')
       })
         //return p.split('.')[1]})
   
@@ -209,9 +209,10 @@ module.exports = class ServiceBuilder {
         json: safePaths,
         resultType: 'pointer'
       }).map(p=>{
-        debug(typeof p)
+        debug(typeof p, 'unique', p)
         if(typeof p == 'string'){
-          return p.split('.')[1]
+          let filteredP =  p.replace('/options/unique', '').replace('/','')
+          return  filteredP
         }
         
         return p
