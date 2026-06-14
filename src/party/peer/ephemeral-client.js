@@ -10,8 +10,8 @@ const RestComms = require('../../comms/rest-comms')
 const WebsocketComms = require('../../comms/websocket-comms')
 
 const MAX_RECONNECT_INTERVAL = 120*1000
-const MIN_RECONNECT_INTERVAL = 5*1000
-const MIN_BACKOFF = 3*1000
+const MIN_RECONNECT_INTERVAL = 9*1000
+const MIN_BACKOFF = 9*1000
 
 const MAX_SESSION_AGE = 24*60*60*1000  //! Set session expiry to 24hr from now
 const SESSION_ROLL_AGE = Math.round(MAX_SESSION_AGE * 0.75)
@@ -21,7 +21,7 @@ function getReconnectInterval(count, backoff=9000){
     MIN_RECONNECT_INTERVAL,
     Math.min(
       MAX_RECONNECT_INTERVAL,
-      count * Math.max(backoff, MIN_BACKOFF)
+      Math.round(MIN_BACKOFF + (count * Math.max(backoff, MIN_BACKOFF) * Math.random()))
     )
   )
 }
@@ -40,7 +40,7 @@ class EphemeralClient extends EventEmitter {
     this.wsParty = null
     this.restParty = null
     this.autoreconnect = autoreconnect
-    this.backoff = 9000
+    this.backoff = MIN_BACKOFF
 
     this.reconnectTimer = null
 
