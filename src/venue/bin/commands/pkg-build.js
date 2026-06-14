@@ -41,6 +41,14 @@ const DEFINITION = {
   },
   version: {
     description: 'package version'
+  },
+  remote: {
+    type: 'string',
+    description: 'name of remote to build project for'
+  },
+  deploy: {
+    type: 'boolean',
+    default: false
   }
 }
 
@@ -113,7 +121,41 @@ class VenuePackageBuild extends CmdTree.Command {
     const builder = new Dataparty.ServiceBuilder(service)
     const build = await builder.compile(parsed.output, true, key)
 
+
+    if(parsed.deploy && parsed.remote){
+      console.log('uploading...')
+      const remote = await this.context.secureConfig.read('remote.'+parsed.remote)
+      let staticTar = undefined
+
+      if(build.files.length == 3){
+        staticTar = fs.readFileSync(build.files[ build.files.length - 1 ])
+      }
+      
+      await this.pushPackage(key, remote, build.build, staticTar)
+    }
+
     return {files: build.files}
+  }
+
+
+  async pushPackage(devId, remote, build, staticTar){
+
+    let client = new Dataparty.EphemeralClient({
+      identity: devId,
+      urlOrParty: remote.url,
+      wsUrlOrParty: remote.ws
+    })
+
+    await client.start()
+
+
+    let uploadResult = await client.restParty.comms.call('create-package', {build, staticTar}, {
+      expectClearTextReply: false,
+      sendClearTextRequest: false,
+      useSessions: true
+    })
+
+    console.log('result', uploadResult)
   }
 }
 

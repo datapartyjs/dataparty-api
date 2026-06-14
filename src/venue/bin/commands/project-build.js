@@ -52,6 +52,10 @@ const DEFINITION = {
   remote: {
     type: 'string',
     description: 'name of remote to build project for'
+  },
+  deploy: {
+    type: 'boolean',
+    default: false
   }
 }
 
@@ -220,6 +224,14 @@ class VenueProjectBuild extends CmdTree.Command {
     
     fs.writeFileSync(buildOutput, JSON.stringify(project, null,2))
 
+    let staticTar = undefined
+    
+    if(prjFiles.length == 3){
+      staticTar = fs.readFileSync(prjFiles[ prjFiles.length - 1 ])
+    }
+
+    await this.pushProject(key, remote, project, staticTar)
+
     return {files: prjFiles, project}
   }
 
@@ -243,6 +255,26 @@ class VenueProjectBuild extends CmdTree.Command {
     debug('addFiles',result)
 
   }
+
+  async pushProject(devId, remote, build, staticTar){
+  
+      let client = new Dataparty.EphemeralClient({
+        identity: devId,
+        urlOrParty: remote.url,
+        wsUrlOrParty: remote.ws
+      })
+  
+      await client.start()
+  
+  
+      let uploadResult = await client.restParty.comms.call('create-project', {project:build, staticTar}, {
+        expectClearTextReply: false,
+        sendClearTextRequest: false,
+        useSessions: true
+      })
+  
+      console.log('result', uploadResult)
+    }
 }
 
 module.exports = VenueProjectBuild
