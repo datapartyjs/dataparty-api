@@ -94,7 +94,7 @@ class EphemeralClient extends EventEmitter {
     }
 
     if(!this.wsParty && this.wsUrl){
-
+      this.emit('connecting')
       this.wsParty = new PeerParty({
         comms: new WebsocketComms({
           uri: this.wsUrl,
@@ -153,6 +153,7 @@ class EphemeralClient extends EventEmitter {
     this.reconnect_tries++
 
     try{
+      this.emit('connecting')
       this.wsParty.comms = new WebsocketComms({
         uri: this.wsUrl,
         discoverRemoteIdentity: false,

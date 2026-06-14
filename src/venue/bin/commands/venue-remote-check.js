@@ -85,6 +85,26 @@ class VenueRemoteCheck extends CmdTree.Command {
       wsUrlOrParty: remote.ws
     })
 
+    client.on('connecting',()=>{
+      console.log('connecting')
+    })
+
+    client.on('connected',()=>{
+      console.log('connected')
+    })
+
+    client.on('disconnected',()=>{
+      console.log('disconnected')
+    })
+
+    client.on('reconnected',()=>{
+      console.log('reconnected')
+    })
+
+    client.on('reconnecting',(info)=>{
+      console.log('reconnecting',info)
+    })
+
     await client.start()
     console.log('client started')
 
