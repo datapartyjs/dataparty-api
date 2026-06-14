@@ -38,7 +38,6 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
           project: Joi.object().keys({
             owner: Joi.string().required(),
             created: Joi.number(),
-            changed: Joi.number(),
             
             name: Joi.string().required(),
             version: Joi.string().required(),

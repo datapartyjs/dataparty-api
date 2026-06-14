@@ -15,6 +15,7 @@ class VenueProject extends ISchema {
     return {
       owner: {type: String, required: true},
       created: {type: Number, required: true},
+      changed: {type: Number, required: true},
       workspace: {type: String, required: true},
       hash: {type: String, required: true, index: true},
 
@@ -24,10 +25,9 @@ class VenueProject extends ISchema {
       project: {
         owner: {type: String, required: true, index: true},  //public_key.key.hash
         created: {type: Number, required: true},
-        changed: {type: Number},
 
         name: {type: String, required: true, index: true},
-        version: {type: String, required: true},
+        version: {type: String, required: true, index: true},
         venue: {type: String},
         domain: {type: String, index: true, unique: true},
 
