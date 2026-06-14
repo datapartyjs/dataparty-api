@@ -14,7 +14,7 @@ const WebsocketShim = require('./websocket-shim')
  * @see https://en.wikipedia.org/wiki/WebSocket
  */
 class WebsocketComms extends PeerComms {
-  constructor({uri, connection, timeout=10000, remoteIdentity, host, party, ...options}){
+  constructor({uri, connection, timeout=20000, remoteIdentity, host, party, ...options}){
     super({remoteIdentity, host, party, ...options})
 
     this.uri = uri

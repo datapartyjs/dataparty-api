@@ -9,6 +9,20 @@ const MemoryConfig = require('../../config/memory')
 const RestComms = require('../../comms/rest-comms')
 const WebsocketComms = require('../../comms/websocket-comms')
 
+const MAX_RECONNECT_INTERVAL = 120*1000
+const MIN_RECONNECT_INTERVAL = 5*1000
+const MIN_BACKOFF = 3*1000
+
+function getReconnectInterval(count, backoff=9000){
+  return Math.max(
+    MIN_RECONNECT_INTERVAL,
+    Math.min(
+      MAX_RECONNECT_INTERVAL,
+      count * Math.max(backoff, MIN_BACKOFF)
+    )
+  )
+}
+
 class EphemeralClient extends EventEmitter {
   constructor({identity, role='guest', autoreconnect=true, contacts, urlOrParty = 'https://api.dataparty.xyz/api', wsUrlOrParty = 'wss://api.dataparty.xyz/ws'}){
 
@@ -21,6 +35,7 @@ class EphemeralClient extends EventEmitter {
     this.wsParty = null
     this.restParty = null
     this.autoreconnect = autoreconnect
+    this.backoff = 9000
 
     this.reconnectTimer = null
 
@@ -100,18 +115,24 @@ class EphemeralClient extends EventEmitter {
       await this.wsParty.start()
       debug('waiting for websocket authorization')
       await this.wsParty.comms.authorized()
+      this.emit('connected')
     }
     
   }
 
   async handleWsClose(){
 
+    this.emit('disconnected')
+
     let stopped = this.wsParty.comms.stopped
 
-    const sleepTime = Math.min(9000*this.reconnect_tries, 20*1000)
+    const sleepTime = getReconnectInterval(this.reconnect_tries, this.backoff)
     debug('ws closed with stopped=',stopped, '   waiting ', sleepTime/1000,'sec')
     
     if(!this.reconnectTimer){
+
+      this.emit('reconnecting', {sleepTime, wakeTime: Date.now()+sleepTime})
+
       this.reconnectTimer = setTimeout(
         this.doReconnect.bind(this),
         sleepTime
@@ -155,6 +176,9 @@ class EphemeralClient extends EventEmitter {
 
       this.reconnect_last_attempt = null
       this.reconnect_tries = 0
+
+      this.emit('connected')
+      this.emit('reconnected')
 
     } catch(err){
       debug('reconnect error', err)
