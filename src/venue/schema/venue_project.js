@@ -74,9 +74,9 @@ class VenueProject extends ISchema {
             useNative: {type: Boolean, required: true},
           }
         }],
-        files: Object
-      },
-      signatures: {type: Object, required: true}
+        files: Object,
+        signatures: {type: Object, required: true}
+      }
       
     }
   }

@@ -36,12 +36,12 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
         ephemeral_session: true,
         validate: Joi.object().keys({
           project: Joi.object().keys({
-            owner: Joi.string(),
+            owner: Joi.string().required(),
             created: Joi.number(),
             changed: Joi.number(),
             
-            name: Joi.string(),
-            venue: Joi.string(),
+            name: Joi.string().required(),
+            venue: Joi.string().required(),
             domain: Joi.string(),
 
             i2p: Joi.object().keys({
@@ -51,7 +51,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
             }),
             party: Joi.array().items(Joi.object().keys({
               name: Joi.string(),
-              type: Joi.string(),
+              type: Joi.string().required(),
               tingo: { path: Joi.string() },
               loki: { path: Joi.string() },
               peer: {
@@ -88,9 +88,9 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
                 hash: Joi.string().required(),
                 size: Joi.number().required()
               }))
-            }))
+            })),
+            signatures: Joi.object().pattern(Joi.string(), Joi.string()).required()
           }).required(),
-          signatures: Joi.object().pattern(Joi.string(), Joi.string()).required(),
           staticTar: Joi.any().custom(typedArraySchema)
         })
       },
@@ -213,7 +213,6 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
         hash: projectHash,
         workspace: workspacePath,
         project: ctx.input.project,
-        signatures: ctx.input.signatures
       })
 
       debug('project created')
@@ -233,7 +232,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
 
     fs.writeFileSync(
       Path.join(workspacePath, safeFileName+'.project.venue.json'),
-      JSON.stringify(ctx.input.build, null, 2)
+      JSON.stringify(ctx.input.project, null, 2)
     )
     
     // verify build signature
