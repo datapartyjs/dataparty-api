@@ -207,7 +207,7 @@ class RestComms extends EventEmitter {
       const serverIdentity = await RestComms.HttpGet(this.uri + `${this.uriPrefix}identity`)
       debug('server identity - ', serverIdentity)
 
-      this.remoteIdentity = new dataparty_crypto.Identity(serverIdentity)
+      this.remoteIdentity = dataparty_crypto.Identity.fromJSON(serverIdentity)
     }
 
     return this.remoteIdentity

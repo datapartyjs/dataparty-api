@@ -21,6 +21,7 @@ commandTree.addCommand(require('./commands/venue-identity-show'))
 commandTree.addCommand(require('./commands/venue-remote-add'))
 commandTree.addCommand(require('./commands/venue-remote-list'))
 commandTree.addCommand(require('./commands/venue-remote-show'))
+commandTree.addCommand(require('./commands/venue-remote-check'))
 
 commandTree.addCommand(require('./commands/pkg-build'))
 
@@ -118,11 +119,13 @@ async function main(){
   
   
   await secureConfig.waitForUnlocked('startup')
-  
-  const output = await commandTree.run({context: {
+
+  context = {
     secureConfig, collectPassword,
-    ...context
-  }})
+    exiting: false
+  }
+  
+  const output = await commandTree.run({context})
   
   if(output){
     console.log(output)

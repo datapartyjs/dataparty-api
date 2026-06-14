@@ -37,6 +37,7 @@ module.exports = class KeyAnnounceEndpoint extends IEndpoint {
         validate: Joi.object().keys({
 
           annoucement: {
+            role: Joi.string().valid('guest', 'billing').required(),
             created: Joi.number().required(),
             expiry: Joi.number().required(),
             actorKey: KeyVerifier.required(),
@@ -190,7 +191,7 @@ module.exports = class KeyAnnounceEndpoint extends IEndpoint {
 
         let keyDoc = await ctx.party.createDocument('public_key', {
           created: Date.now(),
-          role: 'guest',
+          role: ctx.input.annoucement.role || 'guest',
           owner: computedActorHash,
           ...inputActorKey
         })

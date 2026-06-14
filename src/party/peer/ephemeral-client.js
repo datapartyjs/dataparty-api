@@ -10,15 +10,19 @@ const RestComms = require('../../comms/rest-comms')
 const WebsocketComms = require('../../comms/websocket-comms')
 
 class EphemeralClient extends EventEmitter {
-  constructor({identity, contacts, urlOrParty = 'https://api.dataparty.xyz/api', wsUrlOrParty = 'wss://api.dataparty.xyz/ws'}){
+  constructor({identity, role='guest', autoreconnect=true, contacts, urlOrParty = 'https://api.dataparty.xyz/api', wsUrlOrParty = 'wss://api.dataparty.xyz/ws'}){
 
     super()
     
     this.contacts = contacts
     this.sessionKey = null
     this.identity = identity
+    this.role = role || 'guest'
     this.wsParty = null
     this.restParty = null
+    this.autoreconnect = autoreconnect
+
+    this.reconnectTimer = null
 
     if(typeof urlOrParty == 'string'){
       this.restUrl = urlOrParty
@@ -33,6 +37,9 @@ class EphemeralClient extends EventEmitter {
     } else {
       this.wsParty = wsUrlOrParty
     }
+
+    this.reconnect_last_attempt = null
+    this.reconnect_tries = 0
   }
 
 
@@ -72,6 +79,7 @@ class EphemeralClient extends EventEmitter {
     }
 
     if(!this.wsParty && this.wsUrl){
+
       this.wsParty = new PeerParty({
         comms: new WebsocketComms({
           uri: this.wsUrl,
@@ -81,6 +89,10 @@ class EphemeralClient extends EventEmitter {
         }),
         config: this.restParty.config
       })
+
+      this.wsParty.comms.on('server-close', this.handleWsClose.bind(this))
+      this.wsParty.comms.on('timeout', this.handleWsClose.bind(this))
+      this.wsParty.comms.on('error', this.handleWsClose.bind(this))
 
       await this.wsParty.start()
 
@@ -92,15 +104,74 @@ class EphemeralClient extends EventEmitter {
     
   }
 
+  async handleWsClose(){
+
+    let stopped = this.wsParty.comms.stopped
+
+    const sleepTime = Math.min(9000*this.reconnect_tries, 20*1000)
+    debug('ws closed with stopped=',stopped, '   waiting ', sleepTime/1000,'sec')
+    
+    if(!this.reconnectTimer){
+      this.reconnectTimer = setTimeout(
+        this.doReconnect.bind(this),
+        sleepTime
+      )
+    }
+  }
+
+  async doReconnect(){
+    let stopped = this.wsParty.comms.stopped
+
+    this.reconnectTimer = null
+
+    if(stopped || !this.wsParty || !this.autoreconnect){ debug('skip reconnect'); return }
+
+    debug('doing ws reconnect...')
+
+    this.reconnect_last_attempt = Date.now()
+    this.reconnect_tries++
+
+    try{
+      this.wsParty.comms = new WebsocketComms({
+        uri: this.wsUrl,
+        discoverRemoteIdentity: false,
+        remoteIdentity: await this.restParty.comms.getServiceIdentity(),
+        session: this.sessionKey.key.hash
+      })
+
+      this.wsParty.comms.party = this.wsParty
+
+      this.wsParty.comms.on('server-close', this.handleWsClose.bind(this))
+      this.wsParty.comms.on('timeout', this.handleWsClose.bind(this))
+      this.wsParty.comms.on('error', this.handleWsClose.bind(this))
+
+      debug('restarting websocket')
+      await this.wsParty.comms.start()
+      debug('waiting for websocket authorization')
+      await this.wsParty.comms.authorized()
+
+      
+      debug('connected and authorized')
+
+      this.reconnect_last_attempt = null
+      this.reconnect_tries = 0
+
+    } catch(err){
+      debug('reconnect error', err)
+
+      
+      this.handleWsClose()
+    }
+  }
 
 
-  async announcePublicKeys(type='guest', callPath='key/announce'){
+  async announcePublicKeys(callPath='key/announce'){
 
     let currentActor = this.identity
     
     const announceData = {
       annoucement: {
-        type,
+        role: this.role,
         created: Date.now(),
         expiry: Date.now() + 24*60*60*1000,  //! Set session expiry to 24hr from now
         sessionKey: {

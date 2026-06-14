@@ -71,6 +71,7 @@ class ISocketComms extends EventEmitter {
         this.connected = false
         debug('Server closed connection')
         this.emit('close')
+        this.emit('server-close')
     }
 
     onopen(){
