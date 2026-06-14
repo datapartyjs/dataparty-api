@@ -24,6 +24,7 @@ commandTree.addCommand(require('./commands/venue-remote-show'))
 commandTree.addCommand(require('./commands/venue-remote-check'))
 
 commandTree.addCommand(require('./commands/pkg-build'))
+commandTree.addCommand(require('./commands/project-build'))
 
 const HOMEDIR = OS.homedir()
 const DEFAULT_FOLDER = '.venue'
