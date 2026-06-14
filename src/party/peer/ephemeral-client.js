@@ -99,7 +99,7 @@ class EphemeralClient extends EventEmitter {
     }
 
     if(!this.wsParty && this.wsUrl){
-      this.emit('connecting')
+      this.emit('connecting', {time: Date.now()})
       this.wsParty = new PeerParty({
         comms: new WebsocketComms({
           uri: this.wsUrl,
@@ -118,7 +118,7 @@ class EphemeralClient extends EventEmitter {
       await this.wsParty.start()
       debug('waiting for websocket authorization')
       await this.wsParty.comms.authorized()
-      this.emit('connected')
+      this.emit('connected', {time: Date.now()})
     }
     
   }
@@ -136,7 +136,7 @@ class EphemeralClient extends EventEmitter {
   async rollSessionKey(){
 
     debug('rollSessionKey')
-    this.emit('session-end', this.sessionKey.key.hash)
+    this.emit('session-end', {time: Date.now(), session: this.sessionKey.key.hash})
 
     if(this.wsParty){
       await this.wsParty.stop()
@@ -151,7 +151,7 @@ class EphemeralClient extends EventEmitter {
 
   async handleWsClose(){
 
-    this.emit('disconnected')
+    this.emit('disconnected', {time: Date.now()})
 
     let stopped = this.wsParty.comms.stopped
 
@@ -184,7 +184,7 @@ class EphemeralClient extends EventEmitter {
     this.reconnect_tries++
 
     try{
-      this.emit('connecting')
+      this.emit('connecting', {time:Date.now()})
       this.wsParty.comms = new WebsocketComms({
         uri: this.wsUrl,
         discoverRemoteIdentity: false,
@@ -209,8 +209,8 @@ class EphemeralClient extends EventEmitter {
       this.reconnect_last_attempt = null
       this.reconnect_tries = 0
 
-      this.emit('connected')
-      this.emit('reconnected')
+      this.emit('connected', {time:Date.now()})
+      this.emit('reconnected', {time:Date.now()})
 
     } catch(err){
       debug('reconnect error', err)
@@ -277,7 +277,7 @@ class EphemeralClient extends EventEmitter {
       throw new Error('annoucement request failed - '+callPath)
     }
 
-    this.emit('session', this.sessionKey.key.hash)
+    this.emit('session', {time: Date.now(), session: this.sessionKey.key.hash})
   }
 
 

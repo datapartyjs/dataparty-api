@@ -93,20 +93,20 @@ class VenueRemoteCheck extends CmdTree.Command {
       console.log('session-end', id)
     })
 
-    client.on('connecting',()=>{
-      console.log('connecting')
+    client.on('connecting',(info)=>{
+      console.log('connecting', info)
     })
 
-    client.on('connected',()=>{
-      console.log('connected')
+    client.on('connected',(info)=>{
+      console.log('connected', info)
     })
 
-    client.on('disconnected',()=>{
-      console.log('disconnected')
+    client.on('disconnected',(info)=>{
+      console.log('disconnected', info)
     })
 
-    client.on('reconnected',()=>{
-      console.log('reconnected')
+    client.on('reconnected',(info)=>{
+      console.log('reconnected', info)
     })
 
     client.on('reconnecting',(info)=>{
