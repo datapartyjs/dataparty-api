@@ -26,7 +26,7 @@ class VenueProject extends ISchema {
         created: {type: Number, required: true},
         changed: {type: Number},
 
-        name: {type: String, required: true},
+        name: {type: String, required: true, index: true},
         version: {type: String, required: true},
         venue: {type: String},
         domain: {type: String, index: true, unique: true},

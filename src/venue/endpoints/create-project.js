@@ -41,6 +41,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
             changed: Joi.number(),
             
             name: Joi.string().required(),
+            version: Joi.string().required(),
             venue: Joi.string().required(),
             domain: Joi.string(),
 

@@ -108,7 +108,7 @@
     "node-mocks-http": "^1.12.1",
     "node-object-hash": "^3.0.0",
     "node-persist": "^3.0.1",
-    "origin-router": "^1.6.4",
+    "origin-router": "https://github.com/datapartyjs/origin-router.git",
     "parse-url": "^5.0.1",
     "promisfy": "^1.2.0",
     "roslib": "^1.3.0",
