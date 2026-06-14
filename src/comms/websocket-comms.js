@@ -20,6 +20,7 @@ class WebsocketComms extends PeerComms {
     this.uri = uri
     this.connection = connection
     this.timeout = timeout
+    this.timer = null
 
     debug('starting host=',host, ' uuid=', this.uuid, ' uri=', this.uri)
 
@@ -49,7 +50,7 @@ class WebsocketComms extends PeerComms {
     if(isNewConnection){
 
       //await new Promise((resolve,reject)=>{
-        const timer = setTimeout(() => {
+        this.timer = setTimeout(() => {
             debug('websocket timeout')
             this.connection.close()
             this.emit('timeout')
@@ -58,13 +59,13 @@ class WebsocketComms extends PeerComms {
 
         this.socket.once('connect', () => {
           debug('websocket opened')
-          clearTimeout(timer);
+          clearTimeout(this.timer);
           //resolve();
         })
 
         this.socket.once('error',(error) => {
           debug('websocket error', error)
-          clearTimeout(timer)
+          clearTimeout(this.timer)
           this.emit('error', error)
           //this.connection.close()
           //reject(error);

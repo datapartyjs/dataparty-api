@@ -55,6 +55,7 @@ class PeerComms extends ISocketComms {
     this.uuid = uuidv4()
     this.socket = socket || null
     this.stopped = false
+    this.started = false
     //this.auto_reconnect = !socket && !host
 
     this.host = host   //! Is comms host\
@@ -205,6 +206,11 @@ class PeerComms extends ISocketComms {
 
   async start(){
     debug('start')
+
+    if(this.started){ return }
+
+    this.started = true
+
     if(this.socketInit){
       await this.socketInit()
     }
@@ -235,6 +241,7 @@ class PeerComms extends ISocketComms {
 
   async stop(){
     this.stopped = true
+    this.started = false
     debug('stop')
     this.close()
   }

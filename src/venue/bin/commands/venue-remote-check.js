@@ -85,6 +85,14 @@ class VenueRemoteCheck extends CmdTree.Command {
       wsUrlOrParty: remote.ws
     })
 
+    client.on('session',(id)=>{
+      console.log('session', id)
+    })
+
+    client.on('session-end',(id)=>{
+      console.log('session-end', id)
+    })
+
     client.on('connecting',()=>{
       console.log('connecting')
     })

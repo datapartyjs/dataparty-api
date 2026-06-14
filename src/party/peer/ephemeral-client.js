@@ -13,6 +13,9 @@ const MAX_RECONNECT_INTERVAL = 120*1000
 const MIN_RECONNECT_INTERVAL = 5*1000
 const MIN_BACKOFF = 3*1000
 
+const MAX_SESSION_AGE = 24*60*60*1000  //! Set session expiry to 24hr from now
+const SESSION_ROLL_AGE = Math.round(MAX_SESSION_AGE * 0.75)
+
 function getReconnectInterval(count, backoff=9000){
   return Math.max(
     MIN_RECONNECT_INTERVAL,
@@ -30,6 +33,8 @@ class EphemeralClient extends EventEmitter {
     
     this.contacts = contacts
     this.sessionKey = null
+    this.sessionExpiry = null
+    this.sessionTimer = null
     this.identity = identity
     this.role = role || 'guest'
     this.wsParty = null
@@ -109,8 +114,6 @@ class EphemeralClient extends EventEmitter {
       this.wsParty.comms.on('timeout', this.handleWsClose.bind(this))
       this.wsParty.comms.on('error', this.handleWsClose.bind(this))
 
-      await this.wsParty.start()
-
       debug('starting wsParty')
       await this.wsParty.start()
       debug('waiting for websocket authorization')
@@ -120,11 +123,39 @@ class EphemeralClient extends EventEmitter {
     
   }
 
+  async checkSessionExpiry(){
+    if(!this.sessionKey){ return }
+
+    const now = Date.now()
+
+    if(this.sessionExpiry <= now){
+      await this.rollSessionKey()
+    }
+  }
+
+  async rollSessionKey(){
+
+    debug('rollSessionKey')
+    this.emit('session-end', this.sessionKey.key.hash)
+
+    if(this.wsParty){
+      await this.wsParty.stop()
+    }
+
+    this.sessionKey = null
+    this.restParty = null
+    this.wsParty = null
+
+    await this.start()
+  }
+
   async handleWsClose(){
 
     this.emit('disconnected')
 
     let stopped = this.wsParty.comms.stopped
+
+    if(stopped){ return }
 
     const sleepTime = getReconnectInterval(this.reconnect_tries, this.backoff)
     debug('ws closed with stopped=',stopped, '   waiting ', sleepTime/1000,'sec')
@@ -193,12 +224,20 @@ class EphemeralClient extends EventEmitter {
   async announcePublicKeys(callPath='key/announce'){
 
     let currentActor = this.identity
+
+    const now = Date.now()
+    this.sessionExpiry = now + MAX_SESSION_AGE
     
+    this.sessionTimer = setTimeout(
+      this.rollSessionKey.bind(this),
+      SESSION_ROLL_AGE
+    )
+
     const announceData = {
       annoucement: {
         role: this.role,
         created: Date.now(),
-        expiry: Date.now() + 24*60*60*1000,  //! Set session expiry to 24hr from now
+        expiry: this.sessionExpiry,
         sessionKey: {
           type: this.sessionKey.key.type,
           hash: this.sessionKey.key.hash,
@@ -237,6 +276,8 @@ class EphemeralClient extends EventEmitter {
     if(announceResult.done != true){
       throw new Error('annoucement request failed - '+callPath)
     }
+
+    this.emit('session', this.sessionKey.key.hash)
   }
 
 
