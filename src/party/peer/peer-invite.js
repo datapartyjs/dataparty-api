@@ -8,6 +8,8 @@ const dataparty_crypto = require('@dataparty/crypto')
 const PeerParty = require('./peer-party')
 const RTCSocketComms = require('../../comms/rtc-socket-comms')
 
+const DEFAULT_EXPIRY = 5*60*1000
+
 const END_STATES = [
   'cancelled', 'rejected', 'expired', 'completed'
 ]
@@ -33,7 +35,7 @@ async function delay(ms){
 }
 
 class PeerInvite extends EventEmitter {
-  constructor(inviteDoc, toIdentity, matchMakerClient, fromIdentity){
+  constructor(inviteDoc, toIdentity, matchMakerClient, fromIdentity, payload=null){
     super()
 
     this.peerParty = null
@@ -42,7 +44,7 @@ class PeerInvite extends EventEmitter {
     this.matchMaker = matchMakerClient
     this.inviteDoc = inviteDoc
     this.inviteMsg = null //this.latestDoc = null
-    this.payload = null
+    this.payload = payload
 
     this.topicSub = null
     this.topicPub = null
@@ -53,6 +55,18 @@ class PeerInvite extends EventEmitter {
     this.offers = []
 
     this.incomingStream = null
+
+    this.timeoutTimer = null
+
+    if(this.payload){
+      const expiry = this.payload.timestamp + DEFAULT_EXPIRY
+      const now = Date.now()
+
+      const delta = expiry - now
+      if(delta > 0){
+        this.timeoutTimer = setTimeout(this.handleTimeout.bind(this))
+      }
+    }
 
     /*if(!this.isSender()){
       this.inviteDoc.
@@ -89,7 +103,7 @@ class PeerInvite extends EventEmitter {
   async accept(mediaSrc, config){
     debug('accepting invite')
 
-    /*if(this.inviteDoc.toHash == matchMaker.wsParty.identity.key.hash){
+    /*if(this.inviteDoc.toHash == this.matchMaker.client.socketPeerParty.identity.key.hash){
         otherIdentity = await this.matchMaker.lookupPublicKey(this.inviteDoc.fromHash)
     } else {
         otherIdentity = await this.matchMaker.lookupPublicKey(this.inviteDoc.toHash)
@@ -102,11 +116,19 @@ class PeerInvite extends EventEmitter {
     let msgWorkAround = new dataparty_crypto.Message({})
     msgWorkAround.fromJSON(JSON.parse(changedInvite.payload))
 
-    let payload = await this.matchMaker.identity.decrypt(
+    let payload = await this.matchMaker.client.identity.decrypt(
         msgWorkAround
     )
 
     this.payload = payload.msg
+
+    /*const expiry = this.payload.timestamp + DEFAULT_EXPIRY
+    const now = Date.now()
+
+    const delta = expiry - now
+    if(delta > 0 && this.timeoutTimer != null){
+      this.timeoutTimer = setTimeout(this.handleTimeout.bind(this))
+    }*/
 
     return await this.establish({mediaSrc, config})
   }
@@ -118,6 +140,10 @@ class PeerInvite extends EventEmitter {
 
   get state(){
     return (this.inviteMsg || this.inviteDoc).state
+  }
+
+  async handleTimeout(){
+    await this.matchMaker.setInviteState(this, 'expired')
   }
 
   async onInviteMsg(inviteMsg){
@@ -168,7 +194,7 @@ class PeerInvite extends EventEmitter {
     let actorField = this.isSender() ? 'from' : 'to'
     let otherIdentity = this.isSender() ? this.to : this.from
 
-    let party = this.matchMaker.wsParty
+    let party = this.this.matchMaker.client.socketPeerParty
 
     this.topicSub = new party.ROSLIB.Topic({
       ros : party.comms.ros,
@@ -190,7 +216,7 @@ class PeerInvite extends EventEmitter {
         let msgWorkAround = new dataparty_crypto.Message({})
         msgWorkAround.fromJSON(msg.offers[i])
 
-        let offer = await this.matchMaker.identity.decrypt(msgWorkAround)
+        let offer = await this.matchMaker.client.identity.decrypt(msgWorkAround)
 
         if(offer.from.hash != otherIdentity.key.hash){
           debug('BAD IDENTITY')
@@ -268,7 +294,7 @@ class PeerInvite extends EventEmitter {
       debug(' >> offer signal trickle', data)
 
 
-      const secureOffer = await this.matchMaker.identity.encrypt(data, otherIdentity)
+      const secureOffer = await this.matchMaker.client.identity.encrypt(data, otherIdentity)
 
       if(host && !sendFreely){
         //console.log('am host')
@@ -312,6 +338,7 @@ class PeerInvite extends EventEmitter {
 
     } catch (err){
       console.log(err)
+      throw err
     }
   }
 

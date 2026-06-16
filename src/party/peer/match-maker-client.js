@@ -12,30 +12,11 @@ const WebsocketComms = require('../../comms/websocket-comms')
 const PeerInvite = require('./peer-invite')
 
 class MatchMakerClient extends EventEmitter {
-  constructor(identity, contacts, urlOrParty = 'https://api.dataparty.xyz/api', wsUrlOrParty = 'wss://api.dataparty.xyz/ws', billingIdentity=null){
+  constructor(client){
 
     super()
-    
-    this.contacts = contacts
-    this.sessionKey = null
-    this.identity = identity
-    this.wsParty = null
-    this.restParty = null
-    this.billingIdentity = null
 
-    if(typeof urlOrParty == 'string'){
-      this.restUrl = urlOrParty
-      this.restParty = null
-    } else {
-      this.restParty = urlOrParty
-    }
-
-    if(typeof wsUrlOrParty == 'string'){
-      this.wsUrl = wsUrlOrParty
-      this.wsParty = null
-    } else {
-      this.wsParty = wsUrlOrParty
-    }
+    this.client = client
 
     this.invitesTx = null
     this.invitesRx = null
@@ -44,80 +25,55 @@ class MatchMakerClient extends EventEmitter {
       tx: {},
       rx: {}
     }
+
+    this.started = false
+
+    this.client.on('connected', this.handleConnect.bind(this))
+    this.client.on('disconnected', this.handleDisconnect.bind(this))
   }
 
+  async handleConnect(){
+    if(!this.started){ return }
 
+    debug('handleConnect')
+    await this.start()
+  }
+
+  async handleDisconnect(){
+    if(!this.started){ return }
+
+    debug('handleDisconnect')
+    this.invitesRx.unsubscribe( this.handleInviteRxMsg.bind(this) )
+    this.invitesTx.unsubscribe( this.handleInviteTxMsg.bind(this) )
+
+    this.emit('disconnected')
+  }
 
   async start(){
-    this.sessionKey = await dataparty_crypto.Identity.fromRandomSeed({id:'ephemeral-session-key'})
 
-    if(!this.restParty){
-      let config = new MemoryConfig({
-        basePath:'match-maker-client',
-        cloud: {
-          uri: this.restUrl
-        }
-      })
+    this.started = true
+    await this.client.start()
 
-      this.restParty = new LokiParty({
-        path: 'match-maker-client',
-        dbAdapter: new LokiParty.Loki.LokiMemoryAdapter(),
-        config
-      })
+    const party = this.client.socketPeerParty
 
-      await this.restParty.setIdentity(this.sessionKey) 
+    this.invitesRx = new party.ROSLIB.Topic({
+      ros : party.comms.ros,
+      name : '/invites/' + encodeURIComponent(this.client.identity.key.hash) + '/rx',
+      messageType: 'Object'
+    })
 
-      debug('starting restParty')
-      await this.restParty.start()
-
-      if(!this.restParty.comms){
-        this.restParty.comms = new RestComms({
-          party:this.restParty,
-          config: this.restParty.config
-        })
-
-        this.restParty.comms.sessionId = this.sessionKey.key.hash
-      }
-
-      await this.announcePublicKeys()
-    }
-
-    if(!this.wsParty && this.wsUrl){
-      this.wsParty = new PeerParty({
-        comms: new WebsocketComms({
-          uri: this.wsUrl,
-          discoverRemoteIdentity: false,
-          remoteIdentity: await this.restParty.comms.getServiceIdentity(),
-          session: this.sessionKey.key.hash
-        }),
-        config: this.restParty.config
-      })
-
-      await this.wsParty.start()
-
-      debug('starting wsParty')
-      await this.wsParty.start()
-      debug('waiting for websocket authorization')
-      await this.wsParty.comms.authorized()
-
-      this.invitesRx = new this.wsParty.ROSLIB.Topic({
-        ros : this.wsParty.comms.ros,
-        name : '/invites/' + encodeURIComponent(this.identity.key.hash) + '/rx',
-        messageType: 'Object'
-      })
-
-      this.invitesRx.subscribe( this.handleInviteRxMsg.bind(this) )
+    this.invitesRx.subscribe( this.handleInviteRxMsg.bind(this) )
 
 
-      this.invitesTx = new this.wsParty.ROSLIB.Topic({
-        ros : this.wsParty.comms.ros,
-        name : '/invites/' + encodeURIComponent(this.identity.key.hash) + '/tx',
-        messageType: 'Object'
-      })
+    this.invitesTx = new party.ROSLIB.Topic({
+      ros : party.comms.ros,
+      name : '/invites/' + encodeURIComponent(this.client.identity.key.hash) + '/tx',
+      messageType: 'Object'
+    })
 
-      this.invitesTx.subscribe( this.handleInviteTxMsg.bind(this) )
-    }
-    
+    this.invitesTx.subscribe( this.handleInviteTxMsg.bind(this) )
+
+    this.emit('connected')
   }
 
   async handleInviteRxMsg( msg ){
@@ -127,8 +83,8 @@ class MatchMakerClient extends EventEmitter {
 
     if(!this.pendingInvites.rx[inviteId] && msg.invite.state == 'invited'){
 
-      const from = await this.lookupPublicKey(msg.invite.fromHash)
-      const to = await this.lookupPublicKey(msg.invite.toHash)
+      const from = await this.client.lookupPublicKey(msg.invite.fromHash)
+      const to = await this.client.lookupPublicKey(msg.invite.toHash)
 
       let invite = new PeerInvite(msg.invite, to, this, from)
 
@@ -161,95 +117,6 @@ class MatchMakerClient extends EventEmitter {
     }
   }
 
-  async announceBillingKey({stripeCheckoutSession}={}){
-    this.announcePublicKeys(true, {
-      stripe: stripeCheckoutSession
-    })
-  }
-
-  async announcePublicKeys(useBillingKeyAsActor=false, billingMethodDetails=null){
-
-    let currentActor = useBillingKeyAsActor == true ? this.billingIdentity : this.identity
-    
-    const announceData = {
-      annoucement: {
-        //type: 'guest',//useBillingKeyAsActor ? 'billing_identity' : 'user_identity',
-        created: Date.now(),
-        expiry: Date.now() + 24*60*60*1000,  //! Set session expiry to 24hr from now
-        sessionKey: {
-          type: this.sessionKey.key.type,
-          hash: this.sessionKey.key.hash,
-          public: this.sessionKey.key.public
-        },
-        actorKey: {
-          type: currentActor.key.type,
-          hash: currentActor.key.hash,
-          public: currentActor.key.public
-        }
-      },
-      trust: {
-        actorSig: null,
-        sessionSig: null
-      }
-    }
-
-
-    const actorSigMsg = await currentActor.sign(announceData.annoucement, true)
-    const sessionSigMsg = await this.sessionKey.sign(announceData.annoucement, true)
-
-    debug('actorSigMsg', actorSigMsg)
-    debug('sessionSigMsg', sessionSigMsg)
-
-    announceData.trust.actorSig =  dataparty_crypto.Routines.Utils.base64.encode( actorSigMsg.sig )
-    announceData.trust.sessionSig = dataparty_crypto.Routines.Utils.base64.encode( sessionSigMsg.sig )
-
-    debug('announcePublicKeys', announceData)
-
-    let callPath = useBillingKeyAsActor ? 'billing/key/announce' : 'key/announce'
-
-    const announceResult = await this.restParty.comms.call(callPath, announceData, {
-      expectClearTextReply: false,
-      sendClearTextRequest: false,
-      useSessions: false
-    })
-
-    if(announceResult.done != true){
-      throw new Error('annoucement request failed - '+callPath)
-    }
-  }
-
-
-  async lookupPublicKey(hash){
-    debug('lookupPublicKey - hash:', hash)
-
-    if(hash == this.identity.key.hash){
-      return this.identity
-    }
-
-    if(this.contacts){
-      return await this.contacts.lookupPublicKey(hash)
-    }
-
-    const lookupData = { hash }
-
-    const lookupResult = await this.restParty.comms.call('key/lookup', lookupData, {
-      expectClearTextReply: false,
-      sendClearTextRequest: false,
-      useSessions: true
-    })
-
-    if(!lookupResult.done){
-      return null
-    }
-
-    debug('lookup result -', lookupResult)
-
-    const identity = new dataparty_crypto.Identity({
-      key: lookupResult.public_key
-    })
-
-    return identity
-  }
 
   async createInvite(toHashOrIdentity, {type, service, role, session}, info){
 
@@ -257,7 +124,7 @@ class MatchMakerClient extends EventEmitter {
 
     let toIdentity = null
     if(typeof toHashOrIdentity == 'string'){
-      toIdentity = await this.lookupPublicKey(toHashOrIdentity)
+      toIdentity = await this.client.lookupPublicKey(toHashOrIdentity)
     } else {
       toIdentity = toHashOrIdentity
     }
@@ -269,7 +136,7 @@ class MatchMakerClient extends EventEmitter {
       service: service ? service : '@dataparty/video-chat',
       role: role ? role : 'client',
       timestamp: (new Date()).getTime(),
-      from: this.identity.key.hash,
+      from: this.client.identity.key.hash,
       to: toIdentity.key.hash,
       session: session ? session : Math.random().toString(36).slice(2),
       info: info ? info : {
@@ -278,17 +145,17 @@ class MatchMakerClient extends EventEmitter {
       }
     }
 
-    const secureInvite = await this.identity.encrypt(invitePayload, toIdentity)
+    const secureInvite = await this.client.identity.encrypt(invitePayload, toIdentity)
 
     debug('secure-invite', secureInvite)
 
     const invitePostData = {
       to: toIdentity.key.hash,
-      from: this.identity.key.hash,
+      from: this.client.identity.key.hash,
       payload: JSON.stringify(secureInvite.toJSON())
     }
 
-    const inviteResult = await this.restParty.comms.call('invite/create', invitePostData, {
+    const inviteResult = await this.client.socketPeerParty.comms.call('invite/create', invitePostData, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
       useSessions: true
@@ -298,9 +165,9 @@ class MatchMakerClient extends EventEmitter {
 
     if(!inviteDoc){ return }
 
-    let invite = new PeerInvite(inviteResult.invite, toIdentity, this, this.identity)
+    let invite = new PeerInvite(inviteResult.invite, toIdentity, this, this.client.identity, invitePayload)
 
-    invite.payload = invitePayload
+    //invite.payload = invitePayload
 
     this.pendingInvites.tx[inviteDoc.$meta.id] = invite
 
@@ -310,16 +177,16 @@ class MatchMakerClient extends EventEmitter {
   }
 
   async lookupInvites({createdAfter, type='to', id, actorHash  }){
-    let actor = this.identity.key.hash
+    let actor = this.client.identity.key.hash
 
     const lookup = {
       invite: id,
-      actor: actorHash ? actorHash : this.identity.key.hash,
+      actor: actorHash ? actorHash : this.client.identity.key.hash,
       createdAfter,
       type: !type ? 'to' : type
     }
 
-    const lookupResult = await this.restParty.comms.call('invite/lookup', lookup, {
+    const lookupResult = await this.client.socketPeerParty.comms.call('invite/lookup', lookup, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
       useSessions: true
@@ -355,8 +222,8 @@ class MatchMakerClient extends EventEmitter {
     for(let i=0; i < invites.length; i++){
 
       const invite = invites[i]
-      let to = await this.lookupPublicKey( invite.toHash )
-      let from = await this.lookupPublicKey( invite.fromHash )
+      let to = await this.client.lookupPublicKey( invite.toHash )
+      let from = await this.client.lookupPublicKey( invite.fromHash )
 
       let peerInvite = new PeerInvite( invites[i], to, this, from)
 
@@ -377,14 +244,14 @@ class MatchMakerClient extends EventEmitter {
   async setInviteState(invite, newState){
 
     debug('setInviteState')
-    let actor = this.identity.key.hash
+    let actor = this.client.identity.key.hash
 
     const inviteState = {
       invite: invite.inviteDoc.$meta.id,
       state: newState
     }
 
-    const inviteStateResult = await this.restParty.comms.call('invite/set-state', inviteState, {
+    const inviteStateResult = await this.client.socketPeerParty.comms.call('invite/set-state', inviteState, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
       useSessions: true
@@ -399,48 +266,6 @@ class MatchMakerClient extends EventEmitter {
     return inviteStateResult.invite
   }
 
-  async createShortCode(use_limit=3, expiry){
-    debug('createShortCode')
-
-    const request = {
-      use_limit,
-      expiry: !expiry ? Date.now()+24*60*60*3 : expiry
-    }
-
-    const result = await this.restParty.comms.call('short-code/create', request, {
-      expectClearTextReply: false,
-      sendClearTextRequest: false,
-      useSessions: true
-    })
-
-    console.log('createShortCode result', result)
-
-    if(!result.done){
-      return null
-    }
-
-    return result.short_code
-  }
-
-  async lookupPublicKeyByShortCode( code ){
-    debug('lookupPublicKeyByShortCode')
-
-    const request = { code }
-
-    const result = await this.restParty.comms.call('short-code/lookup', request, {
-      expectClearTextReply: false,
-      sendClearTextRequest: false,
-      useSessions: true
-    })
-
-    console.log('lookupPublicKeyByShortCode result', result)
-
-    if(!result.done){
-      return null
-    }
-
-    return result.short_code
-  }
 }
 
 module.exports = MatchMakerClient

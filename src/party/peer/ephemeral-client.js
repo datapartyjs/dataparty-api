@@ -65,6 +65,7 @@ class EphemeralClient extends EventEmitter {
 
 
   async start(){
+    if(this.sessionKey){ return }
     this.sessionKey = await dataparty_crypto.Identity.fromRandomSeed({id:'ephemeral-session-key'})
 
     if(!this.restParty){
@@ -121,6 +122,10 @@ class EphemeralClient extends EventEmitter {
       this.emit('connected', {time: Date.now()})
     }
     
+  }
+
+  get socketPeerParty(){
+    return this.wsParty
   }
 
   async checkSessionExpiry(){
