@@ -9,40 +9,17 @@ const MemoryConfig = require('../../config/memory')
 const RestComms = require('../../comms/rest-comms')
 const WebsocketComms = require('../../comms/websocket-comms')
 
-const MAX_RECONNECT_INTERVAL = 120*1000
-const MIN_RECONNECT_INTERVAL = 9*1000
-const MIN_BACKOFF = 9*1000
-
-const MAX_SESSION_AGE = 24*60*60*1000  //! Set session expiry to 24hr from now
-const SESSION_ROLL_AGE = Math.round(MAX_SESSION_AGE * 0.75)
-
-function getReconnectInterval(count, backoff=9000){
-  return Math.max(
-    MIN_RECONNECT_INTERVAL,
-    Math.min(
-      MAX_RECONNECT_INTERVAL,
-      Math.round(MIN_BACKOFF + (count * Math.max(backoff, MIN_BACKOFF) * Math.random()))
-    )
-  )
-}
-
 class EphemeralClient extends EventEmitter {
-  constructor({identity, role='guest', autoreconnect=true, contacts, urlOrParty = 'https://api.dataparty.xyz/api', wsUrlOrParty = 'wss://api.dataparty.xyz/ws'}){
+  constructor({identity, role='guest', contacts, urlOrParty = 'https://api.dataparty.xyz/api', wsUrlOrParty = 'wss://api.dataparty.xyz/ws'}){
 
     super()
     
     this.contacts = contacts
     this.sessionKey = null
-    this.sessionExpiry = null
-    this.sessionTimer = null
     this.identity = identity
     this.role = role || 'guest'
     this.wsParty = null
     this.restParty = null
-    this.autoreconnect = autoreconnect
-    this.backoff = MIN_BACKOFF
-
-    this.reconnectTimer = null
 
     if(typeof urlOrParty == 'string'){
       this.restUrl = urlOrParty
@@ -57,15 +34,11 @@ class EphemeralClient extends EventEmitter {
     } else {
       this.wsParty = wsUrlOrParty
     }
-
-    this.reconnect_last_attempt = null
-    this.reconnect_tries = 0
   }
 
 
 
   async start(){
-    if(this.sessionKey){ return }
     this.sessionKey = await dataparty_crypto.Identity.fromRandomSeed({id:'ephemeral-session-key'})
 
     if(!this.restParty){
@@ -100,7 +73,7 @@ class EphemeralClient extends EventEmitter {
     }
 
     if(!this.wsParty && this.wsUrl){
-      this.emit('connecting', {time: Date.now()})
+
       this.wsParty = new PeerParty({
         comms: new WebsocketComms({
           uri: this.wsUrl,
@@ -111,138 +84,33 @@ class EphemeralClient extends EventEmitter {
         config: this.restParty.config
       })
 
-      this.wsParty.comms.on('server-close', this.handleWsClose.bind(this))
-      this.wsParty.comms.on('timeout', this.handleWsClose.bind(this))
-      this.wsParty.comms.on('error', this.handleWsClose.bind(this))
+      this.wsParty.comms.on('close', ()=>{
+
+        let stopped = this.wsParty.comms.stopped
+        console.log('hey the ws closed - stopped=', stopped)
+
+      })
+
+      await this.wsParty.start()
 
       debug('starting wsParty')
       await this.wsParty.start()
       debug('waiting for websocket authorization')
       await this.wsParty.comms.authorized()
-      this.emit('connected', {time: Date.now()})
     }
     
-  }
-
-  get socketPeerParty(){
-    return this.wsParty
-  }
-
-  async checkSessionExpiry(){
-    if(!this.sessionKey){ return }
-
-    const now = Date.now()
-
-    if(this.sessionExpiry <= now){
-      await this.rollSessionKey()
-    }
-  }
-
-  async rollSessionKey(){
-
-    debug('rollSessionKey')
-    this.emit('session-end', {time: Date.now(), session: this.sessionKey.key.hash})
-
-    if(this.wsParty){
-      await this.wsParty.stop()
-    }
-
-    this.sessionKey = null
-    this.restParty = null
-    this.wsParty = null
-
-    await this.start()
-  }
-
-  async handleWsClose(){
-
-    this.emit('disconnected', {time: Date.now()})
-
-    let stopped = this.wsParty.comms.stopped
-
-    if(stopped){ return }
-
-    const sleepTime = getReconnectInterval(this.reconnect_tries, this.backoff)
-    debug('ws closed with stopped=',stopped, '   waiting ', sleepTime/1000,'sec')
-    
-    if(!this.reconnectTimer){
-
-      this.emit('reconnecting', {sleepTime, wakeTime: Date.now()+sleepTime})
-
-      this.reconnectTimer = setTimeout(
-        this.doReconnect.bind(this),
-        sleepTime
-      )
-    }
-  }
-
-  async doReconnect(){
-    let stopped = this.wsParty.comms.stopped
-
-    this.reconnectTimer = null
-
-    if(stopped || !this.wsParty || !this.autoreconnect){ debug('skip reconnect'); return }
-
-    debug('doing ws reconnect...')
-
-    this.reconnect_last_attempt = Date.now()
-    this.reconnect_tries++
-
-    try{
-      this.emit('connecting', {time:Date.now()})
-      this.wsParty.comms = new WebsocketComms({
-        uri: this.wsUrl,
-        discoverRemoteIdentity: false,
-        remoteIdentity: await this.restParty.comms.getServiceIdentity(),
-        session: this.sessionKey.key.hash
-      })
-
-      this.wsParty.comms.party = this.wsParty
-
-      this.wsParty.comms.on('server-close', this.handleWsClose.bind(this))
-      this.wsParty.comms.on('timeout', this.handleWsClose.bind(this))
-      this.wsParty.comms.on('error', this.handleWsClose.bind(this))
-
-      debug('restarting websocket')
-      await this.wsParty.comms.start()
-      debug('waiting for websocket authorization')
-      await this.wsParty.comms.authorized()
-
-      
-      debug('connected and authorized')
-
-      this.reconnect_last_attempt = null
-      this.reconnect_tries = 0
-
-      this.emit('connected', {time:Date.now()})
-      this.emit('reconnected', {time:Date.now()})
-
-    } catch(err){
-      debug('reconnect error', err)
-
-      
-      this.handleWsClose()
-    }
   }
 
 
   async announcePublicKeys(callPath='key/announce'){
 
     let currentActor = this.identity
-
-    const now = Date.now()
-    this.sessionExpiry = now + MAX_SESSION_AGE
     
-    this.sessionTimer = setTimeout(
-      this.rollSessionKey.bind(this),
-      SESSION_ROLL_AGE
-    )
-
     const announceData = {
       annoucement: {
         role: this.role,
         created: Date.now(),
-        expiry: this.sessionExpiry,
+        expiry: Date.now() + 24*60*60*1000,  //! Set session expiry to 24hr from now
         sessionKey: {
           type: this.sessionKey.key.type,
           hash: this.sessionKey.key.hash,
@@ -281,8 +149,6 @@ class EphemeralClient extends EventEmitter {
     if(announceResult.done != true){
       throw new Error('annoucement request failed - '+callPath)
     }
-
-    this.emit('session', {time: Date.now(), session: this.sessionKey.key.hash})
   }
 
 

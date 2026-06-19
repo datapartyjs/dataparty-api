@@ -100,7 +100,7 @@ class PeerInvite extends EventEmitter {
     this.emit('done', this)
   }
 
-  async accept(mediaSrc, config){
+  async accept(mediaSrc, config, hostParty){
     debug('accepting invite')
 
     /*if(this.inviteDoc.toHash == this.matchMaker.client.socketPeerParty.identity.key.hash){
@@ -130,7 +130,7 @@ class PeerInvite extends EventEmitter {
       this.timeoutTimer = setTimeout(this.handleTimeout.bind(this))
     }*/
 
-    return await this.establish({mediaSrc, config})
+    return await this.establish({mediaSrc, config, hostParty})
   }
 
   async reject(){

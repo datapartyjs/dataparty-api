@@ -39,7 +39,7 @@ class VenueService extends DatapartySrv.IService {
     builder.addEndpoint(Path.join(__dirname, './endpoints/create-project.js'))
 
 
-    builder.addTask(Path.join(__dirname,'./tasks/cleanup-ephemeral-sessions.js'))
+    builder.addTask(DatapartySrv.task_paths.cleanup_ephemeral_sessions)
 
     builder.addAuth(Path.join(__dirname, './auth.js'))
 

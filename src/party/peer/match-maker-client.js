@@ -28,28 +28,35 @@ class MatchMakerClient extends EventEmitter {
 
     this.started = false
 
-    this.client.on('connected', this.handleConnect.bind(this))
+    this.client.on('reconnected', this.handleReconnect.bind(this))
     this.client.on('disconnected', this.handleDisconnect.bind(this))
   }
 
-  async handleConnect(){
-    if(!this.started){ return }
+  async handleReconnect(){
+    //if(!this.started){ return }
 
-    debug('handleConnect')
+    debug('handleReconnect')
     await this.start()
   }
 
   async handleDisconnect(){
     if(!this.started){ return }
 
+    thi.started = false
+
     debug('handleDisconnect')
     this.invitesRx.unsubscribe( this.handleInviteRxMsg.bind(this) )
     this.invitesTx.unsubscribe( this.handleInviteTxMsg.bind(this) )
+
+    this.invitesRx = null
+    this.invitesTx = null
 
     this.emit('disconnected')
   }
 
   async start(){
+
+    if(this.started){ return }
 
     this.started = true
     await this.client.start()

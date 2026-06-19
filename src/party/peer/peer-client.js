@@ -31,7 +31,7 @@ class PeerClient extends EphemeralClient {
     this.inviteSettings.session = this.sessionKey.key.hash
 
     this.emit('connecting', {time: Date.now()})
-    let invite = await this.matchMaker.createInvite(this.remoteIdentityHash, this.inviteSettings)
+    const invite = await this.announcePublicKeys()
 
     await invite.waitForAccepted()
 
@@ -48,7 +48,17 @@ class PeerClient extends EphemeralClient {
   }
 
   async rollSessionKey(){
-    //
+    debug('rollSessionKey')
+    this.emit('session-end', {time: Date.now(), session: this.sessionKey.key.hash})
+
+    if(this.peerParty){
+      await this.peerParty.stop()
+    }
+
+    this.sessionKey = null
+    this.peerParty = null
+
+    await this.start()
   }
 
   async handleClose(){
@@ -57,6 +67,16 @@ class PeerClient extends EphemeralClient {
 
   async doReconnect(){
     //
+  }
+
+  async announcePublicKeys(){
+    const announceData = await this.createSessionAnnoucement()
+
+    let invite = await this.matchMaker.createInvite(this.remoteIdentityHash, this.inviteSettings, announceData)
+
+    this.emit('session', {time: Date.now(), session: this.sessionKey.key.hash})
+
+    return invite
   }
   
 }

@@ -50,7 +50,7 @@ exports.endpoint = {
   secureecho: require('./endpoints/secure-echo'),
   identity: require('./endpoints/service-identity'),
   version: require('./endpoints/service-version'),
-  key_announce: require('./endpoints/key-announce'),
+  key_announce: require('./endpoints/key-announce')
 }
 
 exports.endpoint_paths = {
@@ -69,4 +69,13 @@ exports.schema = {
 exports.schema_paths = {
   public_key: Path.join(__dirname, './schema/public-key.js'),
   session_key: Path.join(__dirname, './schema/session-key.js')
+}
+
+
+exports.task = {
+  cleanup_ephemeral_sessions: require('./tasks/cleanup-ephemeral-sessions.js')
+}
+
+exports.task_paths = {
+  cleanup_ephemeral_sessions: Path.join(__dirname, './tasks/cleanup-ephemeral-sessions.js')
 }
