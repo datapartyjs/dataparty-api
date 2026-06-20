@@ -31,7 +31,10 @@ module.exports = class Encrypt extends IMiddleware {
 
     if (!Config){ return }
 
-    if(ctx.req.source && ctx.req.source == 'PeerComms'){
+    if(!context.req.source &&
+      ( context.req.source == 'PeerComms' ||
+        context.req.source == 'INTERNAL' )
+    ){
       ctx.setOutput(ctx.output)
       return
     }  

@@ -1,5 +1,6 @@
 const fs = require('fs')
 const Joi = require('joi')
+const Path = require('path')
 const Hoek = require('@hapi/hoek')
 const {Message, Routines, Identity} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.endpoint.create-project')
@@ -103,7 +104,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
 
   static async run(ctx){
 
-    if(ctx.party.identity.key.hash != ctx.input.project.hash){
+    if(ctx.party.identity.key.hash != ctx.input.project.venue){
       throw new Error('project venue does not match this host')
     }
 
@@ -176,7 +177,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
 
     debug('\t'+'hash', projectHash)
 
-    const projectWorkspace = 'projects'+safeFileName+'/'+ctx.input.project.version+'/'+safeProjectHash
+    const projectWorkspace = Path.join('projects/',safeFileName, ctx.input.project.version, safeProjectHash)
 
     const config = ctx.party.config
 
@@ -195,11 +196,11 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
     debug('addProject', projectId)
 
     let projectDoc = (await ctx.party.find()
-    .type('venue_project')
-    .where('project.name').equals(project.name)
-    .where('project.version').equals(project.version)
-    .where('hash').equals(projectHash)
-    .exec())[0]
+      .type('venue_project')
+      .where('project.name').equals(project.name)
+      .where('project.version').equals(project.version)
+      .where('hash').equals(projectHash)
+      .exec())[0]
 
 
     if(!projectDoc){

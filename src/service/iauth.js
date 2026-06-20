@@ -46,6 +46,7 @@ module.exports = class IAuth {
     return true
   }
 
+
   async isInternal(identity){
     return false
   }

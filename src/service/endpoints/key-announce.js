@@ -95,10 +95,16 @@ module.exports = class KeyAnnounceEndpoint extends IEndpoint {
     }
 
 
-    // ensure sender is connected using session key mentioned in annoucement
+    // ensure sender is connected using session key mentioned in annoucement OR this is an internal call
     if(computedSessionHash == inputSessionKey.hash &&
-       inputSessionKey.public.sign == ctx.senderKey.public.sign &&
-       inputSessionKey.public.box == ctx.senderKey.public.box
+      (
+        ctx.req.source == 'INTERNAL' ||
+        //ctx.req.source == 'PeerComms' ||
+        (
+          inputSessionKey.public.sign == ctx.senderKey.public.sign &&
+          inputSessionKey.public.box == ctx.senderKey.public.box
+        )
+      )
     ){
 
       const actorSigBson =  Routines.Utils.base64.decode( ctx.input.trust.actorSig )
@@ -124,10 +130,11 @@ module.exports = class KeyAnnounceEndpoint extends IEndpoint {
       await actorSigMsg.assertVerified( actorIdentity, true )
       await sessionSigMsg.assertVerified( sessionIdentity, true )
 
-      // verify actor is an admin
-      const isAdmin = await ctx.runner.auth.isAdmin(actorIdentity)
-      if(!isAdmin){
-        ctx.debug('non-admin user')
+      // verify actor is allowed
+      const isAllowed = (await ctx.runner.auth.isAdmin(actorIdentity)) ||
+                        (await ctx.runner.auth.isSocketConnectionAllowed(actrIdentity))
+      if(!isAllowed){
+        ctx.debug('non-allowed user')
         return {done: false}
       }
 

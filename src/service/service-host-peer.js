@@ -39,17 +39,32 @@ class ServiceHostPeer {
       return
     }
 
-    //! Validate the session annoucement payload
-
-    invite.payload.info
-
-    //! Check if party wants to allow / deny invite sender
+    //! Check if party wants to allow/deny invite sender
     if(!(await hostRunner.auth.isPeerConnectionAllowed(invite.from))){
+    
+    // verify actor is allowed
+    const isAllowed = (await ctx.runner.auth.isAdmin(invite.from)) ||
+                      (await hostRunner.auth.isPeerConnectionAllowed(invite.from)) ||
+                      (await ctx.runner.auth.isSocketConnectionAllowed(invite.from))
+    if(!isAllowed){
       debug('NOT ALLOWED - user is not allowed', invite.from)
       await invite.reject()
       return
     }
 
+
+    //! Announce the session key
+    const annoucement = invite.payload.info
+    const result = await hostRunner.internalRequest('key/announce', annoucement)
+
+    debug('annoucement result', result)
+
+    if(!result || !result.done){
+
+      debug('user session not allowed')
+
+      return
+    }
 
     let hostParty = hostRunner.party
 
