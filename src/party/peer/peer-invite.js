@@ -115,7 +115,7 @@ class PeerInvite extends EventEmitter {
     this.emit('done', this)
   }
 
-  async accept({mediaSrc, model, hostParty, hostRunner}){
+  async accept({mediaSrc, model, hostParty, hostRunner, discoverRemoteIdentity=false}){
     debug('accepting invite')
 
     /*if(this.inviteDoc.toHash == this.matchMaker.client.socketPeerParty.identity.key.hash){
@@ -146,7 +146,7 @@ class PeerInvite extends EventEmitter {
       this.timeoutTimer = setTimeout(this.handleTimeout.bind(this))
     }*/
 
-    return await this.establish({mediaSrc, model, hostParty, hostRunner})
+    return await this.establish({mediaSrc, model, hostParty, hostRunner, discoverRemoteIdentity})
   }
 
   async reject(){
@@ -200,13 +200,13 @@ class PeerInvite extends EventEmitter {
     })
   }
 
-  async establish({mediaSrc, model, hostParty, hostRunner, rtcSettings}){
+  async establish({mediaSrc, model, hostParty, hostRunner, rtcSettings, discoverRemoteIdentity=false}){
 
     if(!rtcSettings){
       rtcSettings = {}
     }
 
-    let host = (!this.isSender() && this.role == 'client') || (this.isSender() && this.role == 'host')
+    let host = (this.role == 'host')
     let actorField = this.isSender() ? 'from' : 'to'
     let otherIdentity = this.isSender() ? this.to : this.from
 
@@ -276,8 +276,8 @@ class PeerInvite extends EventEmitter {
           config: DEFAULT_ICE_SERVERS
         },
         trickle: rtcSettings.trickle? rtcSettings.trickle : true,
-        discoverRemoteIdentity: false,
-        remoteIdentity: otherIdentity
+        discoverRemoteIdentity: discoverRemoteIdentity ? discoverRemoteIdentity : false,
+        remoteIdentity: discoverRemoteIdentity ? undefined: otherIdentity
       })
     })
 

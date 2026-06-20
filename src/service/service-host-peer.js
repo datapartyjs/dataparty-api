@@ -5,13 +5,13 @@ class ServiceHostPeer {
   constructor({
     runner,
     matchMaker,
-    mediaSrc
-
+    mediaSrc,
+    discoverRemoteIdentity = false
   }){
     this.runner = runner
     this.matchMaker = matchMaker
-
     this.mediaSrc = mediaSrc
+    this.discoverRemoteIdentity = discoverRemoteIdentity
   }
 
   async start(){
@@ -53,6 +53,7 @@ class ServiceHostPeer {
       media: this.mediaSrc,
       hostParty,
       hostRunner,
+      discoverRemoteIdentity: this.discoverRemoteIdentity
     })
   }
 }

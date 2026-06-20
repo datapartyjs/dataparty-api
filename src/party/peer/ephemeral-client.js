@@ -17,7 +17,7 @@ class EphemeralClient extends EventEmitter {
     this.contacts = contacts
     this.sessionKey = null
     this.identity = identity
-    this.role = role || 'guest'
+    this.role = role || 'guest' //! todo/note - these are different from invite roles
     this.wsParty = null
     this.restParty = null
 
