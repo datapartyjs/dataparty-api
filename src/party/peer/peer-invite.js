@@ -98,11 +98,11 @@ class PeerInvite extends EventEmitter {
   isSender(doc){
 
     if(doc){
-      if(doc.toHash == matchMaker.identity.key.hash){return false }
+      if(doc.toHash == matchMaker.client.identity.key.hash){return false }
       else { return true }
     }
 
-    if(this.inviteDoc.toHash == matchMaker.identity.key.hash){return false }
+    if(this.inviteDoc.toHash == matchMaker.client.identity.key.hash){return false }
     else { return true }
   }
 
