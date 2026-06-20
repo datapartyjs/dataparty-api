@@ -69,7 +69,7 @@ class RunnerRouter {
    * @returns {module:Service.ServiceRunner}
    */
   getRunnerByHostIdentity(identity){
-    const partyId = identity.toString()
+    const partyId = typeof identity !== 'string' ? identity.key.hash : identity
     debug('getRunnerByHostIdentity -', partyId)
     const runner = this.runnersByHost.get(partyId)
     
@@ -83,7 +83,7 @@ class RunnerRouter {
    */
   addRunner({domain, runner}){
 
-    const partyId = runner.party.identity.toString()
+    const partyId = runner.party.identity.key.hash
     debug('addRunner - ', partyId, domain)
 
     if(!this.runnersByHost.has(partyId)){

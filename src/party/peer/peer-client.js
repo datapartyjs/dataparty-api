@@ -30,6 +30,8 @@ class PeerClient extends EphemeralClient {
     
     this.inviteSettings.session = this.sessionKey.key.hash
 
+    const role = this.inviteSettings.role
+
     this.emit('connecting', {time: Date.now()})
     const invite = await this.announcePublicKeys()
 
@@ -37,8 +39,9 @@ class PeerClient extends EphemeralClient {
 
     this.peerParty = await invite.establish({
       mediaSrc,
-      hostParty: this.hostParty,
-      config: this.config,
+      role,
+      hostParty: role == 'host' ? this. this.hostParty : undefined,
+      model: role == 'client' ? this.hostParty.factory.model : undefined,
       rtcSettings: this.rtcSettings
     })
 

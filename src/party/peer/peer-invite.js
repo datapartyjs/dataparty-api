@@ -58,7 +58,10 @@ class PeerInvite extends EventEmitter {
 
     this.timeoutTimer = null
 
+    this.role = null
+
     if(this.payload){
+      this._updateRole()
       const expiry = this.payload.timestamp + DEFAULT_EXPIRY
       const now = Date.now()
 
@@ -80,6 +83,18 @@ class PeerInvite extends EventEmitter {
   get to(){ return this.toIdentity }
   get from(){ return this.fromIdentity }
 
+  _updateRole(){
+
+    if(this.isSender()){
+
+      this.role = this.payload.role
+      return
+
+    }
+
+    this.role = this.payload.role == 'client' ? 'host' : 'client'
+  }
+
   isSender(doc){
 
     if(doc){
@@ -100,7 +115,7 @@ class PeerInvite extends EventEmitter {
     this.emit('done', this)
   }
 
-  async accept(mediaSrc, config, hostParty){
+  async accept({mediaSrc, model, hostParty, hostRunner}){
     debug('accepting invite')
 
     /*if(this.inviteDoc.toHash == this.matchMaker.client.socketPeerParty.identity.key.hash){
@@ -121,6 +136,7 @@ class PeerInvite extends EventEmitter {
     )
 
     this.payload = payload.msg
+    this._updateRole()
 
     /*const expiry = this.payload.timestamp + DEFAULT_EXPIRY
     const now = Date.now()
@@ -130,7 +146,7 @@ class PeerInvite extends EventEmitter {
       this.timeoutTimer = setTimeout(this.handleTimeout.bind(this))
     }*/
 
-    return await this.establish({mediaSrc, config, hostParty})
+    return await this.establish({mediaSrc, model, hostParty, hostRunner})
   }
 
   async reject(){
@@ -184,13 +200,13 @@ class PeerInvite extends EventEmitter {
     })
   }
 
-  async establish({mediaSrc, hostParty, config, rtcSettings}){
+  async establish({mediaSrc, model, hostParty, hostRunner, rtcSettings}){
 
     if(!rtcSettings){
       rtcSettings = {}
     }
 
-    let host = this.isSender()
+    let host = (!this.isSender() && this.role == 'client') || (this.isSender() && this.role == 'host')
     let actorField = this.isSender() ? 'from' : 'to'
     let otherIdentity = this.isSender() ? this.to : this.from
 
@@ -242,6 +258,10 @@ class PeerInvite extends EventEmitter {
     }*/
 
     this.peerParty = new PeerParty({
+      hostParty,
+      hostRunner,
+      model: hostParty.factory.model,
+      config: hostParty.config,
       comms: new RTCSocketComms({
         host: this.isSender(),
         session: this.payload.session,
@@ -258,9 +278,7 @@ class PeerInvite extends EventEmitter {
         trickle: rtcSettings.trickle? rtcSettings.trickle : true,
         discoverRemoteIdentity: false,
         remoteIdentity: otherIdentity
-      }),
-      hostParty: this.isSender() ? hostParty : undefined,
-      config: config ? config : hostParty.config
+      })
     })
 
 

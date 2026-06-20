@@ -21,11 +21,39 @@ class ServiceHostPeer {
   }
 
   async onInvite(invite){
-    //
 
-    //! check if service wants to allow user
 
-    const peerParty = await invite.accept(this.mediaSrc,this.config)
+    // Filter out none host mode requests
+    if(invite.role !== 'host'){
+      debug('FAIL - unexpected role[', invite.role, '] we expecte to be host')
+      await invite.reject()
+      return
+    }
+
+    let hostRunner = this.runner.party ? this.runner : this.runner.getRunnerByHostIdentity(invite.to)
+
+    // Make sure we know the requested party & runner
+    if(!hostRunner){
+      debug('FAIL - requested party not available', invite.to)
+      await invite.reject()
+      return
+    }
+
+    //! Check if party wants to allow user
+    if(!(await hostRunner.auth.isSocketConnectionAllowed(invite.from))){
+      debug('NOT ALLOWED - user is not allowed', invite.from)
+      await invite.reject()
+      return
+    }
+
+
+    let hostParty = hostRunner.party
+
+    const peerParty = await invite.accept({
+      media: this.mediaSrc,
+      hostParty,
+      hostRunner,
+    })
   }
 }
 

@@ -127,6 +127,12 @@ class MatchMakerClient extends EventEmitter {
 
   async createInvite(toHashOrIdentity, {type, service, role, session}, info){
 
+    const roles = ['client', 'host']
+
+    if(roles.indexOf(role) == -1){
+      throw new Error("Invalid requested role [" + role + "]")
+    }
+
     debug('createInvite')
 
     let toIdentity = null
