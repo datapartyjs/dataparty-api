@@ -2,9 +2,9 @@ const EphemeralClient = require("./ephemeral-client")
 
 
 class PeerClient extends EphemeralClient {
-  constructor({model=null, /*hostParty=null*/, contacts, identity, remoteIdentityHash, matchMaker, service, role='client', rtcSettings}){
+  constructor({model=null, /*hostParty=null, */ contacts, identity, remoteIdentityHash, matchMaker, service, role='client', rtcSettings}){
 
-    super({identity, role})
+    super({identity, contacts, role})
 
     this.model = model
     this.hostParty = hostParty
@@ -12,9 +12,10 @@ class PeerClient extends EphemeralClient {
 
     this.remoteIdentityHash = remoteIdentityHash
 
+    
     this.inviteSettings = {
       type: 'webrtc',
-      service: service,
+      service: model ? model.package.name : service,
       role: role ? role : 'client',
       session: null
     }
@@ -26,6 +27,14 @@ class PeerClient extends EphemeralClient {
     /*if(role == 'host' && hostParty==null){
       throw 
     }*/
+  }
+
+  get restParty(){
+    return this.peerParty
+  }
+
+  get socketParty(){
+    return this.peerParty
   }
 
   async start(mediaSrc){

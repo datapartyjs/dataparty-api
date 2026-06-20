@@ -37,6 +37,14 @@ class EphemeralClient extends EventEmitter {
   }
 
 
+  get restParty(){
+    return this.restParty
+  }
+
+  get socketParty(){
+    return this.wsParty
+  }
+
 
   async start(){
     this.sessionKey = await dataparty_crypto.Identity.fromRandomSeed({id:'ephemeral-session-key'})
@@ -101,6 +109,43 @@ class EphemeralClient extends EventEmitter {
     
   }
 
+  async createSessionAnnoucement(){
+     let currentActor = this.identity
+    
+    const announceData = {
+      annoucement: {
+        role: this.role,
+        created: Date.now(),
+        expiry: Date.now() + 24*60*60*1000,  //! Set session expiry to 24hr from now
+        sessionKey: {
+          type: this.sessionKey.key.type,
+          hash: this.sessionKey.key.hash,
+          public: this.sessionKey.key.public
+        },
+        actorKey: {
+          type: currentActor.key.type,
+          hash: currentActor.key.hash,
+          public: currentActor.key.public
+        }
+      },
+      trust: {
+        actorSig: null,
+        sessionSig: null
+      }
+    }
+
+
+    const actorSigMsg = await currentActor.sign(announceData.annoucement, true)
+    const sessionSigMsg = await this.sessionKey.sign(announceData.annoucement, true)
+
+    debug('actorSigMsg', actorSigMsg)
+    debug('sessionSigMsg', sessionSigMsg)
+
+    announceData.trust.actorSig =  dataparty_crypto.Routines.Utils.base64.encode( actorSigMsg.sig )
+    announceData.trust.sessionSig = dataparty_crypto.Routines.Utils.base64.encode( sessionSigMsg.sig )
+
+    return announceData
+  }
 
   async announcePublicKeys(callPath='key/announce'){
 
@@ -165,7 +210,7 @@ class EphemeralClient extends EventEmitter {
 
     const lookupData = { hash }
 
-    const lookupResult = await this.wsParty.comms.call('key/lookup', lookupData, {
+    const lookupResult = await this.socketParty.comms.call('key/lookup', lookupData, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
       useSessions: true
@@ -192,7 +237,7 @@ class EphemeralClient extends EventEmitter {
       expiry: !expiry ? Date.now()+24*60*60*3 : expiry
     }
 
-    const result = await this.wsParty.comms.call('short-code/create', request, {
+    const result = await this.socketParty.comms.call('short-code/create', request, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
       useSessions: true
@@ -212,7 +257,7 @@ class EphemeralClient extends EventEmitter {
 
     const request = { code }
 
-    const result = await this.wsParty.comms.call('short-code/lookup', request, {
+    const result = await this.socketParty.comms.call('short-code/lookup', request, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
       useSessions: true

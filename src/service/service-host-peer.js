@@ -39,8 +39,12 @@ class ServiceHostPeer {
       return
     }
 
-    //! Check if party wants to allow user
-    if(!(await hostRunner.auth.isSocketConnectionAllowed(invite.from))){
+    //! Validate the session annoucement payload
+
+    invite.payload.info
+
+    //! Check if party wants to allow / deny invite sender
+    if(!(await hostRunner.auth.isPeerConnectionAllowed(invite.from))){
       debug('NOT ALLOWED - user is not allowed', invite.from)
       await invite.reject()
       return
@@ -50,10 +54,10 @@ class ServiceHostPeer {
     let hostParty = hostRunner.party
 
     const peerParty = await invite.accept({
-      media: this.mediaSrc,
+      mediaSrc: this.mediaSrc,
       hostParty,
       hostRunner,
-      discoverRemoteIdentity: this.discoverRemoteIdentity
+      discoverRemoteIdentity: this.discoverRemoteIdentity  //! todo - this is probably something a party config could reasonably over ride
     })
   }
 }

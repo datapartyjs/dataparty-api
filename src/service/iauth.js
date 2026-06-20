@@ -37,6 +37,10 @@ module.exports = class IAuth {
     return identity
   }
 
+  async isPeerConnectionAllowed(identity){
+    return true
+  }
+
   async isSocketConnectionAllowed(identity){
     //throw new Error('not implemented')
     return true

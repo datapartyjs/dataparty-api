@@ -210,7 +210,7 @@ class PeerInvite extends EventEmitter {
     let actorField = this.isSender() ? 'from' : 'to'
     let otherIdentity = this.isSender() ? this.to : this.from
 
-    let party = this.this.matchMaker.client.socketPeerParty
+    let party = this.this.matchMaker.client.socketParty
 
     this.topicSub = new party.ROSLIB.Topic({
       ros : party.comms.ros,

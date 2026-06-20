@@ -5,6 +5,7 @@ const Debug = require('debug')
 const debug = Debug('dataparty.service.runner-node')
 const EndpointContext = require('./endpoint-context')
 const DeltaTime = require('../utils/delta-time')
+const HttpMocks = require('node-mocks-http')
 
 const Router = require('origin-router').Router
 const Runner = require('@dataparty/tasker').Runner
@@ -444,6 +445,38 @@ class ServiceRunnerNode {
       //res.status(404).end()
       return next()
     }
+  }
+
+  async internalRequest(endpoint, data){
+    let bodyValue = data
+
+    const req = HttpMocks.createRequest({
+      method: 'GET',
+      url: '/'+endpoint,
+      body: bodyValue
+    })
+
+    const res = HttpMocks.createResponse()
+
+    debug('\tthe request', req)
+
+    debug('req ip type', typeof req.ip)
+
+    const route = this.router.get(endpoint)
+
+    debug('route',route)
+
+    req.runner = this
+    req.source = 'INTERNAL'
+
+    debug('call route', await route._events.route({
+      method: req.method,
+      pathname: req.url,
+      request: req,
+      response: res
+    }))
+
+    return {result: res._getData() }
   }
 
   async getTopic(path){

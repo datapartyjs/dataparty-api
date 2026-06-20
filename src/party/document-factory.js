@@ -19,7 +19,7 @@ class DocumentFactory {
     this.factories = factories || {}
     this.party = party || null
     this.ajv = new Ajv()
-    //this.model = model
+    this.model = model
     this.documentClass = documentClass || IDocument
     this.validators = {}
 
