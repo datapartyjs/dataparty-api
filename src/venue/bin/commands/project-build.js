@@ -178,7 +178,7 @@ class VenueProjectBuild extends CmdTree.Command {
 
     const project = {
       owner: key.key.hash,
-      created: Date.now(),
+      //created: Date.now(),
 
       name: parsed.name ? parsed.name : projectJson.name,
       version: parsed.version ? parsed.version : projectJson.version,
@@ -196,6 +196,7 @@ class VenueProjectBuild extends CmdTree.Command {
     await mkdirp(parsed.output)
 
     const buildOutput = parsed.output+'/'+ project.name.replace('/', '-') +'.project.venue.json'
+
 
     let prjFiles = []
     prjFiles.push(buildOutput)
@@ -226,7 +227,7 @@ class VenueProjectBuild extends CmdTree.Command {
 
     let staticTar = undefined
     
-    if(prjFiles.length == 3){
+    if(prjFiles.length == 2){
       staticTar = fs.readFileSync(prjFiles[ prjFiles.length - 1 ])
     }
 

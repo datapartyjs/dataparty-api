@@ -142,7 +142,19 @@ class RestComms extends EventEmitter {
       // debug('raw reply ->', reply)
     } catch (error) {
       debug('rest', fullPath, ' call fail ->', error.message)
-      throw new Error('RestCommsError')
+
+      console.log(Object.keys(error), Object.keys(error.response))
+
+      const simpleError = {
+        name: error.name,
+        code: error.code,
+        //message: error.message,
+        statusCode: error.response.statusCode,
+        statusMessage: error.response.statusMessage,
+        data: error.response.data
+      }
+
+      throw simpleError
     }
 
     const msg = await this.party.decrypt(

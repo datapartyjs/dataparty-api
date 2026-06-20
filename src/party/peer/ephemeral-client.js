@@ -37,9 +37,9 @@ class EphemeralClient extends EventEmitter {
   }
 
 
-  get restParty(){
+  /*get restParty(){
     return this.restParty
-  }
+  }*/
 
   get socketParty(){
     return this.wsParty

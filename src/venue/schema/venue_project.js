@@ -24,7 +24,7 @@ class VenueProject extends ISchema {
 
       project: {
         owner: {type: String, required: true, index: true},  //public_key.key.hash
-        created: {type: Number, required: true},
+        //created: {type: Number, required: true},
 
         name: {type: String, required: true, index: true},
         version: {type: String, required: true, index: true},

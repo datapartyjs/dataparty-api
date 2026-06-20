@@ -38,7 +38,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
         validate: Joi.object().keys({
           project: Joi.object().keys({
             owner: Joi.string().required(),
-            created: Joi.number(),
+            //created: Joi.number(),
             
             name: Joi.string().required(),
             version: Joi.string().required(),
@@ -149,19 +149,27 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
 
     debug('verified package signature')
 
-    const tarHash = Routines.Utils.hash(ctx.input.staticTar)
-    const tarHash64 = Routines.Utils.base64.encode( tarHash )
+    
 
     const safeFileName = ctx.input.project.name.replace('/', '-')
     const tarFileName = safeFileName+'.files.venue.tgz'
 
     const projectFiles = ctx.input.project.files[tarFileName]
 
-    if(projectFiles && projectFiles.hash != tarHash64){
-      throw new Error("staticTar hash doesn't match project definition")
+    if(projectFiles && !ctx.input.staticTar){
+      throw new Error('project definition lists a static tar but none was uploaded')
     }
 
-    debug('verified staticTar')
+    if(ctx.input.staticTar){
+      const tarHash = Routines.Utils.hash(ctx.input.staticTar)
+      const tarHash64 = Routines.Utils.base64.encode( tarHash )
+      
+      if(projectFiles && projectFiles.hash != tarHash64){
+        throw new Error("staticTar hash doesn't match project definition")
+      }
+
+      debug('verified staticTar')
+    }
 
     debug('verified project - '+ctx.input.project.name+'@'+ctx.input.project.version)
 
@@ -206,7 +214,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
     if(!projectDoc){
       debug('creating project')
 
-      const {owner, ...pkgWithoutOwner} = project.package
+      const {owner, ...pkgWithoutOwner} = project
 
       projectDoc = await ctx.party.createDocument('venue_pkg', {
         owner: project.owner,
@@ -221,10 +229,12 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
       debug('need to update project?')
     }
 
-    fs.writeFileSync(
-      Path.join(workspacePath, tarFileName),
-      ctx.input.staticTar
-    )
+    if(ctx.input.staticTar){ 
+      fs.writeFileSync(
+        Path.join(workspacePath, tarFileName),
+        ctx.input.staticTar
+      )
+    }
 
     /*fs.writeFileSync(
       Path.join(workspacePath, safeFileName+'.service.venue.bson'),

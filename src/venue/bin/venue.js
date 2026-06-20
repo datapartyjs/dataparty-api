@@ -123,7 +123,7 @@ async function main(){
 
   context = {
     secureConfig, collectPassword,
-    exiting: false
+    exiting: true
   }
   
   const output = await commandTree.run({context})
