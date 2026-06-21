@@ -1,5 +1,6 @@
 const fs = require('fs')
 const Joi = require('joi')
+const Path = require('path')
 const Hoek = require('@hapi/hoek')
 const {Message, Routines, Identity} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.endpoint.create-package')
@@ -184,19 +185,23 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
 
     debug('verified package signature')
 
-    const tarHash = Routines.Utils.hash(ctx.input.staticTar)
-    const tarHash64 = Routines.Utils.base64.encode( tarHash )
-
     const safeFileName = ctx.input.build.package.name.replace('/', '-')
-    const tarFileName = safeFileName+'.files.venue.tgz'
 
-    const buildFiles = ctx.input.build.files[tarFileName]
+    if(ctx.input.staticTar){
 
-    if(buildFiles && buildFiles.hash != tarHash64){
-      throw new Error("staticTar hash doesn't match package definition")
+      const tarHash = Routines.Utils.hash(ctx.input.staticTar)
+      const tarHash64 = Routines.Utils.base64.encode( tarHash )
+
+      const tarFileName = safeFileName+'.files.venue.tgz'
+
+      const buildFiles = ctx.input.build.files[tarFileName]
+
+      if(buildFiles && buildFiles.hash != tarHash64){
+        throw new Error("staticTar hash doesn't match package definition")
+      }
+
+      debug('verified staticTar')
     }
-
-    debug('verified staticTar')
 
     debug('verified package - '+ctx.input.build.package.name+'@'+ctx.input.build.package.version)
 
@@ -212,7 +217,7 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
 
     debug('\t'+'hash', buildHash)
 
-    const buildWorkspace = 'packages/'+safeFileName+'/'+ctx.input.build.package.version+'/'+safeBuildHash
+    const buildWorkspace = Path.join('packages', safeFileName, ctx.input.build.package.version, safeBuildHash)
 
     const config = ctx.party.config
 
@@ -259,10 +264,12 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
       debug('need to update service?')
     }
 
-    fs.writeFileSync(
-      Path.join(workspacePath, tarFileName),
-      ctx.input.staticTar
-    )
+    if(ctx.input.staticTar){
+      fs.writeFileSync(
+        Path.join(workspacePath, tarFileName),
+        ctx.input.staticTar
+      )
+    }
 
     /*fs.writeFileSync(
       Path.join(workspacePath, safeFileName+'.service.venue.bson'),
