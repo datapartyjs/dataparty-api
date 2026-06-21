@@ -4,10 +4,12 @@ const debug = require('debug')('venued.host')
 const Path = require('path')
 const OS = require('os')
 const fs = require('fs')
-
+const zlib = require('zlib')
 const { execSync } = require('child_process')
 
 const Dataparty = require('../../../../')
+const {Routines} = require('@dataparty/crypto')
+const express = require('express')
 
 const HOMEDIR = OS.homedir()
 const DEFAULT_FOLDER = (HOMEDIR.indexOf('opt')==-1) ? '.venued' : ''
@@ -191,7 +193,17 @@ class VenuedHost extends CmdTree.Command {
         CustomIpFilter.ips.push(ip)
       }
     }
+   
     
+    if(!fs.existsSync(parsed['ssl-key'])){
+      execSync('openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=example.com"',
+        {cwd: parsed.path}
+      )
+    }
+
+    const ssl_key  = fs.readFileSync( parsed['ssl-key'], 'utf8')
+    const ssl_cert = fs.readFileSync( parsed['ssl-cert'], 'utf8')
+
 
     const runner = new Dataparty.ServiceRunnerNode({
       party, service,
@@ -203,14 +215,6 @@ class VenuedHost extends CmdTree.Command {
 
     let runnerRouter = new Dataparty.RunnerRouter(runner)
 
-    if(!fs.existsSync(parsed['ssl-key'])){
-      execSync('openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=example.com"',
-        {cwd: parsed.path}
-      )
-    }
-
-    const ssl_key  = fs.readFileSync( parsed['ssl-key'], 'utf8')
-    const ssl_cert = fs.readFileSync( parsed['ssl-cert'], 'utf8')
 
    
 
@@ -287,24 +291,92 @@ class VenuedHost extends CmdTree.Command {
     if(projects){
       for(let name in projects){
 
+        let projectParties = {}
+
+        //! todo - load parties and put them in projectParties map
+
         const hash = projects[name]
         console.log('\tloading project', name, hash)
-
-        
 
         const project = (await party.find()
             .type('venue_project')
             .where('hash').equals(hash).exec())[0]
 
-        
-        
-            //console.log(project.data)
-        
-        /**
-         * 1. load project doc from db
-         * 2. validate files exist
-         * 3. launch project
-         */
+        const workspace = project.data.workspace
+
+        for(let route of project.data.project.routes){
+          console.log('route', route.package.name)
+          let pkgDoc = (await party.find()
+            .type('venue_pkg')
+            .or()
+            .where('package.name').equals(route.package.name)
+            .where('package.githash').equals(route.package.githash)
+            .sort('-created')
+            .limit(1)
+            .exec())[0]
+          
+          if(!pkgDoc){
+            throw new Error(`package ${JSON.stringify(route.package)} not found. required by ${route.prefix}`)
+          }
+
+          const {compressedBuild, ...printablePkg} = pkgDoc.data
+
+          console.log('found package', printablePkg)
+
+          const serviceFile = JSON.parse(
+            zlib.brotliDecompressSync(
+              Routines.Utils.base64.decode( compressedBuild )
+            )
+          )
+
+          console.log('decompressed', serviceFile.package)
+
+          let serviceParty = null;
+
+
+          if(route.party == 'SYSTEM'){
+            serviceParty = party
+          } else if( projectParties[route.party] ){
+            serviceParty = projectParties[route.party]
+          }
+
+          serviceParty.topics = new Dataparty.LocalTopicHost()
+
+          debug('loading service')
+          const service = new Dataparty.IService(serviceFile.package, serviceFile)
+          debug('loaded service')
+
+          let projectRunner = new Dataparty.ServiceRunnerNode({
+            party: serviceParty, service,
+            sendFullErrors: route.settings.sendFullErrors,
+            useNative: route.settings.useNative,
+            prefix: route.prefix
+          })
+
+          if(route.party == 'SYSTEM'){
+            //projectRunner.router = runner.router
+          }
+
+          //await serviceParty.start()
+          await projectRunner.start()
+          
+
+          console.log('workspace', workspace)
+
+          const projectStaticPath = Path.join(workspace, 'public')
+          projectRunner.router.add('static-files', '/:path*', (req,res, next)=>{
+            
+            let staticHandler = express.static(projectStaticPath)
+
+            return staticHandler(req.request,req.response)
+          })
+          
+          
+          await runnerRouter.addRunner({
+            domain: project.data.project.domain,
+            runner: projectRunner
+          })
+        }
       }
     }
 

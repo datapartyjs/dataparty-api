@@ -111,13 +111,13 @@ class ServiceRunnerNode {
 
     let AuthClass = null
 
-    if(!this.useNative){
+    if(!this.useNative && Hoek.reach(this.service, `compiled.auth`)){
       var self={}
       const build = Hoek.reach(this.service, `compiled.auth`)
       eval(build.code/*, build.map*/)
       AuthClass = self.Lib
     }
-    else{
+    else if(this.service.constructors.auth){
       AuthClass = this.service.constructors.auth
     }
 
