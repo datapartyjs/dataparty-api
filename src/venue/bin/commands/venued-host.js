@@ -274,7 +274,41 @@ class VenuedHost extends CmdTree.Command {
       console.log('\t', i2pAddress)
     }
 
-    //console.log(Path.join(__dirname,'../public'))
+    /**
+     * config section
+     * 
+     * projects: {
+     *    [name]: latest-hash
+     * }
+     */
+
+    const projects = await config.read('projects')
+
+    if(projects){
+      for(let name in projects){
+
+        const hash = projects[name]
+        console.log('\tloading project', name, hash)
+
+        
+
+        const project = (await party.find()
+            .type('venue_project')
+            .where('hash').equals(hash).exec())[0]
+
+        
+        
+            //console.log(project.data)
+        
+        /**
+         * 1. load project doc from db
+         * 2. validate files exist
+         * 3. launch project
+         */
+      }
+    }
+
+    
 
     this.context.exiting = false
 

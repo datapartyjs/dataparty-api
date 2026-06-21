@@ -132,7 +132,7 @@ module.exports = class KeyAnnounceEndpoint extends IEndpoint {
 
       // verify actor is allowed
       const isAllowed = (await ctx.runner.auth.isAdmin(actorIdentity)) ||
-                        (await ctx.runner.auth.isSocketConnectionAllowed(actrIdentity))
+                        (await ctx.runner.auth.isSocketConnectionAllowed(actorIdentity))
       if(!isAllowed){
         ctx.debug('non-allowed user')
         return {done: false}

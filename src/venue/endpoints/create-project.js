@@ -216,9 +216,10 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
 
       const {owner, ...pkgWithoutOwner} = project
 
-      projectDoc = await ctx.party.createDocument('venue_pkg', {
+      projectDoc = await ctx.party.createDocument('venue_project', {
         owner: project.owner,
         created: Date.now(),
+        changed: Date.now(),
         hash: projectHash,
         workspace: workspacePath,
         project: ctx.input.project,
@@ -245,6 +246,8 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
       Path.join(workspacePath, safeFileName+'.project.venue.json'),
       JSON.stringify(ctx.input.project, null, 2)
     )
+
+    await ctx.party.config.write('projects.'+ctx.input.project.name, projectHash)
     
     // verify build signature
 
@@ -311,7 +314,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
       debug('updated service')
     }*/
 
-      return {done: true}
+      return {done: true, project: projectDoc.data}
 
     //return {srv:projectDoc.data}
   }

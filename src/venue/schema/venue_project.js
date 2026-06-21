@@ -29,7 +29,7 @@ class VenueProject extends ISchema {
         name: {type: String, required: true, index: true},
         version: {type: String, required: true, index: true},
         venue: {type: String},
-        domain: {type: String, index: true, unique: true},
+        domain: {type: String, index: true/*, unique: true*/},
 
         i2p: {
           address: String,
