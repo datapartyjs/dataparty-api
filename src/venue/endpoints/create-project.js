@@ -277,7 +277,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
         unlink: true,
         uid: process.getuid(),
         gid: process.getgid()
-      }, tarFileList )
+      }, /*tarFileList*/ )
     }
 
     if(ctx.input.staticTar){ 
@@ -390,6 +390,12 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
       }
       debug('updated service')
     }*/
+
+      console.log('restarting in 3 seconds...')
+      setTimeout(()=>{
+        process.exit(),
+        3000
+      })
 
       return {done: true, project: projectDoc.data}
 

@@ -358,18 +358,33 @@ class VenuedHost extends CmdTree.Command {
           }
 
           //await serviceParty.start()
-          await projectRunner.start()
           
+          await projectRunner.start()
 
           console.log('workspace', workspace)
 
           const projectStaticPath = Path.join(workspace, 'public')
-          projectRunner.router.add('static-files', '/:path*', (req,res, next)=>{
-            
-            let staticHandler = express.static(projectStaticPath)
 
-            return staticHandler(req.request,req.response)
-          })
+          let handler =  (req,res)=>{
+            
+            let staticHandler = express.static(projectStaticPath, { index: ['index.html']})
+
+            let results = staticHandler(req.request,req.response, req.request.next)
+
+            console.log('returning results', Object.keys(req.request))
+
+          
+
+            console.log('sent already - headers?', req.response.headersSent)
+            console.log('sent already - date?', req.response.sendDate)
+            console.log('sent already - outputSize?', req.response.outputSize)
+
+          }
+
+          projectRunner.router.add('static-files1', '/:path*', handler)
+          projectRunner.router.add('static-files2', '/', handler)
+
+          
           
           
           await runnerRouter.addRunner({
