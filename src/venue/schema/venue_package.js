@@ -18,6 +18,7 @@ class VenuePkg extends ISchema {
       changed: {type: Number},
       venue: {type: String},
       workspace: {type: String, required: true},
+      tarpath: {type: String},
       hash: {type: String, required: true, index: true},
       settings: {
         //enabled: {type: Boolean, required: true},

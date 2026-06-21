@@ -40,12 +40,9 @@ class ServiceHostPeer {
     }
 
     //! Check if party wants to allow/deny invite sender
-    if(!(await hostRunner.auth.isPeerConnectionAllowed(invite.from))){
-    
-    // verify actor is allowed
-    const isAllowed = (await ctx.runner.auth.isAdmin(invite.from)) ||
+    const isAllowed = (await hostRunner.auth.isAdmin(invite.from)) ||
                       (await hostRunner.auth.isPeerConnectionAllowed(invite.from)) ||
-                      (await ctx.runner.auth.isSocketConnectionAllowed(invite.from))
+                      (await hostRunner.auth.isSocketConnectionAllowed(invite.from))
     if(!isAllowed){
       debug('NOT ALLOWED - user is not allowed', invite.from)
       await invite.reject()

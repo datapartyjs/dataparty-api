@@ -17,6 +17,7 @@ class VenueProject extends ISchema {
       created: {type: Number, required: true},
       changed: {type: Number, required: true},
       workspace: {type: String, required: true},
+      tarpath: {type: String},
       hash: {type: String, required: true, index: true},
 
       enabled: {type: Boolean},

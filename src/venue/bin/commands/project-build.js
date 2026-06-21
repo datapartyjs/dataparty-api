@@ -257,7 +257,7 @@ class VenueProjectBuild extends CmdTree.Command {
 
   }
 
-  async pushProject(devId, remote, build, staticTar){
+  async pushProject(devId, remote, build, staticTar=null){
   
       let client = new Dataparty.EphemeralClient({
         identity: devId,

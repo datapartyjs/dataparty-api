@@ -186,13 +186,12 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
     debug('verified package signature')
 
     const safeFileName = ctx.input.build.package.name.replace('/', '-')
+    const tarFileName = safeFileName+'.files.venue.tgz'
 
     if(ctx.input.staticTar){
 
       const tarHash = Routines.Utils.hash(ctx.input.staticTar)
       const tarHash64 = Routines.Utils.base64.encode( tarHash )
-
-      const tarFileName = safeFileName+'.files.venue.tgz'
 
       const buildFiles = ctx.input.build.files[tarFileName]
 
@@ -254,6 +253,7 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
         venue: ctx.party.identity.key.hash,
         hash: buildHash,
         workspace: workspacePath,
+        tarpath: Path.join(workspacePath, tarFileName),
         settings: ctx.input.settings,
         package: pkgWithoutOwner,
         compressedBuild: Routines.Utils.base64.encode(compressedBrotliBuild)
@@ -346,7 +346,7 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
       debug('updated service')
     }*/
 
-      return {done: true}
+      return {done: true, package: srvDoc.data}
 
     //return {srv:srvDoc.data}
   }

@@ -4,6 +4,9 @@ const Path = require('path')
 const Hoek = require('@hapi/hoek')
 const {Message, Routines, Identity} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.endpoint.create-project')
+
+const process = require('process')
+const tar = require('tar')
 const zlib = require('zlib')
 
 const IEndpoint = require('../../service/iendpoint')
@@ -149,10 +152,8 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
 
     debug('verified package signature')
 
-    
-
     const safeFileName = ctx.input.project.name.replace('/', '-')
-    const tarFileName = safeFileName+'.files.venue.tgz'
+    const tarFileName = safeFileName+'.project.files.venue.tgz'
 
     const projectFiles = ctx.input.project.files[tarFileName]
 
@@ -170,6 +171,39 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
 
       debug('verified staticTar')
     }
+
+    // check route packages are valid
+    let packages = {}
+    let tarList = []
+
+    for(let route of ctx.input.project.routes){
+      console.log(route)
+      let pkgDoc = (await ctx.party.find()
+        .type('venue_pkg')
+        .or()
+        .where('package.name').equals(route.package.name)
+        .where('package.githash').equals(route.package.githash)
+        .sort('-created')
+        .limit(1)
+        .exec())[0]
+      
+      if(!pkgDoc){
+        throw new Error(`package ${JSON.stringify(route.package)} not found. required by ${route.prefix}`)
+      }
+
+      const {compressedBuild, ...printablePkg} = pkgDoc.data
+
+      console.log('found package', printablePkg)
+
+      let pkgTarPath = pkgDoc.data.tarpath
+
+      if(pkgTarPath && pkgTarPath.length > 0){
+        tarList.push(pkgTarPath)
+      }
+
+      packages[route.prefix] = pkgDoc.data
+    }
+
 
     debug('verified project - '+ctx.input.project.name+'@'+ctx.input.project.version)
 
@@ -222,6 +256,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
         changed: Date.now(),
         hash: projectHash,
         workspace: workspacePath,
+        tarpath: Path.join(workspacePath, tarFileName),
         project: ctx.input.project,
       })
 
@@ -230,11 +265,53 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
       debug('need to update project?')
     }
 
+    debug('extracting other tars', tarList)
+
+    for(let tarPath of tarList){
+      debug('extracting', tarPath)
+
+      await tar.extract({
+        cwd: workspacePath,
+        file: tarPath,
+        newer: true,
+        unlink: true,
+        uid: process.getuid(),
+        gid: process.getgid()
+      }, tarFileList )
+    }
+
     if(ctx.input.staticTar){ 
+      debug('saving tar file', tarFileName)
       fs.writeFileSync(
         Path.join(workspacePath, tarFileName),
         ctx.input.staticTar
       )
+
+      debug('extracting contents')
+
+      /*await tar.t({
+        cwd: workspacePath,
+        file: Path.join(workspacePath, tarFileName),
+        onReadEntry: entry => { console.log('\t\t', entry) }
+      })*/
+
+      //const tarFileInfo = projectDoc.data.project.files[ tarFileName ]
+
+      //if(projectFiles){
+        const tarFileList = Object.keys(projectFiles.files)
+
+        debug('file list - ', tarFileList)
+
+        await tar.extract({
+          cwd: workspacePath,
+          file: Path.join(workspacePath, tarFileName),
+          newer: true,
+          unlink: true,
+          uid: process.getuid(),
+          gid: process.getgid()
+        }, tarFileList )
+
+      //}
     }
 
     /*fs.writeFileSync(

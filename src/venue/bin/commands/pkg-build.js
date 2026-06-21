@@ -124,7 +124,13 @@ class VenuePackageBuild extends CmdTree.Command {
 
     if(parsed.deploy && parsed.remote){
       console.log('uploading...')
+      
       const remote = await this.context.secureConfig.read('remote.'+parsed.remote)
+
+      if(!remote){
+        throw 'invalid remote ['+parsed.remote+']'
+      }
+
       let staticTar = undefined
 
       if(build.files.length == 3){
@@ -138,7 +144,7 @@ class VenuePackageBuild extends CmdTree.Command {
   }
 
 
-  async pushPackage(devId, remote, build, staticTar){
+  async pushPackage(devId, remote, build, staticTar=null){
 
     let client = new Dataparty.EphemeralClient({
       identity: devId,

@@ -44,7 +44,11 @@ class MongoQuery {
   }
 
   getSort () {
-    return { [this.spec.sort.param.join('.')]: this.spec.sort.direction }
+    if(Array.isArray(this.spec.sort.param)){
+      return { [this.spec.sort.param.join('.')]: this.spec.sort.direction }
+    }
+    
+    return { [this.spec.sort.param]: this.spec.sort.direction }
   }
 
   /**

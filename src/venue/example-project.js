@@ -10,7 +10,7 @@ module.exports = {
         prefix: '/api',
         party:'SYSTEM',
         package: {
-          name: '@dataparty/venue'
+          name: '@dataparty/api'
         },
         settings: {
           sendFullErrors: false,
