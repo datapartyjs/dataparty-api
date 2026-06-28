@@ -22,6 +22,7 @@ commandTree.addCommand(require('./commands/venue-remote-add'))
 commandTree.addCommand(require('./commands/venue-remote-list'))
 commandTree.addCommand(require('./commands/venue-remote-show'))
 commandTree.addCommand(require('./commands/venue-remote-check'))
+commandTree.addCommand(require('./commands/venue-remote-repl'))
 
 commandTree.addCommand(require('./commands/pkg-build'))
 commandTree.addCommand(require('./commands/project-build'))
