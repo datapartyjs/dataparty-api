@@ -92,7 +92,7 @@ class PeerComms extends ISocketComms {
 
       let response = null
       let request = await this.decrypt( {data: message}, this.remoteIdentity )
-      debug('handleHostCall', truncateString(request, 1024))
+      debug('handleClientCall', truncateString(JSON.stringify(request, null, 2), 1024))
 
       let inputValidated
 
@@ -461,11 +461,15 @@ class PeerComms extends ISocketComms {
   async handleCallOp(op){
     debug('peer-call', op.input.endpoint)
 
+    const actor = await this.party.hostRunner.auth.lookupIdentity(this.remoteIdentity)
+
     if(this.party.hostRunner){
 
       debug('calling runner')
 
-      if(op.input.endpoint == 'api-v2-peer-bouncer' && await this.party.hostRunner.auth.isAdmin(this.remoteIdentity)){
+      
+
+      if(op.input.endpoint == 'api-v2-peer-bouncer' && await this.party.hostRunner.auth.isAdmin(actor)){
         debug('ask->', truncateString(op.input.data, 1024))
         op.result = {result: await this.party.handleCall(op.input.data) }
 
@@ -514,7 +518,7 @@ class PeerComms extends ISocketComms {
       op.setState(HostOp.STATES.Finished_Success)
       return
 
-    } else if(op.input.endpoint == 'api-v2-peer-bouncer' && await this.party.hostRunner.auth.isAdmin(this.remoteIdentity)){
+    } else if(op.input.endpoint == 'api-v2-peer-bouncer' && await this.party.hostRunner.auth.isAdmin(actor)){
       
       debug('ask->',op.input.data)
       op.result = {result: await this.party.handleCall(op.input.data) }
