@@ -19,7 +19,7 @@ class VenueProject extends ISchema {
       workspace: {type: String, required: true},
       tarpath: {type: String},
       hash: {type: String, required: true, index: true},
-
+      previousHash: {type: String, index: true},
       enabled: {type: Boolean},
 
 
@@ -55,7 +55,7 @@ class VenueProject extends ISchema {
             uri: String,
             mongoOptions: String,
             secureUri: String
-          }
+          },
           peer: {
             venue: String,
             remoteIdentity: String
@@ -71,6 +71,7 @@ class VenueProject extends ISchema {
         }],
         routes: [{
           prefix: String,
+          staticPath: String,
           party: String,
           package: {
             owner: String,

@@ -126,44 +126,44 @@ async function constructParty(type, projectPartyDesc, config, model){
     }
     
 
-    return new PARTY_CLASS(
+    return new PARTY_CLASS({
       path,
       dbAdapter: dbAdapterImpl,
       config,
       model,
       ...otherOptions
-    )
+    })
   } else if (type == 'zango'){
     const {dbname, ...otherOptions} = projectPartyDesc.zango
 
-    return new PARTY_CLASS(
+    return new PARTY_CLASS({
       dbname,
       config,
       model,
       ...otherOptions
-    )
+    })
   } else if (type == 'tingo'){
     const {path, ...otherOptions} = projectPartyDesc.tingo
 
     await config.touchDir(path|'db')
 
-    return new PARTY_CLASS(
+    return new PARTY_CLASS({
       path: config.filePath(path | 'db'),
       config,
       model,
       ...otherOptions
-    )
+    })
   } else if (type == 'peer'){
     return Dataparty.PeerClient
   } else if (type == 'mongo'){
     const {uri, secureUri, ...otherOptions} = projectPartyDesc.mongo
 
-    return new PARTY_CLASS(
+    return new PARTY_CLASS({
       uri,
       config,
       model,
       ...otherOptions
-    )
+    })
   }
 }
 
@@ -171,6 +171,14 @@ class VenuedHost extends CmdTree.Command {
   constructor(context){
     super({...VenuedHost.Definition, context})
     debug('constructor')
+
+    this.active_projects = {}
+
+    this.party = null
+    this.config = null
+    this.runner = null
+    this.runnerRouter = null
+    this.host = null
   }
   
   static get Command(){
@@ -207,18 +215,18 @@ class VenuedHost extends CmdTree.Command {
     
     const PARTY = getPartyByType(parsed['db-type'])
 
-    const config = new Dataparty.Config.JsonFileConfig({basePath: parsed.path})
+    this.config = new Dataparty.Config.JsonFileConfig({basePath: parsed.path})
 
-    await config.start()
+    await this.config.start()
 
     //if(parsed['db-uri'][0] == '/'){
-      config.touchDir( 'db' )
+      this.config.touchDir( 'db' )
     //}
 
-    const party = new PARTY({
+    this.party = new PARTY({
       path: parsed['db-uri'],
       model: ServiceSchema,
-      config: config,
+      config: this.config,
       noCache: false
     })
 
@@ -277,20 +285,20 @@ class VenuedHost extends CmdTree.Command {
     const ssl_cert = fs.readFileSync( parsed['ssl-cert'], 'utf8')
 
 
-    const runner = new Dataparty.ServiceRunnerNode({
-      party, service,
+    this.runner = new Dataparty.ServiceRunnerNode({
+      party: this.party, service,
       sendFullErrors: parsed['full-errors'],
       useNative: false,
       prefix: 'venue/'
     })
     
 
-    let runnerRouter = new Dataparty.RunnerRouter(runner)
+    this.runnerRouter = new Dataparty.RunnerRouter(this.runner)
 
 
    
 
-    if(parsed.i2p && !await config.read('i2p.sam')){
+    if(parsed.i2p && !await this.config.read('i2p.sam')){
       debug('i2p - creating key')
 
       const SAM = require('@diva.exchange/i2p-sam')
@@ -310,16 +318,16 @@ class VenuedHost extends CmdTree.Command {
 
 
       await Promise.all([
-        config.write('i2p.address', i2p.address),
-        config.write('i2p.sam.publicKey', i2p.public),
-        config.write('i2p.sam.privateKey', i2p.private),
+        this.config.write('i2p.address', i2p.address),
+        this.config.write('i2p.sam.publicKey', i2p.public),
+        this.config.write('i2p.sam.privateKey', i2p.private),
       ])
 
-      await config.save()
+      await this.config.save()
     }
 
-    const host = new Dataparty.ServiceHost({
-      runner: runnerRouter,
+    this.host = new Dataparty.ServiceHost({
+      runner: this.runnerRouter,
       trust_proxy: parsed['trust-proxy/'],
       wsEnabled: true,
       ssl_key, ssl_cert,
@@ -334,18 +342,18 @@ class VenuedHost extends CmdTree.Command {
       i2pForwardPort: '3000',
       i2pOptions: 'i2cp.leaseSetEncType=6,4',
       //i2pOptions: 'i2cp.leaseSetEncType=4',
-      i2pKey: await config.read('i2p.sam')
+      i2pKey: await this.config.read('i2p.sam')
     })
 
-    await party.start()
-    await runner.start()
-    await host.start()
+    await this.party.start()
+    await this.runner.start()
+    await this.host.start()
   
     debug('started')
     console.log('partying')
     console.log('\t', parsed.listen)
 
-    const i2pAddress = await config.read('i2p.address')
+    const i2pAddress = await this.config.read('i2p.address')
     if(i2pAddress){
       console.log('\t', i2pAddress)
     }
@@ -358,162 +366,15 @@ class VenuedHost extends CmdTree.Command {
      * }
      */
 
-    const projects = await config.read('projects')
+    const projects = await this.config.read('projects')
 
     if(projects){
       for(let name in projects){
 
         const hash = projects[name]
         console.log('\tloading project', name, hash)
-
-        const project = (await party.find()
-            .type('venue_project')
-            .where('hash').equals(hash).exec())[0]
-
-        const workspace = project.data.workspace
-
-        //! todo - load parties and put them in projectParties map
-        let projectParties = {}
-        for(let projectPartyDesc of project.data.project.party){
-          const partyWorkspace = Path.join(workspace, projectPartyDesc.name)
-          const partyConfig = new Dataparty.Config.JsonFileConfig({basePath: partyWorkspace})
-
-          let configFirstRun = !fs.existsSync( partyWorkspace+'/config.json' )
-
-          await partyConfig.start()
-
-          if(configFirstRun){
-            await config.writeAll(projectPartyDesc.defaultConfig)  
-          }
-
-          await partyConfig.touchDir( 'db' )
-          // read secret string > base64.decode > message.decrypt
-          // 
-          let projectPartyIdentity //= Identity.readFrom()
-
-          let projectParty = constructParty( projectPartyDesc.type, projectPartyDesc, partyConfig )
-
-          projectParties[ projectPartyDesc.name ] = projectParty
-
-          await projectParty.start()
-
-        }
         
-
-
-        for(let route of project.data.project.routes){
-
-          if(!route.package){continue}
-          console.log('route', route.package.name)
-          let pkgDoc = (await party.find()
-            .type('venue_pkg')
-            .or()
-            .where('package.name').equals(route.package.name)
-            .where('package.githash').equals(route.package.githash)
-            .sort('-created')
-            .limit(1)
-            .exec())[0]
-          
-          if(!pkgDoc){
-            throw new Error(`package ${JSON.stringify(route.package)} not found. required by ${route.prefix}`)
-          }
-
-          const {compressedBuild, ...printablePkg} = pkgDoc.data
-
-          console.log('found package', printablePkg)
-
-          const serviceFile = JSON.parse(
-            zlib.brotliDecompressSync(
-              Routines.Utils.base64.decode( compressedBuild )
-            )
-          )
-
-          const ServiceSchema = {
-            package: serviceFile.package,
-            ...serviceFile.schemas
-          }
-
-          console.log('decompressed', serviceFile.package)
-
-          let serviceParty = null;
-
-
-          if(route.party == 'SYSTEM'){
-            serviceParty = party
-          } else if( projectParties[route.party] ){
-            serviceParty = projectParties[route.party]
-
-            await serviceParty.factory.addModels(ServiceSchema)
-
-            debug('patching in validators')
-            const partyType = project.data.project.party[route.party].type
-
-            if(['loki','tingo'].indexOf(partyType) > -1){
-              
-              for(const collectionName of serviceParty.factory.getValidators()){
-
-                debug('creating collection', collectionName)
-                
-                const indexSettings = reach(serviceParty.factory, 'schemas.IndexSettings.'+collectionName)
-                await serviceParty.db.createCollection(collectionName, indexSettings)
-              }
-            } else if('mongo' == partyType){
-              serviceParty.db.addBouncerModels(serviceParty.factory.model)
-            } 
-          }
-
-          serviceParty.topics = new Dataparty.LocalTopicHost()
-
-          debug('loading service')
-          const service = new Dataparty.IService(serviceFile.package, serviceFile)
-          debug('loaded service')
-
-          let projectRunner = new Dataparty.ServiceRunnerNode({
-            party: serviceParty, service,
-            sendFullErrors: route.settings.sendFullErrors,
-            useNative: route.settings.useNative,
-            prefix: route.prefix
-          })
-
-          if(route.party == 'SYSTEM'){
-            //projectRunner.router = runner.router
-          }
-
-          //await serviceParty.start()
-          
-          await projectRunner.start()
-
-          console.log('workspace', workspace)
-
-          const projectStaticPath = Path.join(workspace, 'public')
-
-          let handler =  (req,res)=>{
-            
-            let staticHandler = express.static(projectStaticPath, { index: ['index.html']})
-
-            let results = staticHandler(req.request,req.response, req.request.next)
-
-            console.log('returning results', Object.keys(req.request))
-
-          
-
-            console.log('sent already - headers?', req.response.headersSent)
-            console.log('sent already - date?', req.response.sendDate)
-            console.log('sent already - outputSize?', req.response.outputSize)
-
-          }
-
-          projectRunner.router.add('static-files1', '/:path*', handler)
-          projectRunner.router.add('static-files2', '/', handler)
-
-          
-          
-          
-          await runnerRouter.addRunner({
-            domain: project.data.project.domain,
-            runner: projectRunner
-          })
-        }
+        await this.loadProject(hash)
       }
     }
 
@@ -522,6 +383,166 @@ class VenuedHost extends CmdTree.Command {
     this.context.exiting = false
 
     return
+  }
+
+  async unloadProject(hash){
+    //
+  }
+
+  async loadProject(hash){
+    // if first run
+    //   if previosHash exists copy previous party config's & db's
+    //   setup project
+    //   if previous.isRunning then previous.unload()
+    // launch
+
+    const project = (await this.party.find()
+        .type('venue_project')
+        .where('hash').equals(hash).exec())[0]
+
+    const workspace = project.data.workspace
+
+    //! todo - load parties and put them in projectParties map
+    let projectParties = {}
+    for(let projectPartyDesc of project.data.project.party){
+      const partyWorkspace = Path.join(workspace, 'party', projectPartyDesc.name)
+      const partyConfig = new Dataparty.Config.JsonFileConfig({basePath: partyWorkspace})
+
+      let configFirstRun = !fs.existsSync( partyWorkspace+'/config.json' )
+
+      await partyConfig.start()
+
+      if(configFirstRun){
+        await partyConfig.writeAll(projectPartyDesc.defaultConfig)  
+      }
+
+      await partyConfig.touchDir( 'db' )
+      // read secret string > base64.decode > message.decrypt
+      // 
+      let projectPartyIdentity //= Identity.readFrom()
+
+      let projectParty = constructParty( projectPartyDesc.type, projectPartyDesc, partyConfig )
+
+      projectParties[ projectPartyDesc.name ] = projectParty
+
+      await projectParty.start()
+
+    }
+    
+
+
+    for(let route of project.data.project.routes){
+
+      if(!route.package){continue}
+      console.log('route', route.package.name)
+      let pkgDoc = (await this.party.find()
+        .type('venue_pkg')
+        .or()
+        .where('package.name').equals(route.package.name)
+        .where('package.githash').equals(route.package.githash)
+        .sort('-created')
+        .limit(1)
+        .exec())[0]
+      
+      if(!pkgDoc){
+        throw new Error(`package ${JSON.stringify(route.package)} not found. required by ${route.prefix}`)
+      }
+
+      const {compressedBuild, ...printablePkg} = pkgDoc.data
+
+      console.log('found package', printablePkg)
+
+      const serviceFile = JSON.parse(
+        zlib.brotliDecompressSync(
+          Routines.Utils.base64.decode( compressedBuild )
+        )
+      )
+
+      const ServiceSchema = {
+        package: serviceFile.package,
+        ...serviceFile.schemas
+      }
+
+      console.log('decompressed', serviceFile.package)
+
+      let serviceParty = null;
+
+
+      if(route.party == 'SYSTEM'){
+        serviceParty = party
+      } else if( projectParties[route.party] ){
+        serviceParty = projectParties[route.party]
+
+        await serviceParty.factory.addModels(ServiceSchema)
+
+        debug('patching in validators')
+        const partyType = project.data.project.party[route.party].type
+
+        if(['loki','tingo'].indexOf(partyType) > -1){
+          
+          for(const collectionName of serviceParty.factory.getValidators()){
+
+            debug('creating collection', collectionName)
+            
+            const indexSettings = reach(serviceParty.factory, 'schemas.IndexSettings.'+collectionName)
+            await serviceParty.db.createCollection(collectionName, indexSettings)
+          }
+        } else if('mongo' == partyType){
+          serviceParty.db.addBouncerModels(serviceParty.factory.model)
+        } 
+      }
+
+      serviceParty.topics = new Dataparty.LocalTopicHost()
+
+      debug('loading service')
+      const service = new Dataparty.IService(serviceFile.package, serviceFile)
+      debug('loaded service')
+
+      let projectRunner = new Dataparty.ServiceRunnerNode({
+        party: serviceParty, service,
+        sendFullErrors: route.settings.sendFullErrors,
+        useNative: route.settings.useNative,
+        prefix: route.prefix
+      })
+
+      if(route.party == 'SYSTEM'){
+        //projectRunner.router = runner.router
+      }
+
+      //await serviceParty.start()
+      
+      await projectRunner.start()
+
+      console.log('workspace', workspace)
+
+      if(route.staticPath){
+        const projectStaticPath = Path.join(workspace, route.staticPath)
+
+        let handler =  (req,res)=>{
+          
+          let staticHandler = express.static(projectStaticPath, { index: ['index.html']})
+
+          let results = staticHandler(req.request,req.response, req.request.next)
+
+          console.log('returning results', Object.keys(req.request))
+
+        
+
+          console.log('sent already - headers?', req.response.headersSent)
+          console.log('sent already - date?', req.response.sendDate)
+          console.log('sent already - outputSize?', req.response.outputSize)
+
+        }
+
+        projectRunner.router.add('static-files1', '/:path*', handler)
+        projectRunner.router.add('static-files2', '/', handler)
+      }
+      
+      await this.runnerRouter.addRunner({
+        domain: project.data.project.domain,
+        runner: projectRunner
+      })
+    }
   }
 }
 

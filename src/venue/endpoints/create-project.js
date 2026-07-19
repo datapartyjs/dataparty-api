@@ -80,6 +80,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
             })),
             routes: Joi.array().items(Joi.object().keys({
               prefix: Joi.string(),
+              staticPath: Joi.string(),
               party: Joi.string(),
               package: Joi.object().keys({
                 owner: Joi.string(),
