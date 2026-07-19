@@ -75,6 +75,12 @@ class JsonFileConfig extends IConfig {
     return reach( this.content, key)
   }
 
+  async writeAll(newContent){
+    logger('writing full content')
+    this.content = newContent
+    await this.save()
+  }
+
   async write(key, value){
 
     logger('writing path:', key)

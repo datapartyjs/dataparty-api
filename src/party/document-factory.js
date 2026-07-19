@@ -32,7 +32,43 @@ class DocumentFactory {
         this.validators[schema.title] = v
         debug(schema.title)
       }
+    } else {
+      
+      this.schemas={
+        JSONSchema: {},
+        IndexSettings: {},
+        Permissions: {}
+      }
     }
+  }
+
+  async addModels(model, replace=true){
+    debug('addModels')
+    const schemas = reach(model, 'schemas', model)
+
+    if(!this.model){
+      this.model = model
+    }
+
+    for(let schema of schemas.JSONSchema){
+
+      if(this.schemas.JSONSchema[ schema.title ]){
+        if(replace){
+          debug('warning - over-writing schema ['+schema.title+']')
+        } else {
+          throw new Error('SchemaAlreadyDefined')
+        }
+      }
+
+      this.schemas.JSONSchema[ schema.title ] = schema
+      this.schemas.IndexSettings[ schema.title ] = schemas.IndexSettings[schema.title]
+      this.schemas.Permissions[ schema.title ] = schemas.Permissions[schema.title]
+
+      const v = this.ajv.compile(schema)
+      this.validators[schema.title] = v
+      debug(schema.title)
+    }
+    
   }
 
   /**

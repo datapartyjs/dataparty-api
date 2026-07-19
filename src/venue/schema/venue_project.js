@@ -40,13 +40,22 @@ class VenueProject extends ISchema {
 
         party: [{
           name: String,
-          type: {type: String, enum: ['tingo', 'loki', 'peer', 'mongo']},
+          type: {type: String, enum: ['tingo', 'zango', 'loki', 'peer', 'mongo']},
           tingo: {
             path: String
           },
+          zango: {
+            dbname: String
+          },
           loki: {
+            dbAdapter: {type: String, enum: ['memory', 'fs', 'lsfa', 'localstorage']},
             path: String
           },
+          mongo: {
+            uri: String,
+            mongoOptions: String,
+            secureUri: String
+          }
           peer: {
             venue: String,
             remoteIdentity: String
@@ -58,7 +67,7 @@ class VenueProject extends ISchema {
           settings: {
             noCache: Boolean,
           },
-          defaultConfig: String
+          defaultConfig: Object
         }],
         routes: [{
           prefix: String,

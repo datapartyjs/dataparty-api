@@ -8,6 +8,7 @@ const zlib = require('zlib')
 const { execSync } = require('child_process')
 
 const Dataparty = require('../../../../')
+const reach = require('../../../utils/reach')
 const {Routines} = require('@dataparty/crypto')
 const express = require('express')
 
@@ -92,6 +93,77 @@ const DEFINITION = {
 function getPartyByType(type){
   if(type == 'tingo'){
     return Dataparty.TingoParty
+  } else if (type == 'zango'){
+    return Dataparty.ZangoParty
+  } else if (type == 'loki'){
+    return Dataparty.LokiParty
+  } else if (type == 'peer'){
+    return Dataparty.PeerClient
+  } else if (type == 'mongo'){
+    return Dataparty.MongoParty
+  }
+
+  return null
+}
+
+async function constructParty(type, projectPartyDesc, config, model){
+  const PARTY_CLASS = getPartyByType(type)
+  if(type == 'loki'){
+
+    const TingoAdapterTypes = {
+      'memory': Dataparty.LokiParty.Loki.LokiMemoryAdapter,
+      'fs': Dataparty.LokiParty.Loki.LokiFsAdapter,
+      'lfsa': Dataparty.LokiParty.Loki.LokiFsStructuredAdapter,
+      'localstorage': Dataparty.LokiParty.Loki.LokiLocalStorageAdapter // this probably doesn't work in nodejs
+    }
+
+    let {path, dbAdapter, ...otherOptions} = projectPartyDesc.loki
+    let dbAdapterImpl = TingoAdapterTypes[dbAdapter|'lfsa']
+
+    if(dbAdapter == 'fs' || dbAdapter == 'lfsa'){
+      await config.touchDir('db')
+      path = config.filePath( Path.join('db', path) )
+    }
+    
+
+    return new PARTY_CLASS(
+      path,
+      dbAdapter: dbAdapterImpl,
+      config,
+      model,
+      ...otherOptions
+    )
+  } else if (type == 'zango'){
+    const {dbname, ...otherOptions} = projectPartyDesc.zango
+
+    return new PARTY_CLASS(
+      dbname,
+      config,
+      model,
+      ...otherOptions
+    )
+  } else if (type == 'tingo'){
+    const {path, ...otherOptions} = projectPartyDesc.tingo
+
+    await config.touchDir(path|'db')
+
+    return new PARTY_CLASS(
+      path: config.filePath(path | 'db'),
+      config,
+      model,
+      ...otherOptions
+    )
+  } else if (type == 'peer'){
+    return Dataparty.PeerClient
+  } else if (type == 'mongo'){
+    const {uri, secureUri, ...otherOptions} = projectPartyDesc.mongo
+
+    return new PARTY_CLASS(
+      uri,
+      config,
+      model,
+      ...otherOptions
+    )
   }
 }
 
@@ -291,10 +363,6 @@ class VenuedHost extends CmdTree.Command {
     if(projects){
       for(let name in projects){
 
-        let projectParties = {}
-
-        //! todo - load parties and put them in projectParties map
-
         const hash = projects[name]
         console.log('\tloading project', name, hash)
 
@@ -303,6 +371,35 @@ class VenuedHost extends CmdTree.Command {
             .where('hash').equals(hash).exec())[0]
 
         const workspace = project.data.workspace
+
+        //! todo - load parties and put them in projectParties map
+        let projectParties = {}
+        for(let projectPartyDesc of project.data.project.party){
+          const partyWorkspace = Path.join(workspace, projectPartyDesc.name)
+          const partyConfig = new Dataparty.Config.JsonFileConfig({basePath: partyWorkspace})
+
+          let configFirstRun = !fs.existsSync( partyWorkspace+'/config.json' )
+
+          await partyConfig.start()
+
+          if(configFirstRun){
+            await config.writeAll(projectPartyDesc.defaultConfig)  
+          }
+
+          await partyConfig.touchDir( 'db' )
+          // read secret string > base64.decode > message.decrypt
+          // 
+          let projectPartyIdentity //= Identity.readFrom()
+
+          let projectParty = constructParty( projectPartyDesc.type, projectPartyDesc, partyConfig )
+
+          projectParties[ projectPartyDesc.name ] = projectParty
+
+          await projectParty.start()
+
+        }
+        
+
 
         for(let route of project.data.project.routes){
 
@@ -331,6 +428,11 @@ class VenuedHost extends CmdTree.Command {
             )
           )
 
+          const ServiceSchema = {
+            package: serviceFile.package,
+            ...serviceFile.schemas
+          }
+
           console.log('decompressed', serviceFile.package)
 
           let serviceParty = null;
@@ -340,6 +442,24 @@ class VenuedHost extends CmdTree.Command {
             serviceParty = party
           } else if( projectParties[route.party] ){
             serviceParty = projectParties[route.party]
+
+            await serviceParty.factory.addModels(ServiceSchema)
+
+            debug('patching in validators')
+            const partyType = project.data.project.party[route.party].type
+
+            if(['loki','tingo'].indexOf(partyType) > -1){
+              
+              for(const collectionName of serviceParty.factory.getValidators()){
+
+                debug('creating collection', collectionName)
+                
+                const indexSettings = reach(serviceParty.factory, 'schemas.IndexSettings.'+collectionName)
+                await serviceParty.db.createCollection(collectionName, indexSettings)
+              }
+            } else if('mongo' == partyType){
+              serviceParty.db.addBouncerModels(serviceParty.factory.model)
+            } 
           }
 
           serviceParty.topics = new Dataparty.LocalTopicHost()

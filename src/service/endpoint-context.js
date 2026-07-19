@@ -57,7 +57,9 @@ class EndpointContext {
      */
     this.stats = {
       start: Date.now(),
-      bytes_in: !req ? null : JSON.stringify(req.body).length
+      bytes_in: !req ? null : JSON.stringify(req.body).length,
+      bytes_out: 0,
+      end: null
     }
     this.oauth_cloud = null
 
@@ -126,6 +128,14 @@ class EndpointContext {
 
   setOutput(output){
     this.output = output
+
+    if(typeof this.output =='string'){
+      this.stats.bytes_out = this.output.length
+    } else {
+      this.stats.bytes_out = JSON.stringify(this.output).length
+    }
+
+    
     this.debug('output set')
   }
 

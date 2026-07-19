@@ -46,6 +46,13 @@ class ServiceRunnerNode {
     this.started = false
 
     this.taskCounter = 0
+
+    this.stats = {
+      bytes_in: 0,
+      bytes_out: 0,
+      requests: 0,
+      errors: 0
+    }
   }
 
   async start(){
@@ -563,6 +570,9 @@ class ServiceRunnerNode {
       
       try{
 
+        this.stats.requests++
+        this.stats.bytes_in += context.stats.bytes_in
+
         await this.runMiddleware(middlewareCfg, context, 'pre')
     
         phase = 'endpoint'
@@ -582,9 +592,15 @@ class ServiceRunnerNode {
         debug('result', context.output)
 
         context.res.send(context.output)
+        context.stats.end = Date.now()
+
+        
+        this.stats.bytes_out += context.stats.bytes_out
 
       }
       catch(err){
+
+        this.stats.errors++
 
         if(this.sendFullErrors){
           debug('caught error', err)

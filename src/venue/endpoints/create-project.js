@@ -57,7 +57,16 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
               name: Joi.string(),
               type: Joi.string().required(),
               tingo: { path: Joi.string() },
-              loki: { path: Joi.string() },
+              zango: { dbname: Joi.string() },
+              mongo: {
+                uri: Joi.string(),
+                mongoOptions: Joi.object(),
+                secureUri: Joi.string()
+              },
+              loki: { 
+                dbAdapter: Joi.String(),
+                path: Joi.string()
+              },
               peer: {
                 venue: Joi.string(),
                 remoteIdentity: Joi.string()
@@ -67,7 +76,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
                 securePrivate: Joi.string()
               },
               settings: { noCache: Joi.string() },
-              defaultConfig: Joi.string()
+              defaultConfig: Joi.object()
             })),
             routes: Joi.array().items(Joi.object().keys({
               prefix: Joi.string(),
