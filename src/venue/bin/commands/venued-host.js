@@ -402,7 +402,7 @@ class VenuedHost extends CmdTree.Command {
 
     const workspace = project.data.workspace
 
-    //! todo - load parties and put them in projectParties map
+    //! load parties and put them in projectParties map
     let projectParties = {}
     for(let projectPartyDesc of project.data.project.party){
       const partyWorkspace = Path.join(workspace, 'party', projectPartyDesc.name)
@@ -418,10 +418,17 @@ class VenuedHost extends CmdTree.Command {
 
       await partyConfig.touchDir( 'db' )
       // read secret string > base64.decode > message.decrypt
-      // 
-      let projectPartyIdentity //= Identity.readFrom()
+      const securePrivateB64 = Routines.Utils.base64.decode( projectPartyDesc.key.securePrivate )
+      const securePrivateMsg = new dataparty_crypto.Message({})
+      securePrivateMsg.fromBSON( securePrivateB64 )
+
+      const securePrivateContent = await securePrivateMsg.decrypt( this.party.privateIdentity )
+
+      const projectPartyIdentity = Identity.fromBSON( securePrivateContent )
 
       let projectParty = constructParty( projectPartyDesc.type, projectPartyDesc, partyConfig )
+
+      await projectParty.setIdentity( projectPartyIdentity )
 
       projectParties[ projectPartyDesc.name ] = projectParty
 
