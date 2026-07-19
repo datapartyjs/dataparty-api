@@ -9,10 +9,12 @@ const DocumentFactory = require('./document-factory')
 const CloudDocument = require('./cloud/cloud-document')
 const EphemeralClient = require('./peer/ephemeral-client')
 const MatchMakerClient = require('./peer/match-maker-client')
+const PeerClient = require('./peer/peer-client')
 
 module.exports = {
   IDocument, IParty, DocumentFactory,
   CloudDocument,
   CloudParty, LokiParty, PeerParty,
-  TingoParty, EphemeralClient, MatchMakerClient
+  TingoParty, EphemeralClient, MatchMakerClient,
+  PeerClient
 }

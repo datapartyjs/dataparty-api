@@ -9,6 +9,7 @@ const DocumentFactory = require('./document-factory')
 const CloudDocument = require('./cloud/cloud-document')
 const EphemeralClient = require('./peer/ephemeral-client')
 const MatchMakerClient = require('./peer/match-maker-client')
+const PeerClient = require('./peer/peer-client')
 
 const LokiDb = require('../bouncer/db/loki-db')
 
@@ -16,5 +17,5 @@ module.exports = {
   IDocument, IParty, DocumentFactory,
   CloudDocument,
   CloudParty, LokiParty, ZangoParty, PeerParty,
-  LokiDb, EphemeralClient, MatchMakerClient
+  LokiDb, EphemeralClient, MatchMakerClient, PeerClient
 }
