@@ -131,7 +131,8 @@ async function constructParty(type, projectPartyDesc, config, model){
       dbAdapter: dbAdapterImpl,
       config,
       model,
-      ...otherOptions
+      ...otherOptions,
+      ...projectPartyDesc.settings
     })
   } else if (type == 'zango'){
     const {dbname, ...otherOptions} = projectPartyDesc.zango
@@ -140,7 +141,8 @@ async function constructParty(type, projectPartyDesc, config, model){
       dbname,
       config,
       model,
-      ...otherOptions
+      ...otherOptions,
+      ...projectPartyDesc.settings
     })
   } else if (type == 'tingo'){
     const {path, ...otherOptions} = projectPartyDesc.tingo
@@ -151,7 +153,8 @@ async function constructParty(type, projectPartyDesc, config, model){
       path: config.filePath(path | 'db'),
       config,
       model,
-      ...otherOptions
+      ...otherOptions,
+      ...projectPartyDesc.settings
     })
   } else if (type == 'peer'){
     return Dataparty.PeerClient
@@ -162,7 +165,8 @@ async function constructParty(type, projectPartyDesc, config, model){
       uri,
       config,
       model,
-      ...otherOptions
+      ...otherOptions,
+      ...projectPartyDesc.settings
     })
   }
 }
