@@ -177,7 +177,11 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
     let tarList = []
 
     for(let route of ctx.input.project.routes){
+
       console.log(route)
+
+      if(!route.package || !route.package.name){continue}
+
       let pkgDoc = (await ctx.party.find()
         .type('venue_pkg')
         .or()

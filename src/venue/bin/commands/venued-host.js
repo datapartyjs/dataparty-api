@@ -305,6 +305,8 @@ class VenuedHost extends CmdTree.Command {
         const workspace = project.data.workspace
 
         for(let route of project.data.project.routes){
+
+          if(!route.package){continue}
           console.log('route', route.package.name)
           let pkgDoc = (await party.find()
             .type('venue_pkg')

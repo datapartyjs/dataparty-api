@@ -435,6 +435,7 @@ class ServiceRunnerNode {
 
     debug('req', req.method, req.hostname,'-', req.url, req.ips, req.body)
 
+    if(req.method == 'PATCH'){ return next() }
 
     let route = await this.router.route(req, res)
 
