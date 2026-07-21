@@ -36,6 +36,23 @@ const DEFINITION = {
   force: {
     type: 'boolean',
     default: false
+  },
+  ble: {
+    type: 'string',
+    description: 'ble address of device or set to "random" for devices with address randomization'
+  },
+  i2p: {
+    type: 'string',
+    description: 'i2p address of the remote'
+  },
+  mdns: {
+    type: 'boolean',
+    default: false
+  },
+  mmhash: {
+    type: 'string',
+    description: 'match maker server identtiy hash',
+    multiple: true
   }
 }
 
@@ -79,11 +96,13 @@ class VenueRemoteAdd extends CmdTree.Command {
     const version = await Dataparty.Comms.RestComms.HttpGet(versionUrl)
 
     const remote = {
+      identity, version,
       url: parsed.url,
       ws: parsed.ws,
-      i2p: parsed.i2p,
-      mmhash: parsed.mmhash,
-      identity, version
+      i2p: parsed.i2p,  // { address, publicKey}
+      mmhash: parsed.mmhash, // [ mmhash ]
+      ble: parsed.ble, //  address | 'random'
+      mdns: parsed.mdns
     }
 
     await this.context.secureConfig.write('remote.'+remoteName, remote)

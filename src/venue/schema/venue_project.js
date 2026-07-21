@@ -39,6 +39,10 @@ class VenueProject extends ISchema {
         },
 
         hosting:{
+          cloud: {
+            domain: String,
+          },
+
           http: {
             listenUri: String,
             cors: Object,
@@ -46,20 +50,20 @@ class VenueProject extends ISchema {
             trust_proxy: Boolean,
             wsEnabled: Boolean,
             secureSSL: String, //! {ssl_key: String, ssl_cert: String}
-            generateSSLKey: Boolean
+            //generateSSLKey: Boolean
           },
 
           i2p: {
             address: String,
             publicKey: String,
             secureKey: String, // { publicKey, privateKey }
-            generateKey: Boolean
+            //generateKey: Boolean
           },
 
-          p2p: {
+          p2p: [{
             matchMakerHash: String,
             identityParty: String
-          },
+          }],
 
           ble: {
             enabled: Boolean
@@ -92,7 +96,7 @@ class VenueProject extends ISchema {
           key: {
             hash: String,
             securePrivate: String, //! base64.encode( Message(Identity.toBSON).encrypt.toBSON() )
-            generateKey: Boolean
+            //generateKey: Boolean
           },
           settings: {
             noCache: Boolean,

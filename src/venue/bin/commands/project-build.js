@@ -210,7 +210,7 @@ class VenueProjectBuild extends CmdTree.Command {
       value = await this.saveSecret(kvKey, owner, owner, identity.toBSON())
     }
 
-    return await this.decryptFromBase64(owner, owner, value)
+    return dataparty_crypto.Identity.fromBSON(await this.decryptFromBase64(owner, owner, value))
   }
 
   async getOrStoreMongoUri(owner, venue, projectName, partyName, uri){
@@ -324,7 +324,7 @@ class VenueProjectBuild extends CmdTree.Command {
         ble: Hoek.reach(projectJson, 'hosting.ble')
       },
 
-      party: projectJson.party,
+      party: [],
       routes: projectJson.routes,
       files: projectJson.files
 
@@ -357,6 +357,43 @@ class VenueProjectBuild extends CmdTree.Command {
 
       project.hosting.i2p = i2pConfig
     }
+
+    Hoek.reach(projectJson, 'party', []).forEach( partyDesc=>{
+      let needsKey = Hoek.reach(partyDesc, 'key.generateKey', false) || Hoek.reach(partyDesc, 'key', null) == null
+      let needsSecureMongo = Hoek.reach(partyDesc, 'mongo.uri', null) != null
+
+      let obj = {...partyDesc}
+
+      if(needsKey){
+        debug('creating party key [', partyDesc.name, ']')
+
+        const partyPrivateId = await this.getOrGenerateIdentity( key, remote.identity, projectJson.name, partyDesc.name )
+        
+        obj.key = {
+          hash: partyPrivateId.key.hash,
+          securePrivate: await this.encryptToBase64(
+            key,
+            remote.identity,
+            partyPrivateId
+          )
+        }
+
+      }
+
+      if(needsSecureMongo){
+        debug('securing mongo.uri [', partyDesc.name, ']')
+        obj.mongo = {
+          mongoOptions: Hoek.reach(partyDesc, 'mongo.options', null),
+          secureUri: await this.encryptToBase64(
+            key,
+            remote.identity,
+            await this.getOrStoreMongoUri(key, remote.identity, projectJson.name, partyDesc.name, Hoek.reach(partyDesc, 'mongo.uri', null))
+          )
+        }
+      }
+
+      project.party.push( obj )
+    })
 
     await mkdirp(parsed.output)
 
