@@ -65,6 +65,11 @@ class ServiceRunner {
     }
   }
 
+  async stop(){
+    await this.taskRunner.stop()
+    this.started = false
+  }
+
   async loadEndpoint(name){
     if(this.endpoint[name]){
       return

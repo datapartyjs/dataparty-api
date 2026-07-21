@@ -7,6 +7,8 @@ const fs = require('fs')
 const zlib = require('zlib')
 const { execSync } = require('child_process')
 
+const Router = require('origin-router').Router
+
 const Dataparty = require('../../../../')
 const reach = require('../../../utils/reach')
 const {Routines} = require('@dataparty/crypto')
@@ -47,6 +49,14 @@ const DEFINITION = {
     alias: 'allow-ip',
     description: 'IP to add to allow list',
     multiple: true
+  },
+  'iot': {
+    type: 'boolean',
+    default: false
+  },
+  'cloud': {
+    type: 'boolean',
+    default: false
   },
   'db-type': {
     description: 'Type of database',
@@ -183,6 +193,7 @@ class VenuedHost extends CmdTree.Command {
     this.runner = null
     this.runnerRouter = null
     this.host = null
+    this.mode = 'cloud'
   }
   
   static get Command(){
@@ -205,9 +216,19 @@ class VenuedHost extends CmdTree.Command {
       throw new CmdTree.Error.HelpRequest('help request')
     }
 
-    /*if (!parsed.name){
-      throw new CmdTree.Error.UsageError('no name provided')
-    }*/
+    if (parsed.cloud == true && parsed.iot == true){
+      throw new CmdTree.Error.UsageError('cannot specify both --cloud and --iot at the same time')
+    }
+
+    if (!parsed.cloud && !parsed.iot){
+      throw new CmdTree.Error.UsageError('you must specifiy an operating mode using --cloud or --iot')
+    }
+
+    if(parsed.cloud){
+      this.mode = 'cloud'
+    } else if(parsed.iot){
+      this.mode = 'iot'
+    }
 
     
     const ServiceCode = require(parsed['service-code'])
@@ -233,6 +254,13 @@ class VenuedHost extends CmdTree.Command {
       config: this.config,
       noCache: false
     })
+
+    this.party.topics = new Dataparty.LocalTopicHost()
+
+    this.party.helpers = {
+      unloadProject: this.unloadProject.bind(this),
+      loadProject: this.loadProject.bind(this)
+    }
 
     const service = new ServiceCode( ServiceSchema.package, ServiceBuild )
 
@@ -390,12 +418,73 @@ class VenuedHost extends CmdTree.Command {
   }
 
   async unloadProject(hash){
-    //
+
+    debug('unloadProject', hash)
+
+    if(!this.active_projects[hash]){
+      debug('\t','project already unloaded')
+      return
+    }
+
+    // stop mmClient
+    // stop p2pHost
+    // stop host
+    // stop runner[ * ]
+    // stop party[ * ]
+
+    if(this.mode == 'cloud' && this.active_projects[hash].project.data.project.domain){
+      this.runnerRouter.removeRunnerByDomain( this.active_projects[hash].project.data.project.domain )
+    }
+
+    if(this.active_projects[hash].mmClient){
+      debug('\t','stopping mmClient')
+      await this.active_projects[hash].mmClient.stop()
+
+      this.active_projects[hash].mmClient = null
+    }
+
+    if(this.active_projects[hash].p2pHost){
+      debug('\t','stopping p2pHost')
+      await this.active_projects[hash].p2pHost.stop()
+
+      this.active_projects[hash].p2pHost = null
+    }
+
+    if(this.active_projects[hash].host){
+      debug('\t','stopping http host')
+      await this.active_projects[hash].host.stop()
+
+      this.active_projects[hash].host = null
+    }
+
+    for(let runnerPrefix in this.active_projects[hash].runner){
+      debug('\t','stopping route [', runnerPrefix ,']')
+      await this.active_projects[hash].runner[runnerPrefix].stop()
+
+      this.active_projects[hash].runner[runnerPrefix] = null
+      delete this.active_projects[hash].runner[runnerPrefix]
+    }
+
+    for(let partyName in this.active_projects[hash].party){
+      debug('\t','stopping party [', partyName ,']')
+      const partyId = this.active_projects[hash].party[partyName].identity.key.hash
+      await this.active_projects[hash].party[partyName].stop()
+
+      this.active_projects[hash].party[partyName] = null
+      delete this.active_projects[hash].party[partyName]
+
+      if(this.mode == 'cloud'){
+        this.runnerRouter.removeRunnerByHostIdentity( partyId )
+      }
+    }
+
+    this.active_projects[hash] = null
+    delete this.active_projects[hash]
   }
 
   async loadProject(hash){
     // if first run
-    //   if previosHash exists copy previous party config's & db's
+    //   if previosHash exists && data.copyPrevious==true copy previous party config's & db's
     //   setup project
     //   if previous.isRunning then previous.unload()
     // launch
@@ -405,6 +494,19 @@ class VenuedHost extends CmdTree.Command {
         .where('hash').equals(hash).exec())[0]
 
     const workspace = project.data.workspace
+
+    let projectRouter = new Router()
+
+    const projectSSL = await this.decryptSecret(project.data.project.http.secureSSL)
+    const projecti2pKey = await this.decryptSecret(project.data.project.i2p.secureKey)
+
+    let projectRunner = null
+    this.active_projects[hash] = {
+      project,
+      party: {},
+      runner: {},
+      host: null
+    }
 
     //! load parties and put them in projectParties map
     let projectParties = {}
@@ -439,9 +541,9 @@ class VenuedHost extends CmdTree.Command {
       await projectParty.start()
 
     }
+
+    this.active_projects[hash].party = projectParties
     
-
-
     for(let route of project.data.project.routes){
 
       if(!route.package){continue}
@@ -480,7 +582,7 @@ class VenuedHost extends CmdTree.Command {
 
 
       if(route.party == 'SYSTEM'){
-        serviceParty = party
+        serviceParty = this.party
       } else if( projectParties[route.party] ){
         serviceParty = projectParties[route.party]
 
@@ -503,26 +605,30 @@ class VenuedHost extends CmdTree.Command {
         } 
       }
 
-      serviceParty.topics = new Dataparty.LocalTopicHost()
+      if(!serviceParty.topics){
+        serviceParty.topics = new Dataparty.LocalTopicHost()
+      }
+
+      
 
       debug('loading service')
       const service = new Dataparty.IService(serviceFile.package, serviceFile)
       debug('loaded service')
 
-      let projectRunner = new Dataparty.ServiceRunnerNode({
+      let routeRunner = new Dataparty.ServiceRunnerNode({
         party: serviceParty, service,
+        router: projectRouter,
         sendFullErrors: route.settings.sendFullErrors,
         useNative: route.settings.useNative,
         prefix: route.prefix
       })
 
       if(route.party == 'SYSTEM'){
-        //projectRunner.router = runner.router
+        //routeRunner.router = runner.router
       }
 
-      //await serviceParty.start()
       
-      await projectRunner.start()
+      await routeRunner.start()
 
       console.log('workspace', workspace)
 
@@ -545,15 +651,53 @@ class VenuedHost extends CmdTree.Command {
 
         }
 
-        projectRunner.router.add('static-files1', '/:path*', handler)
-        projectRunner.router.add('static-files2', '/', handler)
+        projectRouter.add('static-files1', Path.join(route.prefix, '/:path*'), handler)
+        projectRouter.add('static-files2', Path.join(route.prefix, '/'), handler)
       }
+
+      if(!projectRunner){
+        projectRunner = routeRunner
+      }
+
+      this.active_projects[hash].runner[route.prefix] = routeRunner
       
+    }
+
+    if(this.mode == 'cloud'){
+
       await this.runnerRouter.addRunner({
         domain: project.data.project.domain,
         runner: projectRunner
       })
+
+    } else if(this.mode == 'iot'){
+
+      this.active_projects[hash].host = new Dataparty.ServiceHost({
+        cors: project.data.project.http.cors | {},
+        runner: projectRunner,
+        trust_proxy: project.data.project.http.trust_proxy,
+        mdnsEnabled: project.data.project.http.mdnsEnabled,
+        wsEnabled: project.data.project.http.wsEnabled,
+        ssl_key: projectSSL.key,
+        ssl_cert: projectSSL.cert,
+        listenUri: project.data.project.http.listenUri,
+        i2pEnabled: parsed.i2p,
+        i2pSamHost: parsed['i2p-host'],
+        i2pSamPort: parsed['i2p-port'],
+        i2pForwardHost: '127.0.0.1',
+        i2pForwardPort: '3000',
+        i2pOptions: 'i2cp.leaseSetEncType=6,4',
+        i2pKey: projecti2pKey
+      })
+
+      await this.active_projects[hash].host.start()
     }
+
+
+  }
+
+  async decryptSecret(secureContent){
+    //
   }
 }
 

@@ -19,7 +19,9 @@ class VenueProject extends ISchema {
       workspace: {type: String, required: true},
       tarpath: {type: String},
       hash: {type: String, required: true, index: true},
-      previousHash: {type: String, index: true},
+      previousHash: {type: String},
+      nextHash: {type: String},
+
       enabled: {type: Boolean},
 
 
@@ -31,12 +33,37 @@ class VenueProject extends ISchema {
         version: {type: String, required: true, index: true},
         venue: {type: String},
         domain: {type: String, index: true/*, unique: true*/},
-
-        i2p: {
-          address: String,
-          public: String,
-          securePrivate: String
+        
+        data: {
+          copyPrevious: true,
         },
+
+        hosting:{
+          http: {
+            listenUri: String,
+            cors: Object,
+            mdnsEnabled: Boolean,
+            trust_proxy: Boolean,
+            wsEnabled: Boolean,
+            secureSSL: String //! {ssl_key: String, ssl_cert: String}
+          },
+
+          i2p: {
+            address: String,
+            publicKey: String,
+            secureKey: String // { publicKey, privateKey }
+          },
+
+          p2p: {
+            matchMakerHash: String,
+            identityParty: String
+          },
+
+          ble: {
+            enabled: Boolean
+          }
+        },
+        
 
         party: [{
           name: String,
@@ -62,7 +89,7 @@ class VenueProject extends ISchema {
           },
           key: {
             hash: String,
-            securePrivate: String
+            securePrivate: String //! base64.encode( Message(Identity.toBSON).encrypt.toBSON() )
           },
           settings: {
             noCache: Boolean,

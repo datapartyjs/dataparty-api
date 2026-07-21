@@ -98,6 +98,17 @@ class RunnerRouter {
     }
   }
 
+  removeRunnerByDomain(domain){
+    debug('removeRunnerByDomain -', domain)
+    this.runnersByDomain.delete(domain)
+  }
+
+  removeRunnerByHostIdentity(identityOrHash){
+    const partyId = typeof identityOrHash !== 'string' ? identityOrHash.key.hash : identityOrHash
+    debug('removeRunnerByHostIdentity -', partyId)
+    this.runnersByHost.delete(partyId)
+  }
+
 /**
    * Expressjs style way of calling an endpoint. The req will be passed to the router to select the appropritate endpoint
    * @method module:Service.RouterRunner.onRequest

@@ -103,6 +103,10 @@ class ServiceRunnerNode {
     }
   }
 
+  async stop(){
+    await this.taskRunner.stop()
+    this.started = false
+  }
 
   async loadAuth(){
     if(this.auth){ return }

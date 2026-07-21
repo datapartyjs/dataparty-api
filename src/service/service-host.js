@@ -342,9 +342,21 @@ class ServiceHost {
     clearTimeout(this.errorHandlerTimer)
     this.errorHandlerTimer = null
 
+    if(this.i2pEnabled && this.i2p != null){
+      this.i2p.close()
+      this.i2p = null
+    }
+
+    if(this.wsEnabled && this.wsServer != null){
+      this.wsServer.stop()
+      this.wsServer = null
+    }
+
     await new Promise((resolve,reject)=>{
       this.apiServer.close(resolve)
     })
+
+    this.apiServer = null
 
     debug('stopped server')
   }
