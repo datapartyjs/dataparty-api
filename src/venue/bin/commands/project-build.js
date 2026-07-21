@@ -313,11 +313,49 @@ class VenueProjectBuild extends CmdTree.Command {
       venue: remote.identity.key.hash,
       domain: projectJson.domain,
 
-      i2p: projectJson.i2p,
+      data: {
+        copyPrevious: Hoek.reach(projectJson, 'data.copyPrevious', true)
+      },
+
+      hosting: {
+        http: null,
+        i2p: null,
+        p2p: Hoek.reach(projectJson, 'hosting.p2p'),
+        ble: Hoek.reach(projectJson, 'hosting.ble')
+      },
+
       party: projectJson.party,
       routes: projectJson.routes,
       files: projectJson.files
 
+    }
+
+    if(Hoek.reach(projectJson, 'hosting.http', false)){
+      let { generateSSLKey, ...httpConfig } = Hoek.reach(projectJson, 'hosting.http')
+
+      if(generateSSLKey && !httpConfig.secureSSL){
+        httpConfig.secureSSL = await this.encryptToBase64(
+          key,
+          remote.identity,
+          await this.getOrGenerateSSLKey( key, remote.identity, projectJson.name )
+        )
+      }
+
+      project.hosting.http = httpConfig
+    }
+
+    if(Hoek.reach(projectJson, 'hosting.i2p', false)){
+      let { generateSSLKey, ...i2pConfig } = Hoek.reach(projectJson, 'hosting.http')
+
+      if(generateSSLKey && !i2pConfig.secureKey){
+        i2pConfig.secureKey = await this.encryptToBase64(
+          key,
+          remote.identity,
+          await this.getOrGenerateI2PKey( key, remote.identity, projectJson.name )
+        )
+      }
+
+      project.hosting.i2p = i2pConfig
     }
 
     await mkdirp(parsed.output)
