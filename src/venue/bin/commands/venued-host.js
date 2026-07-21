@@ -692,6 +692,8 @@ class VenuedHost extends CmdTree.Command {
 
   async decryptSecret(secureContentBase64OrBSON, privateIdentity = null){
 
+    if(!secureContentBase64OrBSON){ return null }
+
     if(!privateIdentity){ privateIdentity = this.party.privateIdentity }
 
     const securePrivateBSON = (typeof secureContentBase64OrBSON == 'string') ? Routines.Utils.base64.decode( secureContentBase64OrBSON ) : secureContentBase64OrBSON

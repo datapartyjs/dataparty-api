@@ -5,9 +5,11 @@ const Path = require('path')
 const OS = require('os')
 const fs = require('fs')
 const mkdirp = require('mkdirp')
+const selfsigned = require('selfsigned')
 
 const prompt = require('prompt')
 const argon2 = require('argon2')
+const SAM = require('@diva.exchange/i2p-sam')
 
 const { execSync } = require('child_process')
 
@@ -56,7 +58,18 @@ const DEFINITION = {
   deploy: {
     type: 'boolean',
     default: false
-  }
+  },
+  i2p: {
+    description: 'Enable i2p hosting',
+    type: 'boolean',
+    default: false
+  },
+  'i2p-host':{
+    default: '127.0.0.1'
+  },
+  'i2p-port': {
+    default: 7656
+  },
 }
 
 
@@ -114,6 +127,8 @@ class VenueProjectBuild extends CmdTree.Command {
 
     this.project = {}
     this.project_sources = []
+
+    this.parsed = null
   }
   
   static get Command(){
@@ -163,9 +178,23 @@ class VenueProjectBuild extends CmdTree.Command {
     let value = await this.context.secureConfig.read(kvKey)
 
     if(!value){
-      // generate secret
+      // generate SSL secrets
 
-      value = await this.saveSecret(kvKey, owner, owner, rawSecret)
+      // generate EC certificate with P-521 curve and SHA-512
+      const pems = await selfsigned.generate(null, {
+        keyType: 'ec',
+        curve: 'P-521',
+        algorithm: 'sha512',
+        notAfterDate: Date.now() + (365*24*60*60*1000*5)
+      })
+
+      value = await this.saveSecret(kvKey, owner, owner, {
+        key: pems.private,
+        cert: pems.cert,
+        fingerprint: pems.fingerprint,
+        public: pems.public
+
+      })
     }
 
     return await this.decryptFromBase64(owner, owner, value)
@@ -200,7 +229,26 @@ class VenueProjectBuild extends CmdTree.Command {
     if(!value){
       // generate secret
 
-      value = await this.saveSecret(kvKey, owner, owner, rawSecret)
+      const i2pSettings = {
+        sam: {
+          host: this.parsed['i2p-host'],
+          portTCP: this.parsed['i2p-port'],
+        },
+        session: {
+          options: 'i2cp.leaseSetEncType=6,4'
+        }
+      }
+
+      let i2p = await SAM.createLocalDestination(i2pSettings)
+
+      value = await this.saveSecret(kvKey, owner, owner, {
+        address: i2p.address,
+        public: i2p.public,
+        private: i2p.private,
+        session_options: 'i2cp.leaseSetEncType=6,4'
+      })
+
+      i2p.close()
     }
 
     return await this.decryptFromBase64(owner, owner, value)
@@ -209,6 +257,7 @@ class VenueProjectBuild extends CmdTree.Command {
   async run({parsed}){
     //debug('context -', this.context)
     //console.log('parsed -', parsed)
+    this.parsed = parsed
     
     if (parsed.h) {
       throw new CmdTree.Error.HelpRequest('help request')
