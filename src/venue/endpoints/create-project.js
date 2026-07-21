@@ -48,11 +48,40 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
             venue: Joi.string().required(),
             domain: Joi.string(),
 
-            i2p: Joi.object().keys({
-              address: Joi.string(),
-              public: Joi.string(),
-              securePrivate: Joi.string()
+            data: {
+              copyPrevious: Joi.boolean().default(true)
+            },
+
+            hosting: Joi.object().keys({
+
+              http: Joi.object().keys({
+                listenUri: Joi.string(),
+                cors: Joi.object(),
+                mdnsEnabled: Joi.boolean(),
+                trust_proxy: Joi.boolean(),
+                wsEnabled: Joi.boolean(),
+                secureSSL: Joi.string(),
+                generateSSLKey: Joi.boolean(),
+              }),
+
+              i2p: Joi.object().keys({
+                generateKey: Joi.boolean(),
+                address: Joi.string(),
+                public: Joi.string(),
+                securePrivate: Joi.string()
+              }),
+
+              p2p: {
+                matchMakerHash: Joi.string(),
+                identityParty: Joi.string()
+              },
+
+              ble: {
+                enabled: Joi.boolean()
+              }
             }),
+
+            
             party: Joi.array().items(Joi.object().keys({
               name: Joi.string(),
               type: Joi.string().required(),
@@ -72,6 +101,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
                 remoteIdentity: Joi.string()
               },
               key: {
+                generateKey: Joi.boolean(),
                 hash: Joi.string(),
                 securePrivate: Joi.string()
               },

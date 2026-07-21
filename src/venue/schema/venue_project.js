@@ -45,13 +45,15 @@ class VenueProject extends ISchema {
             mdnsEnabled: Boolean,
             trust_proxy: Boolean,
             wsEnabled: Boolean,
-            secureSSL: String //! {ssl_key: String, ssl_cert: String}
+            secureSSL: String, //! {ssl_key: String, ssl_cert: String}
+            generateSSLKey: Boolean
           },
 
           i2p: {
             address: String,
             publicKey: String,
-            secureKey: String // { publicKey, privateKey }
+            secureKey: String, // { publicKey, privateKey }
+            generateKey: Boolean
           },
 
           p2p: {
@@ -89,7 +91,8 @@ class VenueProject extends ISchema {
           },
           key: {
             hash: String,
-            securePrivate: String //! base64.encode( Message(Identity.toBSON).encrypt.toBSON() )
+            securePrivate: String, //! base64.encode( Message(Identity.toBSON).encrypt.toBSON() )
+            generateKey: Boolean
           },
           settings: {
             noCache: Boolean,

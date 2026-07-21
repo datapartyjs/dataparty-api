@@ -82,6 +82,7 @@ class VenueRemoteAdd extends CmdTree.Command {
       url: parsed.url,
       ws: parsed.ws,
       i2p: parsed.i2p,
+      mmhash: parsed.mmhash,
       identity, version
     }
 

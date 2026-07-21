@@ -127,6 +127,84 @@ class VenueProjectBuild extends CmdTree.Command {
       definition: DEFINITION
     }
   }
+
+  async encryptToBase64(from, to, value){
+    const msg = new dataparty_crypto.Message({msg: value})
+    await msg.encrypt(from, to.key)
+
+    const bsonMsg = msg.toBSON()
+    const base64Msg = dataparty_crypto.Routines.Utils.base64.encode( bsonMsg )
+
+    return base64Msg
+  }
+
+  async decryptFromBase64(privateIdentity, from, secureContentBase64OrBSON){
+    const securePrivateBSON = (typeof secureContentBase64OrBSON == 'string') ? Routines.Utils.base64.decode( secureContentBase64OrBSON ) : secureContentBase64OrBSON
+    const securePrivateMsg = new dataparty_crypto.Message({})
+    securePrivateMsg.fromBSON( securePrivateBSON )
+
+    const securePrivateContent = await securePrivateMsg.decrypt( privateIdentity )
+
+    await securePrivateMsg.assertVerified(from)
+
+    return securePrivateContent
+  }
+  
+  async saveSecret(path, from, to, value){
+    const secretB64 = await this.encryptToBase64(from, to, value)
+    await this.secureConfig.write( path, secretB64 )
+
+    return secretB64
+  }
+
+  async getOrGenerateSSLKey(owner, venue, projectName){
+    const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.ssl'
+    
+    let value = await this.context.secureConfig.read(kvKey)
+
+    if(!value){
+      // generate secret
+
+      value = await this.saveSecret(kvKey, owner, owner, rawSecret)
+    }
+
+    return await this.decryptFromBase64(owner, owner, value)
+  }
+
+  async getOrGenerateIdentity(owner, venue, projectName, partyName){
+    const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.' + partyName + '.identity'
+
+    if(!value){
+      // generate secret
+      const identity = await dataparty_crypto.Identity.fromRandomSeed({id: projectName +'.'+partyName })
+
+      value = await this.saveSecret(kvKey, owner, owner, identity.toBSON())
+    }
+
+    return await this.decryptFromBase64(owner, owner, value)
+  }
+
+  async getOrStoreMongoUri(owner, venue, projectName, partyName, uri){
+    const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.' + partyName + '.mongo'
+
+    if(!value){
+      value = await this.saveSecret(kvKey, owner, owner, uri)
+    }
+
+    return await this.decryptFromBase64(owner, owner, value)
+  }
+
+  async getOrGenerateI2PKey(owner, venue, projectName){
+    const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.i2p'
+
+    if(!value){
+      // generate secret
+
+      value = await this.saveSecret(kvKey, owner, owner, rawSecret)
+    }
+
+    return await this.decryptFromBase64(owner, owner, value)
+  }
   
   async run({parsed}){
     //debug('context -', this.context)

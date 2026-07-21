@@ -6,9 +6,28 @@ module.exports = {
       venue: 'dataparty-venue',
       domain: 'api.dataparty.xyz',
 
+      hosting: {
+        http:{
+          listenUri: 'https://0.0.0.0:3000',
+          trust_proxy: false,
+          generateSSLKey: true
+        }
+      },
+
+      party: {
+        name: 'main',
+        type: 'tingo',
+        key: {
+          generateKey: true
+        },
+        settings: {
+          noCache: true
+        }
+      },
+
       routes: [{
         prefix: '/api',
-        party:'SYSTEM',
+        party:'main',
         package: {
           name: '@dataparty/api'
         },

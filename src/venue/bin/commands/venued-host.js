@@ -120,7 +120,7 @@ async function constructParty(type, projectPartyDesc, config, model){
   const PARTY_CLASS = getPartyByType(type)
   if(type == 'loki'){
 
-    const TingoAdapterTypes = {
+    const LokiAdapterTypes = {
       'memory': Dataparty.LokiParty.Loki.LokiMemoryAdapter,
       'fs': Dataparty.LokiParty.Loki.LokiFsAdapter,
       'lfsa': Dataparty.LokiParty.Loki.LokiFsStructuredAdapter,
@@ -128,11 +128,11 @@ async function constructParty(type, projectPartyDesc, config, model){
     }
 
     let {path, dbAdapter, ...otherOptions} = projectPartyDesc.loki
-    let dbAdapterImpl = TingoAdapterTypes[dbAdapter|'lfsa']
+    let dbAdapterImpl = LokiAdapterTypes[dbAdapter|'lfsa']
 
     if(dbAdapter == 'fs' || dbAdapter == 'lfsa'){
       await config.touchDir('db')
-      path = config.filePath( Path.join('db', path) )
+      path = config.filePath( Path.join('db', path|'data.loki.db') )
     }
     
 
@@ -497,8 +497,8 @@ class VenuedHost extends CmdTree.Command {
 
     let projectRouter = new Router()
 
-    const projectSSL = await this.decryptSecret(project.data.project.http.secureSSL)
-    const projecti2pKey = await this.decryptSecret(project.data.project.i2p.secureKey)
+    const projectSSL = await this.decryptSecret(project.data.project.hosting.http.secureSSL)
+    const projecti2pKey = await this.decryptSecret(project.data.project.hosting.i2p.secureKey)
 
     let projectRunner = null
     this.active_projects[hash] = {
@@ -523,14 +523,8 @@ class VenuedHost extends CmdTree.Command {
       }
 
       await partyConfig.touchDir( 'db' )
-      // read secret string > base64.decode > message.decrypt
-      const securePrivateB64 = Routines.Utils.base64.decode( projectPartyDesc.key.securePrivate )
-      const securePrivateMsg = new dataparty_crypto.Message({})
-      securePrivateMsg.fromBSON( securePrivateB64 )
 
-      const securePrivateContent = await securePrivateMsg.decrypt( this.party.privateIdentity )
-
-      const projectPartyIdentity = Identity.fromBSON( securePrivateContent )
+      const projectPartyIdentity = Identity.fromBSON( await this.decryptSecret( projectPartyDesc.key.securePrivate ) )
 
       let projectParty = constructParty( projectPartyDesc.type, projectPartyDesc, partyConfig )
 
@@ -673,14 +667,14 @@ class VenuedHost extends CmdTree.Command {
     } else if(this.mode == 'iot'){
 
       this.active_projects[hash].host = new Dataparty.ServiceHost({
-        cors: project.data.project.http.cors | {},
+        cors: project.data.project.hosting.http.cors | {},
         runner: projectRunner,
-        trust_proxy: project.data.project.http.trust_proxy,
-        mdnsEnabled: project.data.project.http.mdnsEnabled,
-        wsEnabled: project.data.project.http.wsEnabled,
+        trust_proxy: project.data.project.hosting.http.trust_proxy,
+        mdnsEnabled: project.data.project.hosting.http.mdnsEnabled,
+        wsEnabled: project.data.project.hosting.http.wsEnabled,
         ssl_key: projectSSL.key,
         ssl_cert: projectSSL.cert,
-        listenUri: project.data.project.http.listenUri,
+        listenUri: project.data.project.hosting.http.listenUri,
         i2pEnabled: parsed.i2p,
         i2pSamHost: parsed['i2p-host'],
         i2pSamPort: parsed['i2p-port'],
@@ -696,8 +690,16 @@ class VenuedHost extends CmdTree.Command {
 
   }
 
-  async decryptSecret(secureContent){
-    //
+  async decryptSecret(secureContentBase64OrBSON, privateIdentity = null){
+
+    if(!privateIdentity){ privateIdentity = this.party.privateIdentity }
+
+    const securePrivateBSON = (typeof secureContentBase64OrBSON == 'string') ? Routines.Utils.base64.decode( secureContentBase64OrBSON ) : secureContentBase64OrBSON
+    const securePrivateMsg = new dataparty_crypto.Message({})
+    securePrivateMsg.fromBSON( securePrivateBSON )
+
+    const securePrivateContent = await securePrivateMsg.decrypt( privateIdentity )
+    return securePrivateContent
   }
 }
 
