@@ -35,7 +35,7 @@ class VenueProject extends ISchema {
         domain: {type: String, index: true/*, unique: true*/},
         
         data: {
-          copyPrevious: true,
+          copyPrevious: Boolean,
         },
 
         hosting:{

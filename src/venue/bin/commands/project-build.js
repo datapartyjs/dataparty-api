@@ -358,7 +358,7 @@ class VenueProjectBuild extends CmdTree.Command {
       project.hosting.i2p = i2pConfig
     }
 
-    Hoek.reach(projectJson, 'party', []).forEach( partyDesc=>{
+    Hoek.reach(projectJson, 'party', []).forEach( async partyDesc=>{
       let needsKey = Hoek.reach(partyDesc, 'key.generateKey', false) || Hoek.reach(partyDesc, 'key', null) == null
       let needsSecureMongo = Hoek.reach(partyDesc, 'mongo.uri', null) != null
 
