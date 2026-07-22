@@ -141,12 +141,17 @@ async function main(){
     exiting: true
   }
   
-  const output = await commandTree.run({context})
-  
-  if(output){
-    console.log(output)
+  try{
 
-    if(process.send){ process.send({output}) }
+    const output = await commandTree.run({context})
+    
+    if(output){
+      console.log(output)
+
+      if(process.send){ process.send({output}) }
+    }
+  } catch (err){
+    console.log(err)
   }
 
 }
@@ -156,6 +161,7 @@ main().catch((error) => {
   console.log(error)
   console.error(error.message)
   debug(error)
+  console.log(error.stack)
   console.log(commandTree.getHelp())
   if(process.send){
     process.send({

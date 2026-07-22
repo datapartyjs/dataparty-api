@@ -10,7 +10,7 @@ const argon2 = require('argon2')
 
 const { execSync } = require('child_process')
 
-const Dataparty = require('../../../../')
+const Dataparty = require('../../../../src/index')
 const dataparty_crypto = require('@dataparty/crypto')
 
 const DEFINITION = {

@@ -7,6 +7,9 @@ const dataparty_crypto = require('@dataparty/crypto')
 //const WebsocketComms = require('./old-websocket-comms')
 const AuthError = require('../errors/auth-error')
 
+const Https = require('https')
+
+
 
 const DEFAULT_REST_TIMEOUT = 30000
 
@@ -30,9 +33,9 @@ class RestComms extends EventEmitter {
 
     this.axiosOptions = axiosOptions
 
-    if(allowSelfSigned && https && https.Agent){
-      const agent = new https.Agent({
-        rejectUnauthorized: !parsed.iot
+    if(allowSelfSigned && Https && Https.Agent){
+      let agent = new Https.Agent({
+        rejectUnauthorized: false
       })
 
       this.axiosOptions.httpsAgent = agent
@@ -381,6 +384,8 @@ class RestComms extends EventEmitter {
   static async HttpRequest(verb, url, data, options) {
 
     debug(`${verb} - ${url}`)
+
+    console.log('axiosOptions', options)
 
     const response = await axios({
       method: verb,

@@ -1,6 +1,9 @@
 const debug = require('debug')('dataparty.comms.websocket')
 
-const WebSocket = global.WebSocket ? global.WebSocket : require('ws')
+const isBrowser = typeof window !== 'undefined' &&
+                  typeof document !== 'undefined';   
+
+const WebSocket = isBrowser ? global.WebSocket : require('ws')
 
 const PeerComms = require('./peer-comms')
 

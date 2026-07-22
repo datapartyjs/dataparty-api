@@ -120,7 +120,7 @@ class VenueRemoteAdd extends CmdTree.Command {
       mmhash: parsed.mmhash, // [ mmhash ]
       ble: parsed.ble, //  address | 'random'
       mdns: parsed.mdns,
-      selfsigned: parsed.iot
+      allowSelfSigned: parsed.iot
     }
 
     await this.context.secureConfig.write('remote.'+remoteName, remote)

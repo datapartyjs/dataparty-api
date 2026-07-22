@@ -362,6 +362,7 @@ class VenuedHost extends CmdTree.Command {
       runner: this.runnerRouter,
       trust_proxy: parsed['trust-proxy/'],
       wsEnabled: true,
+      wsUpgradePath: '/ws',
       ssl_key, ssl_cert,
       listenUri: parsed.listen,
       staticPath: Path.join(__dirname,'../../public'),
