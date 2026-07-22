@@ -93,7 +93,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
                 secureUri: Joi.string()
               },
               loki: { 
-                dbAdapter: Joi.String(),
+                dbAdapter: Joi.string(),
                 path: Joi.string()
               },
               peer: {

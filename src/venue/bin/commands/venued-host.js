@@ -321,7 +321,7 @@ class VenuedHost extends CmdTree.Command {
       party: this.party, service,
       sendFullErrors: parsed['full-errors'],
       useNative: false,
-      prefix: 'venue/'
+      prefix: this.mode == 'cloud' ? 'venue/' : '/'
     })
     
 
@@ -365,8 +365,8 @@ class VenuedHost extends CmdTree.Command {
       ssl_key, ssl_cert,
       listenUri: parsed.listen,
       staticPath: Path.join(__dirname,'../../public'),
-      staticPrefix: '/venue/',
-      ipFilter: CustomIpFilter,
+      staticPrefix: this.mode =='cloud' ? '/venue/' : '/',
+      ipFilter: this.mode == 'cloud' ? CustomIpFilter : null,
       i2pEnabled: parsed.i2p,
       i2pSamHost: parsed['i2p-host'],
       i2pSamPort: parsed['i2p-port'],

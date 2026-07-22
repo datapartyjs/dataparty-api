@@ -3,7 +3,7 @@
 const Pkg = require('../../../package.json')
 const debug = require('debug')('venue')
 const CommandTree = require('command-tree').CommandTree
-
+const Hoek = require('@hapi/hoek')
 
 const commandTree = new CommandTree({ usage: 'venued <global-options> [command] <command-options>\nVersion: ' + Pkg.version })
 
@@ -45,11 +45,23 @@ let context = {
 async function main(){
 
   if(process.argv.length < 3 || process.argv[2] == 'help' || process.argv[2] == '--help'){
+    const cmdPath = process.argv.slice(3).join('.')
+    if(cmdPath && cmdPath.length > 0){
+
+      if(Hoek.reach(commandTree.cmds, cmdPath)){
+        console.log(commandTree.getCmdHelp(cmdPath))
+        if(process.send){ process.send(console.log(commandTree.getCmdHelp(cmdPath))) }
+        
+        return
+      } else {
+        console.log("command [", process.argv.slice(3).join(' '), "] not found \n\n")
+      }
+    }
+
     console.log(commandTree.getHelp())
     if(process.send){ process.send(commandTree.getHelp()) }
     return
   }
-  
   
   const output = await commandTree.run({context})
   
