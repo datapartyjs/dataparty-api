@@ -89,7 +89,8 @@ class EphemeralClient extends EventEmitter {
           uri: this.wsUrl,
           discoverRemoteIdentity: false,
           remoteIdentity: await this.restParty.comms.getServiceIdentity(),
-          session: this.sessionKey.key.hash
+          session: this.sessionKey.key.hash,
+          allowSelfSigned: this.allowSelfSigned
         }),
         config: this.restParty.config
       })

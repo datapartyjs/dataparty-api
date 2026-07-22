@@ -14,13 +14,14 @@ const WebsocketShim = require('./websocket-shim')
  * @see https://en.wikipedia.org/wiki/WebSocket
  */
 class WebsocketComms extends PeerComms {
-  constructor({uri, connection, timeout=20000, remoteIdentity, host, party, ...options}){
+  constructor({uri, connection, timeout=20000, remoteIdentity, host, party, allowSelfSigned=false, ...options}){
     super({remoteIdentity, host, party, ...options})
 
     this.uri = uri
     this.connection = connection
     this.timeout = timeout
     this.timer = null
+    this.allowSelfSigned = allowSelfSigned
 
     debug('starting host=',host, ' uuid=', this.uuid, ' uri=', this.uri)
 
@@ -40,7 +41,9 @@ class WebsocketComms extends PeerComms {
 
     if(!this.host && !this.connection){
       debug('opening client connection to',this.uri)
-      this.connection = new WebSocket(this.uri)
+      this.connection = new WebSocket(this.uri, {
+        rejectUnauthorized: !this.allowSelfSigned
+      })
 
       isNewConnection = true
     }
