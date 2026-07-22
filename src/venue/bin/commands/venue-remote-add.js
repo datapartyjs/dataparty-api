@@ -5,6 +5,8 @@ const Path = require('path')
 const OS = require('os')
 const fs = require('fs')
 
+const https = require('https')
+
 const prompt = require('prompt')
 const argon2 = require('argon2')
 
@@ -53,6 +55,11 @@ const DEFINITION = {
     type: 'string',
     description: 'match maker server identtiy hash',
     multiple: true
+  },
+  iot: {
+    alias: 'self-signed',
+    type: 'boolean',
+    default: false
   }
 }
 
@@ -73,6 +80,8 @@ class VenueRemoteAdd extends CmdTree.Command {
       definition: DEFINITION
     }
   }
+
+
   
   async run({parsed}){
     if (parsed.h) {
@@ -92,8 +101,16 @@ class VenueRemoteAdd extends CmdTree.Command {
     const identityUrl = parsed.url+'/identity'
     const versionUrl = parsed.url+'/version'
 
-    const identity = await Dataparty.Comms.RestComms.HttpGet(identityUrl)
-    const version = await Dataparty.Comms.RestComms.HttpGet(versionUrl)
+    const agent = new https.Agent({
+      rejectUnauthorized: !parsed.iot
+    });
+
+    const identity = await Dataparty.Comms.RestComms.HttpGet(identityUrl, {
+      httpsAgent: agent
+    })
+    const version = await Dataparty.Comms.RestComms.HttpGet(versionUrl, {
+      httpsAgent: agent
+    })
 
     const remote = {
       identity, version,
@@ -102,7 +119,8 @@ class VenueRemoteAdd extends CmdTree.Command {
       i2p: parsed.i2p,  // { address, publicKey}
       mmhash: parsed.mmhash, // [ mmhash ]
       ble: parsed.ble, //  address | 'random'
-      mdns: parsed.mdns
+      mdns: parsed.mdns,
+      selfsigned: parsed.iot
     }
 
     await this.context.secureConfig.write('remote.'+remoteName, remote)

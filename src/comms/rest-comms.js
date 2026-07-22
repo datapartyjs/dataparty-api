@@ -16,7 +16,7 @@ const DEFAULT_REST_TIMEOUT = 30000
  * @extends EventEmitter
  */
 class RestComms extends EventEmitter {
-  constructor({ remoteIdentity, config, party }) {
+  constructor({ remoteIdentity, config, party, axiosOptions={}, allowSelfSigned=false }) {
     super()
     this.uri = undefined
     this.wsUri = undefined
@@ -27,6 +27,16 @@ class RestComms extends EventEmitter {
     this.remoteIdentity = remoteIdentity
     this.websocketComm = undefined
     this.party = party
+
+    this.axiosOptions = axiosOptions
+
+    if(allowSelfSigned && https && https.Agent){
+      const agent = new https.Agent({
+        rejectUnauthorized: !parsed.iot
+      })
+
+      this.axiosOptions.httpsAgent = agent
+    }
 
     this.authed = undefined
 
@@ -136,7 +146,7 @@ class RestComms extends EventEmitter {
 
     let reply
     try {
-      reply = await RestComms.HttpPost(fullPath, content)
+      reply = await RestComms.HttpPost(fullPath, content, this.axiosOptions)
       //reply = JSON.parse(str)
 
       // debug('raw reply ->', reply)
@@ -216,7 +226,7 @@ class RestComms extends EventEmitter {
       if (!this.uri) {
         await this.loadCloud()
       }
-      const serverIdentity = await RestComms.HttpGet(this.uri + `${this.uriPrefix}identity`)
+      const serverIdentity = await RestComms.HttpGet(this.uri + `${this.uriPrefix}identity`, this.axiosOptions)
       debug('server identity - ', serverIdentity)
 
       this.remoteIdentity = dataparty_crypto.Identity.fromJSON(serverIdentity)
@@ -368,7 +378,7 @@ class RestComms extends EventEmitter {
     })
   }*/
 
-  static async HttpRequest(verb, url, data) {
+  static async HttpRequest(verb, url, data, options) {
 
     debug(`${verb} - ${url}`)
 
@@ -377,18 +387,19 @@ class RestComms extends EventEmitter {
       url,
       data,
       headers: {'Content-Type': 'application/json'},
-      timeout: DEFAULT_REST_TIMEOUT
+      timeout: DEFAULT_REST_TIMEOUT,
+      ...options
     })
 
     return response.data
   }
 
-  static async HttpGet(url) {
-    return RestComms.HttpRequest('GET', url)
+  static async HttpGet(url, options) {
+    return RestComms.HttpRequest('GET', url, undefined, options)
   }
 
-  static async HttpPost(url, body) {
-    return RestComms.HttpRequest('POST', url, body)
+  static async HttpPost(url, body, options) {
+    return RestComms.HttpRequest('POST', url, body, options)
   }
 }
 

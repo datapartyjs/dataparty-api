@@ -83,7 +83,8 @@ class VenueRemoteRepl extends CmdTree.Command {
     const client = new Dataparty.EphemeralClient({
       identity: key,
       urlOrParty: remote.url,
-      wsUrlOrParty: remote.ws
+      wsUrlOrParty: remote.ws,
+      allowSelfSigned: remote.allowSelfSigned
     })
 
     client.on('session',(id)=>{

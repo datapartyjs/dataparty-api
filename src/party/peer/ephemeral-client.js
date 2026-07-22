@@ -10,10 +10,11 @@ const RestComms = require('../../comms/rest-comms')
 const WebsocketComms = require('../../comms/websocket-comms')
 
 class EphemeralClient extends EventEmitter {
-  constructor({identity, role='guest', contacts, urlOrParty = 'https://api.dataparty.xyz/api', wsUrlOrParty = 'wss://api.dataparty.xyz/ws'}){
+  constructor({identity, role='guest', contacts, urlOrParty = 'https://api.dataparty.xyz/api', wsUrlOrParty = 'wss://api.dataparty.xyz/ws', allowSelfSigned = false}){
 
     super()
     
+    this.allowSelfSigned = allowSelfSigned
     this.contacts = contacts
     this.sessionKey = null
     this.identity = identity
@@ -71,7 +72,8 @@ class EphemeralClient extends EventEmitter {
       if(!this.restParty.comms){
         this.restParty.comms = new RestComms({
           party:this.restParty,
-          config: this.restParty.config
+          config: this.restParty.config,
+          allowSelfSigned: this.allowSelfSigned
         })
 
         this.restParty.comms.sessionId = this.sessionKey.key.hash

@@ -464,7 +464,8 @@ class VenueProjectBuild extends CmdTree.Command {
       let client = new Dataparty.EphemeralClient({
         identity: devId,
         urlOrParty: remote.url,
-        wsUrlOrParty: remote.ws
+        wsUrlOrParty: remote.ws,
+        allowSelfSigned: remote.allowSelfSigned
       })
   
       await client.start()
