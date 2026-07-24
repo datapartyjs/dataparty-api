@@ -11,7 +11,9 @@ const Router = require('origin-router').Router
 
 const Dataparty = require('../../../../')
 const reach = require('../../../utils/reach')
-const {Routines} = require('@dataparty/crypto')
+
+const dataparty_crypto = require('@dataparty/crypto')
+const {Routines} = dataparty_crypto
 const express = require('express')
 
 const HOMEDIR = OS.homedir()
@@ -117,6 +119,7 @@ function getPartyByType(type){
 }
 
 async function constructParty(type, projectPartyDesc, config, model){
+  debug('constructParty', type)
   const PARTY_CLASS = getPartyByType(type)
   if(type == 'loki'){
 
@@ -128,11 +131,11 @@ async function constructParty(type, projectPartyDesc, config, model){
     }
 
     let {path, dbAdapter, ...otherOptions} = projectPartyDesc.loki
-    let dbAdapterImpl = LokiAdapterTypes[dbAdapter|'lfsa']
+    let dbAdapterImpl = LokiAdapterTypes[dbAdapter || 'lfsa']
 
     if(dbAdapter == 'fs' || dbAdapter == 'lfsa'){
       await config.touchDir('db')
-      path = config.filePath( Path.join('db', path|'data.loki.db') )
+      path = config.filePath( Path.join('db', path || 'data.loki.db') )
     }
     
 
@@ -155,12 +158,12 @@ async function constructParty(type, projectPartyDesc, config, model){
       ...projectPartyDesc.settings
     })
   } else if (type == 'tingo'){
-    const {path, ...otherOptions} = projectPartyDesc.tingo
+    const {path, ...otherOptions} = projectPartyDesc.tingo || { path: 'db'}
 
-    await config.touchDir(path|'db')
+    await config.touchDir(path)
 
     return new PARTY_CLASS({
-      path: config.filePath(path | 'db'),
+      path: config.filePath(path ),
       config,
       model,
       ...otherOptions,
@@ -211,6 +214,8 @@ class VenuedHost extends CmdTree.Command {
   async run({parsed}){
     //debug('context -', this.context)
     //debug('parsed -', parsed)
+
+    this.parsed = parsed
     
     if (parsed.h) {
       throw new CmdTree.Error.HelpRequest('help request')
@@ -250,7 +255,7 @@ class VenuedHost extends CmdTree.Command {
 
     this.party = new PARTY({
       path: parsed['db-uri'],
-      model: ServiceSchema,
+      model: ServiceBuild,
       config: this.config,
       noCache: false
     })
@@ -407,7 +412,7 @@ class VenuedHost extends CmdTree.Command {
         const hash = projects[name]
         console.log('\tloading project', name, hash)
         
-        await this.loadProject(hash)
+        await this.loadProject(hash, name)
       }
     }
 
@@ -483,23 +488,42 @@ class VenuedHost extends CmdTree.Command {
     delete this.active_projects[hash]
   }
 
-  async loadProject(hash){
+  async loadProject(hash, name){
     // if first run
     //   if previosHash exists && data.copyPrevious==true copy previous party config's & db's
     //   setup project
     //   if previous.isRunning then previous.unload()
     // launch
 
+    const safeProjectHash = hash.replace(/\//g, "-").replace(/=/g, "_")
+
+
     const project = (await this.party.find()
         .type('venue_project')
-        .where('hash').equals(hash).exec())[0]
+        .where('project.name').equals(name)
+        .where('hash').equals(safeProjectHash).exec())[0]
 
+
+    if(!project){
+      return
+    }
     const workspace = project.data.workspace
+
+    if(project.data.hash != safeProjectHash){
+      console.log(`wrong hash got [ ${project.data.hash} ] when expecting [ ${safeProjectHash} ]`)
+      throw 'project hash mix up'
+    }
+
+    console.log('workspace', workspace)
+
+    //process.exit()
 
     let projectRouter = new Router()
 
-    const projectSSL = await this.decryptSecret(project.data.project.hosting.http.secureSSL)
-    const projecti2pKey = await this.decryptSecret(project.data.project.hosting.i2p.secureKey)
+    const projectSSL = await this.decryptSecret(reach(project, 'data.project.hosting.http.secureSSL'))
+    const projecti2pKey = await this.decryptSecret(reach(project, 'data.project.hosting.i2p.secureKey'))
+
+    console.log(projectSSL)
 
     let projectRunner = null
     this.active_projects[hash] = {
@@ -511,6 +535,7 @@ class VenuedHost extends CmdTree.Command {
 
     //! load parties and put them in projectParties map
     let projectParties = {}
+    let projectPartiesDescs = {}
     for(let projectPartyDesc of project.data.project.party){
       const partyWorkspace = Path.join(workspace, 'party', projectPartyDesc.name)
       const partyConfig = new Dataparty.Config.JsonFileConfig({basePath: partyWorkspace})
@@ -520,18 +545,23 @@ class VenuedHost extends CmdTree.Command {
       await partyConfig.start()
 
       if(configFirstRun){
-        await partyConfig.writeAll(projectPartyDesc.defaultConfig)  
+        if(projectPartyDesc.defaultConfig) { await partyConfig.writeAll(projectPartyDesc.defaultConfig) }
       }
 
       await partyConfig.touchDir( 'db' )
 
-      const projectPartyIdentity = Identity.fromBSON( await this.decryptSecret( projectPartyDesc.key.securePrivate ) )
+      const payload = await this.decryptSecret( projectPartyDesc.key.securePrivate )
 
-      let projectParty = constructParty( projectPartyDesc.type, projectPartyDesc, partyConfig )
+      debug('payload', payload)
+
+      const projectPartyIdentity = dataparty_crypto.Identity.fromJSON( payload )
+
+      let projectParty = await constructParty( projectPartyDesc.db, projectPartyDesc, partyConfig )
 
       await projectParty.setIdentity( projectPartyIdentity )
 
       projectParties[ projectPartyDesc.name ] = projectParty
+      projectPartiesDescs[ projectPartyDesc.name ] = projectPartyDesc
 
       await projectParty.start()
 
@@ -584,7 +614,7 @@ class VenuedHost extends CmdTree.Command {
         await serviceParty.factory.addModels(ServiceSchema)
 
         debug('patching in validators')
-        const partyType = project.data.project.party[route.party].type
+        const partyType = projectPartiesDescs[route.party].db
 
         if(['loki','tingo'].indexOf(partyType) > -1){
           
@@ -668,7 +698,7 @@ class VenuedHost extends CmdTree.Command {
     } else if(this.mode == 'iot'){
 
       this.active_projects[hash].host = new Dataparty.ServiceHost({
-        cors: project.data.project.hosting.http.cors | {},
+        cors: project.data.project.hosting.http.cors || {},
         runner: projectRunner,
         trust_proxy: project.data.project.hosting.http.trust_proxy,
         mdnsEnabled: project.data.project.hosting.http.mdnsEnabled,
@@ -676,9 +706,9 @@ class VenuedHost extends CmdTree.Command {
         ssl_key: projectSSL.key,
         ssl_cert: projectSSL.cert,
         listenUri: project.data.project.hosting.http.listenUri,
-        i2pEnabled: parsed.i2p,
-        i2pSamHost: parsed['i2p-host'],
-        i2pSamPort: parsed['i2p-port'],
+        i2pEnabled: this.parsed.i2p,
+        i2pSamHost: this.parsed['i2p-host'],
+        i2pSamPort: this.parsed['i2p-port'],
         i2pForwardHost: '127.0.0.1',
         i2pForwardPort: '3000',
         i2pOptions: 'i2cp.leaseSetEncType=6,4',

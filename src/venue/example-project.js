@@ -14,20 +14,21 @@ module.exports = {
         }
       },
 
-      party: {
+      party: [{
         name: 'main',
-        type: 'tingo',
+        db: 'tingo',
         key: {
           generateKey: true
         },
         settings: {
           noCache: true
         }
-      },
+      }],
 
       routes: [{
         prefix: '/api',
         party:'main',
+        staticPath: 'public/',
         package: {
           name: '@dataparty/api'
         },

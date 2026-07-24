@@ -73,7 +73,7 @@ class VenueProject extends ISchema {
 
         party: [{
           name: String,
-          type: {type: String, enum: ['tingo', 'zango', 'loki', 'peer', 'mongo']},
+          db: {type: String, enum: ['tingo', 'zango', 'loki', 'peer', 'mongo']},
           tingo: {
             path: String
           },

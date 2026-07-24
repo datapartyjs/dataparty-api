@@ -84,7 +84,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
             
             party: Joi.array().items(Joi.object().keys({
               name: Joi.string(),
-              type: Joi.string().required(),
+              db: Joi.string().required(),
               tingo: { path: Joi.string() },
               zango: { dbname: Joi.string() },
               mongo: {
@@ -105,7 +105,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
                 hash: Joi.string(),
                 securePrivate: Joi.string()
               },
-              settings: { noCache: Joi.string() },
+              settings: { noCache: Joi.boolean() },
               defaultConfig: Joi.object()
             })),
             routes: Joi.array().items(Joi.object().keys({
@@ -117,7 +117,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
                 name: Joi.string().required(),
                 version: Joi.string(),
                 branch: Joi.string(),
-                hash: Joi.string()
+                hash: Joi.string().max(100)
               }),
               settings: {
                 sendFullErrors: Joi.boolean().required(),
@@ -259,7 +259,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
       )
     )
 
-    const safeProjectHash = projectHash.replace(/\//g, "-")
+    const safeProjectHash = projectHash.replace(/\//g, "-").replace(/=/g, "_")
 
     debug('\t'+'hash', projectHash)
 
@@ -285,7 +285,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
       .type('venue_project')
       .where('project.name').equals(project.name)
       .where('project.version').equals(project.version)
-      .where('hash').equals(projectHash)
+      .where('hash').equals(safeProjectHash)
       .exec())[0]
 
 
@@ -298,7 +298,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
         owner: project.owner,
         created: Date.now(),
         changed: Date.now(),
-        hash: projectHash,
+        hash: safeProjectHash,
         workspace: workspacePath,
         tarpath: Path.join(workspacePath, tarFileName),
         project: ctx.input.project,
@@ -434,12 +434,6 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
       }
       debug('updated service')
     }*/
-
-      console.log('restarting in 3 seconds...')
-      setTimeout(()=>{
-        process.exit(),
-        3000
-      })
 
       return {done: true, project: projectDoc.data}
 

@@ -1,6 +1,7 @@
 'use strict'
 
 const ObjectId = require('bson-objectid')
+const {isValidUUIDV4} = require('is-valid-uuid-v4')
 const debug = require('debug')('bouncer.mongo-query')
 
 // mongoose adapter for data party query specification
@@ -51,6 +52,22 @@ class MongoQuery {
     return { [this.spec.sort.param]: this.spec.sort.direction }
   }
 
+  checkOID(oid){
+    if (ObjectId.isValid(oid)) {
+      debug('is valid mongo OId')
+      let id = (new ObjectId(oid)).toString()
+      return id
+    } else if ( isValidUUIDV4(oid)){
+      debug('is valid uuidv4')
+      return oid
+    }
+    else{
+      debug('oid', oid)
+      debug('is not valid')
+      throw 'invalid oid'
+    }
+  }
+
   /**
    * build mongo query doc from spec match tree
    * - explicitly 'and' top level of match tree
@@ -68,7 +85,7 @@ class MongoQuery {
       rootMatch.unshift({
         op: 'equals',
         param: ['owner', 'id'],
-        value: (new ObjectId(this.spec.owner.id)).id
+        value: this.checkOID(this.spec.owner.id) // (new ObjectId(this.spec.owner.id)).id
       })
       rootMatch.unshift({
         op: 'equals',
@@ -84,14 +101,7 @@ class MongoQuery {
     if (this.spec.ids) {
       const oids = []
       for (const oid of this.spec.ids) {
-        if (ObjectId.isValid(oid)) {
-          debug('is valid')
-          let id = (new ObjectId(oid)).toString()
-          oids.push(id)
-        }
-        else{
-          debug('is not valid')
-        }
+        oids.push(this.checkOID(oid))
       }
       if (oids.length > 0) {
         rootMatch.unshift({

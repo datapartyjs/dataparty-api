@@ -5,11 +5,13 @@ const Path = require('path')
 const OS = require('os')
 const fs = require('fs')
 const mkdirp = require('mkdirp')
-const selfsigned = require('selfsigned')
+const createCert = require('create-cert')
 
 const prompt = require('prompt')
 const argon2 = require('argon2')
 const SAM = require('@diva.exchange/i2p-sam')
+
+const reach = require('../../../utils/reach')
 
 const { execSync } = require('child_process')
 
@@ -19,7 +21,7 @@ const {
 const tar = require('tar')
 
 
-const Dataparty = require('../../../../')
+const Dataparty = require('../../../../src/index')
 const dataparty_crypto = require('@dataparty/crypto')
 const Joi = require('joi')
 
@@ -154,20 +156,25 @@ class VenueProjectBuild extends CmdTree.Command {
   }
 
   async decryptFromBase64(privateIdentity, from, secureContentBase64OrBSON){
-    const securePrivateBSON = (typeof secureContentBase64OrBSON == 'string') ? Routines.Utils.base64.decode( secureContentBase64OrBSON ) : secureContentBase64OrBSON
+    const securePrivateBSON = (typeof secureContentBase64OrBSON) == 'string' ? Routines.Utils.base64.decode( secureContentBase64OrBSON ) : secureContentBase64OrBSON
     const securePrivateMsg = new dataparty_crypto.Message({})
+    
     securePrivateMsg.fromBSON( securePrivateBSON )
 
     const securePrivateContent = await securePrivateMsg.decrypt( privateIdentity )
 
-    await securePrivateMsg.assertVerified(from)
+
+    if(securePrivateMsg.from.hash != from.key.hash){
+      throw new Error('not expected sender')
+    }
 
     return securePrivateContent
   }
   
   async saveSecret(path, from, to, value){
+    debug('saveSecret - ', path)
     const secretB64 = await this.encryptToBase64(from, to, value)
-    await this.secureConfig.write( path, secretB64 )
+    await this.context.secureConfig.write( path, secretB64 )
 
     return secretB64
   }
@@ -175,27 +182,52 @@ class VenueProjectBuild extends CmdTree.Command {
   async getOrGenerateSSLKey(owner, venue, projectName){
     const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.ssl'
     
+
     let value = await this.context.secureConfig.read(kvKey)
 
-    if(!value){
-      // generate SSL secrets
 
+    if(!value || true){
+      // generate SSL secrets
+      debug('creating ssl cert')
       // generate EC certificate with P-521 curve and SHA-512
-      const pems = await selfsigned.generate(null, {
-        keyType: 'ec',
-        curve: 'P-521',
-        algorithm: 'sha512',
-        notAfterDate: Date.now() + (365*24*60*60*1000*5)
-      })
+      /*const pems = await selfsigned.generate([
+          { name: 'commonName', value: 'localhost' }
+        ], 
+        {
+          days: 365,
+          keySize: 2048,
+          algorithm: 'sha256'
+        }
+      )*/
+      //const pems = require('openssl-self-signed-certificate')
+
+      ///let sslGenCmd = 'openssl req -x509 -newkey rsa:2048 -keyout dist/'+projectName+'-key.pem -out dist/'+projectName+'-cert.pem -days 365 -nodes -addext "subjectAltName=DNS:localhost,DNS:10.88.200.159,IP:127.0.0.1"    '
+
+      //let sslGenCmd = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout dist/'+projectName+'-key.pem -out dist/'+projectName+'-cert.pem'
+      ///sslGenCmd += ' -subj "/C=AU/ST=NSW/L=Sydney/O=DataParty/OU=root/emailAddress=self@localhost"'
+
+      //console.log(sslGenCmd)
+
+      //const output = execSync(sslGenCmd, { encoding: 'utf8' })
+      execSync('openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout dist/'+projectName+'-key.pem -out dist/'+projectName+'-cert.pem  -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=example.com"')
+
+      //console.log(output)
+
+      const sslKey = fs.readFileSync('dist/'+projectName+'-key.pem', 'utf8')
+      const sslCert = fs.readFileSync('dist/'+projectName+'-cert.pem', 'utf8')
+
 
       value = await this.saveSecret(kvKey, owner, owner, {
-        key: pems.private,
-        cert: pems.cert,
-        fingerprint: pems.fingerprint,
-        public: pems.public
+        key: sslKey,
+        cert: sslCert,
+        //fingerprint: pems.fingerprint,
+        //public: pems.public
 
       })
+    } else {
+      debug('found ssl cert')
     }
+  
 
     return await this.decryptFromBase64(owner, owner, value)
   }
@@ -203,11 +235,13 @@ class VenueProjectBuild extends CmdTree.Command {
   async getOrGenerateIdentity(owner, venue, projectName, partyName){
     const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.' + partyName + '.identity'
 
-    if(!value){
+    let value = await this.context.secureConfig.read(kvKey)
+
+    if(true){
       // generate secret
       const identity = await dataparty_crypto.Identity.fromRandomSeed({id: projectName +'.'+partyName })
 
-      value = await this.saveSecret(kvKey, owner, owner, identity.toBSON())
+      value = await this.saveSecret(kvKey, owner, owner, identity.toBSON(true))
     }
 
     return dataparty_crypto.Identity.fromBSON(await this.decryptFromBase64(owner, owner, value))
@@ -215,6 +249,8 @@ class VenueProjectBuild extends CmdTree.Command {
 
   async getOrStoreMongoUri(owner, venue, projectName, partyName, uri){
     const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.' + partyName + '.mongo'
+
+    let value = await this.context.secureConfig.read(kvKey)
 
     if(!value){
       value = await this.saveSecret(kvKey, owner, owner, uri)
@@ -225,6 +261,8 @@ class VenueProjectBuild extends CmdTree.Command {
 
   async getOrGenerateI2PKey(owner, venue, projectName){
     const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.i2p'
+
+    let value = await this.context.secureConfig.read(kvKey)
 
     if(!value){
       // generate secret
@@ -314,14 +352,14 @@ class VenueProjectBuild extends CmdTree.Command {
       domain: projectJson.domain,
 
       data: {
-        copyPrevious: Hoek.reach(projectJson, 'data.copyPrevious', true)
+        copyPrevious: reach(projectJson, 'data.copyPrevious', true)
       },
 
       hosting: {
-        http: null,
-        i2p: null,
-        p2p: Hoek.reach(projectJson, 'hosting.p2p'),
-        ble: Hoek.reach(projectJson, 'hosting.ble')
+        http: undefined,
+        i2p: undefined,
+        p2p: reach(projectJson, 'hosting.p2p'),
+        ble: reach(projectJson, 'hosting.ble')
       },
 
       party: [],
@@ -330,51 +368,51 @@ class VenueProjectBuild extends CmdTree.Command {
 
     }
 
-    if(Hoek.reach(projectJson, 'hosting.http', false)){
-      let { generateSSLKey, ...httpConfig } = Hoek.reach(projectJson, 'hosting.http')
+    if(reach(projectJson, 'hosting.http', false)){
+      let { generateSSLKey, ...httpConfig } = reach(projectJson, 'hosting.http')
 
-      if(generateSSLKey && !httpConfig.secureSSL){
+      if((generateSSLKey && !httpConfig.secureSSL) || true){
         httpConfig.secureSSL = await this.encryptToBase64(
           key,
           remote.identity,
-          await this.getOrGenerateSSLKey( key, remote.identity, projectJson.name )
+          await this.getOrGenerateSSLKey( key, key, projectJson.name )
         )
       }
 
       project.hosting.http = httpConfig
     }
 
-    if(Hoek.reach(projectJson, 'hosting.i2p', false)){
-      let { generateSSLKey, ...i2pConfig } = Hoek.reach(projectJson, 'hosting.http')
+    if(reach(projectJson, 'hosting.i2p', false)){
+      let { generateSSLKey, ...i2pConfig } = reach(projectJson, 'hosting.i2p')
 
       if(generateSSLKey && !i2pConfig.secureKey){
         i2pConfig.secureKey = await this.encryptToBase64(
           key,
           remote.identity,
-          await this.getOrGenerateI2PKey( key, remote.identity, projectJson.name )
+          await this.getOrGenerateI2PKey( key, key, projectJson.name )
         )
       }
 
       project.hosting.i2p = i2pConfig
     }
 
-    Hoek.reach(projectJson, 'party', []).forEach( async partyDesc=>{
-      let needsKey = Hoek.reach(partyDesc, 'key.generateKey', false) || Hoek.reach(partyDesc, 'key', null) == null
-      let needsSecureMongo = Hoek.reach(partyDesc, 'mongo.uri', null) != null
+    reach(projectJson, 'party', []).forEach( async partyDesc=>{
+      let needsKey = reach(partyDesc, 'key.generateKey', false) || reach(partyDesc, 'key', null) == null || true
+      let needsSecureMongo = reach(partyDesc, 'mongo.uri', null) != null
 
       let obj = {...partyDesc}
 
       if(needsKey){
         debug('creating party key [', partyDesc.name, ']')
 
-        const partyPrivateId = await this.getOrGenerateIdentity( key, remote.identity, projectJson.name, partyDesc.name )
+        const partyPrivateId = await this.getOrGenerateIdentity( key, key, projectJson.name, partyDesc.name )
         
         obj.key = {
           hash: partyPrivateId.key.hash,
           securePrivate: await this.encryptToBase64(
             key,
             remote.identity,
-            partyPrivateId
+            partyPrivateId.toJSON(true)
           )
         }
 
@@ -383,11 +421,11 @@ class VenueProjectBuild extends CmdTree.Command {
       if(needsSecureMongo){
         debug('securing mongo.uri [', partyDesc.name, ']')
         obj.mongo = {
-          mongoOptions: Hoek.reach(partyDesc, 'mongo.options', null),
+          mongoOptions: reach(partyDesc, 'mongo.options', null),
           secureUri: await this.encryptToBase64(
             key,
             remote.identity,
-            await this.getOrStoreMongoUri(key, remote.identity, projectJson.name, partyDesc.name, Hoek.reach(partyDesc, 'mongo.uri', null))
+            await this.getOrStoreMongoUri(key, key, projectJson.name, partyDesc.name, reach(partyDesc, 'mongo.uri', null))
           )
         }
       }
