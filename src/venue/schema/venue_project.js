@@ -65,10 +65,7 @@ class VenueProject extends ISchema {
             identityParty: String
           }],
 
-          ble: {
-            type: { enabled: Boolean },
-            required: false
-          }
+          ble: {type: Boolean, required: false}
         },
         
 

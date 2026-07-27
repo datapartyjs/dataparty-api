@@ -359,7 +359,7 @@ class VenueProjectBuild extends CmdTree.Command {
         http: undefined,
         i2p: undefined,
         p2p: reach(projectJson, 'hosting.p2p', []),
-        ble: reach(projectJson, 'hosting.ble')
+        ble: reach(projectJson, 'hosting.ble', false)
       },
 
       party: [],

@@ -76,9 +76,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
                 identityParty: Joi.string()
               }),
 
-              ble: {
-                enabled: Joi.boolean()
-              }
+              ble: Joi.boolean()
             }),
 
             
