@@ -526,6 +526,7 @@ class VenuedHost extends CmdTree.Command {
     console.log(projectSSL)
 
     let projectRunner = null
+    let routeRunner = null
     this.active_projects[hash] = {
       project,
       party: {},
@@ -640,7 +641,7 @@ class VenuedHost extends CmdTree.Command {
       const service = new Dataparty.IService(serviceFile.package, serviceFile)
       debug('loaded service')
 
-      let routeRunner = new Dataparty.ServiceRunnerNode({
+      routeRunner = new Dataparty.ServiceRunnerNode({
         party: serviceParty, service,
         router: projectRouter,
         sendFullErrors: route.settings.sendFullErrors,
