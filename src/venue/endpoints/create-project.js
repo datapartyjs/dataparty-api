@@ -71,10 +71,10 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
                 securePrivate: Joi.string()
               }),
 
-              p2p: {
+              p2p: Joi.array().items({
                 matchMakerHash: Joi.string(),
                 identityParty: Joi.string()
-              },
+              }),
 
               ble: {
                 enabled: Joi.boolean()
