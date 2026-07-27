@@ -690,6 +690,8 @@ class VenuedHost extends CmdTree.Command {
 
     if(this.mode == 'cloud'){
 
+      debug('domain', project.data.project.domain, 'is null', projec==null)
+
       await this.runnerRouter.addRunner({
         domain: project.data.project.domain,
         runner: projectRunner
