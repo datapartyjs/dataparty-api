@@ -35,7 +35,7 @@ class VenueProject extends ISchema {
         domain: {type: String, index: true/*, unique: true*/},
         
         data: {
-          copyPrevious: Boolean,
+          copyPrevious: {type: Boolean, default: true},
         },
 
         hosting:{
@@ -50,7 +50,7 @@ class VenueProject extends ISchema {
             trust_proxy: Boolean,
             wsEnabled: Boolean,
             secureSSL: String, //! {ssl_key: String, ssl_cert: String}
-            //generateSSLKey: Boolean
+            generateSSLKey: Boolean
           },
 
           i2p: {
