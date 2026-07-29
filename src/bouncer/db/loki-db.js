@@ -41,6 +41,14 @@ module.exports = class LokiDb extends IDb {
   static get Loki(){
     return Loki
   }
+  
+  static get LokiFsAdapter(){
+    return LokiFS
+  }
+
+  static get LokiFsStructuredAdapter(){
+    return LFSA
+  }
 
   static get LokiLocalStorageAdapter(){
     return Loki.LokiLocalStorageAdapter

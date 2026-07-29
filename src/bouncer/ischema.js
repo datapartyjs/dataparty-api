@@ -1,4 +1,4 @@
-const debug = require('debug')('bouncer.ISchema')
+const debug = require('debug')('dataparty.bouncer.ISchema')
 const MgoUtils = require('../utils/mongoose-scheme-utils')
 
 module.exports = class ISchema {

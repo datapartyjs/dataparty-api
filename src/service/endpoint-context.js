@@ -15,7 +15,7 @@ class EndpointContext {
    * @param {Debug} options.debug           Debug constructor (defaults to npm:Debug)
    * @param {boolean} options.sendFullErrors  Enables sending full stack traces to client (defaults to false)
    */
-  constructor({party, endpoint, req, res, input, debug=Debug, sendFullErrors=false}){
+  constructor({party, endpoint, runner, req, res, input, debug=Debug, sendFullErrors=false}){
 
     /**
      * @member module:Service.EndpointContext.debug
@@ -26,6 +26,11 @@ class EndpointContext {
      * @member module:Service.EndpointContext.endpoint
      */
     this.endpoint = endpoint
+
+    /**
+     * @member module:Service.EndpointContext.runner
+     */
+    this.runner = runner
 
     /**
      * @member module:Service.EndpointContext.MiddlewareConfig
@@ -52,7 +57,9 @@ class EndpointContext {
      */
     this.stats = {
       start: Date.now(),
-      bytes_in: !req ? null : JSON.stringify(req.body).length
+      bytes_in: !req ? null : JSON.stringify(req.body).length,
+      bytes_out: 0,
+      end: null
     }
     this.oauth_cloud = null
 
@@ -121,6 +128,14 @@ class EndpointContext {
 
   setOutput(output){
     this.output = output
+
+    if(typeof this.output =='string'){
+      this.stats.bytes_out = this.output.length
+    } else {
+      this.stats.bytes_out = JSON.stringify(this.output).length
+    }
+
+    
     this.debug('output set')
   }
 

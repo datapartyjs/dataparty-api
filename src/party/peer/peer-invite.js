@@ -8,6 +8,8 @@ const dataparty_crypto = require('@dataparty/crypto')
 const PeerParty = require('./peer-party')
 const RTCSocketComms = require('../../comms/rtc-socket-comms')
 
+const DEFAULT_EXPIRY = 5*60*1000
+
 const END_STATES = [
   'cancelled', 'rejected', 'expired', 'completed'
 ]
@@ -33,7 +35,7 @@ async function delay(ms){
 }
 
 class PeerInvite extends EventEmitter {
-  constructor(inviteDoc, toIdentity, matchMakerClient, fromIdentity){
+  constructor(inviteDoc, toIdentity, matchMakerClient, fromIdentity, payload=null){
     super()
 
     this.peerParty = null
@@ -42,7 +44,7 @@ class PeerInvite extends EventEmitter {
     this.matchMaker = matchMakerClient
     this.inviteDoc = inviteDoc
     this.inviteMsg = null //this.latestDoc = null
-    this.payload = null
+    this.payload = payload
 
     this.topicSub = null
     this.topicPub = null
@@ -53,6 +55,21 @@ class PeerInvite extends EventEmitter {
     this.offers = []
 
     this.incomingStream = null
+
+    this.timeoutTimer = null
+
+    this.role = null
+
+    if(this.payload){
+      this._updateRole()
+      const expiry = this.payload.timestamp + DEFAULT_EXPIRY
+      const now = Date.now()
+
+      const delta = expiry - now
+      if(delta > 0){
+        this.timeoutTimer = setTimeout(this.handleTimeout.bind(this))
+      }
+    }
 
     /*if(!this.isSender()){
       this.inviteDoc.
@@ -66,14 +83,26 @@ class PeerInvite extends EventEmitter {
   get to(){ return this.toIdentity }
   get from(){ return this.fromIdentity }
 
+  _updateRole(){
+
+    if(this.isSender()){
+
+      this.role = this.payload.role
+      return
+
+    }
+
+    this.role = this.payload.role == 'client' ? 'host' : 'client'
+  }
+
   isSender(doc){
 
     if(doc){
-      if(doc.toHash == matchMaker.identity.key.hash){return false }
+      if(doc.toHash == matchMaker.client.identity.key.hash){return false }
       else { return true }
     }
 
-    if(this.inviteDoc.toHash == matchMaker.identity.key.hash){return false }
+    if(this.inviteDoc.toHash == matchMaker.client.identity.key.hash){return false }
     else { return true }
   }
 
@@ -86,10 +115,10 @@ class PeerInvite extends EventEmitter {
     this.emit('done', this)
   }
 
-  async accept(mediaSrc, config){
+  async accept({mediaSrc, model, hostParty, hostRunner, discoverRemoteIdentity=false}){
     debug('accepting invite')
 
-    /*if(this.inviteDoc.toHash == matchMaker.wsParty.identity.key.hash){
+    /*if(this.inviteDoc.toHash == this.matchMaker.client.socketPeerParty.identity.key.hash){
         otherIdentity = await this.matchMaker.lookupPublicKey(this.inviteDoc.fromHash)
     } else {
         otherIdentity = await this.matchMaker.lookupPublicKey(this.inviteDoc.toHash)
@@ -102,13 +131,22 @@ class PeerInvite extends EventEmitter {
     let msgWorkAround = new dataparty_crypto.Message({})
     msgWorkAround.fromJSON(JSON.parse(changedInvite.payload))
 
-    let payload = await this.matchMaker.identity.decrypt(
+    let payload = await this.matchMaker.client.identity.decrypt(
         msgWorkAround
     )
 
     this.payload = payload.msg
+    this._updateRole()
 
-    return await this.establish({mediaSrc, config})
+    /*const expiry = this.payload.timestamp + DEFAULT_EXPIRY
+    const now = Date.now()
+
+    const delta = expiry - now
+    if(delta > 0 && this.timeoutTimer != null){
+      this.timeoutTimer = setTimeout(this.handleTimeout.bind(this))
+    }*/
+
+    return await this.establish({mediaSrc, model, hostParty, hostRunner, discoverRemoteIdentity})
   }
 
   async reject(){
@@ -118,6 +156,10 @@ class PeerInvite extends EventEmitter {
 
   get state(){
     return (this.inviteMsg || this.inviteDoc).state
+  }
+
+  async handleTimeout(){
+    await this.matchMaker.setInviteState(this, 'expired')
   }
 
   async onInviteMsg(inviteMsg){
@@ -158,17 +200,17 @@ class PeerInvite extends EventEmitter {
     })
   }
 
-  async establish({mediaSrc, hostParty, config, rtcSettings}){
+  async establish({mediaSrc, model, hostParty, hostRunner, rtcSettings, discoverRemoteIdentity=false}){
 
     if(!rtcSettings){
       rtcSettings = {}
     }
 
-    let host = this.isSender()
+    let host = (this.role == 'host')
     let actorField = this.isSender() ? 'from' : 'to'
     let otherIdentity = this.isSender() ? this.to : this.from
 
-    let party = this.matchMaker.wsParty
+    let party = this.this.matchMaker.client.socketParty
 
     this.topicSub = new party.ROSLIB.Topic({
       ros : party.comms.ros,
@@ -190,7 +232,7 @@ class PeerInvite extends EventEmitter {
         let msgWorkAround = new dataparty_crypto.Message({})
         msgWorkAround.fromJSON(msg.offers[i])
 
-        let offer = await this.matchMaker.identity.decrypt(msgWorkAround)
+        let offer = await this.matchMaker.client.identity.decrypt(msgWorkAround)
 
         if(offer.from.hash != otherIdentity.key.hash){
           debug('BAD IDENTITY')
@@ -216,6 +258,10 @@ class PeerInvite extends EventEmitter {
     }*/
 
     this.peerParty = new PeerParty({
+      hostParty,
+      hostRunner,
+      model: hostParty.factory.model,
+      config: hostParty.config,
       comms: new RTCSocketComms({
         host: this.isSender(),
         session: this.payload.session,
@@ -230,11 +276,9 @@ class PeerInvite extends EventEmitter {
           config: DEFAULT_ICE_SERVERS
         },
         trickle: rtcSettings.trickle? rtcSettings.trickle : true,
-        discoverRemoteIdentity: false,
-        remoteIdentity: otherIdentity
-      }),
-      hostParty: this.isSender() ? hostParty : undefined,
-      config: config ? config : hostParty.config
+        discoverRemoteIdentity: discoverRemoteIdentity ? discoverRemoteIdentity : false,
+        remoteIdentity: discoverRemoteIdentity ? undefined: otherIdentity
+      })
     })
 
 
@@ -268,7 +312,7 @@ class PeerInvite extends EventEmitter {
       debug(' >> offer signal trickle', data)
 
 
-      const secureOffer = await this.matchMaker.identity.encrypt(data, otherIdentity)
+      const secureOffer = await this.matchMaker.client.identity.encrypt(data, otherIdentity)
 
       if(host && !sendFreely){
         //console.log('am host')
@@ -312,6 +356,7 @@ class PeerInvite extends EventEmitter {
 
     } catch (err){
       console.log(err)
+      throw err
     }
   }
 

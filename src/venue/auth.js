@@ -1,6 +1,7 @@
 const debug = require('debug')('dataparty.auth.venue-auth')
 
 const IAuth = require('../service/iauth')
+const {Identity} = require('@dataparty/crypto')
 
 
 module.exports = class IAuth {
@@ -36,12 +37,28 @@ module.exports = class IAuth {
   }
 
   async lookupIdentity(identity){
+
+    let sessionKeyDoc = (await this.context.party.find()
+      .type('session_key')
+      .where('annoucement.sessionKey.hash')
+      .equals(identity.key.hash)
+      .exec()
+    )[0]
+
+    if(sessionKeyDoc){
+      const actorIdentity = Identity.fromJSON({
+        id: 'actor',
+        key: sessionKeyDoc.data.annoucement.actorKey
+      })
+
+      return actorIdentity
+    }
+
     return identity
   }
 
   async isSocketConnectionAllowed(identity){
-    //throw new Error('not implemented')
-    return true
+    return await this.isAdmin(identity)
   }
 
   async isInternal(identity){
@@ -49,7 +66,16 @@ module.exports = class IAuth {
   }
 
   async isAdmin(identity){
-    return false
+
+    // verify key-hash is an admin
+    const admins = (await this.context.party.config.read('admins')) || []
+
+    if(admins.indexOf(identity.key.hash) == -1){
+      debug('non-admin user', identity.key.hash)
+      return false
+    }
+
+    return true
   }
 
   async canReadDb(identity){

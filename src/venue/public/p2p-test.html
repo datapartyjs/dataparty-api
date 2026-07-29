@@ -256,7 +256,12 @@ async function init(){
 
   await hostLocal.start()
 
-  matchMaker = new Dataparty.MatchMakerClient(hostLocal.privateIdentity, null)
+  matchMaker = new Dataparty.MatchMakerClient(
+    hostLocal.privateIdentity,
+    null,
+    'https://api.dataparty.xyz/api',
+    'wss://api.dataparty.xyz/ws'
+  )
 
   await matchMaker.start()
 

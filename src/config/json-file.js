@@ -6,6 +6,7 @@ const mkdirp = require('mkdirp')
 const deepSet = require('lodash').set
 const reach = require('../utils/reach')
 const logger = require('debug')('dataparty.config.json-file')
+const sanitize = require('sanitize-filename')
 
 const IConfig = require('./iconfig')
 
@@ -22,6 +23,8 @@ class JsonFileConfig extends IConfig {
     this.path = this.basePath +'/config.json'
     this.defaults = defaults || {}
     this.content = Object.assign({}, this.defaults)
+    this.writing = false
+    this.started = false
   }
 
   async load(){
@@ -47,9 +50,16 @@ class JsonFileConfig extends IConfig {
   }
 
   async start () {
+
+    if(this.started){return}
+
     await this.touchDir('')
     await this.load()
+
+    fs.watchFile(this.path, this.handleFileChange.bind(this))
     logger('started')
+
+    this.started = true
   }
 
   async clear () {
@@ -66,6 +76,12 @@ class JsonFileConfig extends IConfig {
     return reach( this.content, key)
   }
 
+  async writeAll(newContent){
+    logger('writing full content')
+    this.content = newContent
+    await this.save()
+  }
+
   async write(key, value){
 
     logger('writing path:', key)
@@ -79,7 +95,9 @@ class JsonFileConfig extends IConfig {
   }
 
   async save(){
+    this.writing = true
     fs.writeFileSync(this.path, JSON.stringify(this.content, null, 2))
+    this.writing = false
   }
 
   async touchDir (path) {
@@ -97,6 +115,24 @@ class JsonFileConfig extends IConfig {
         resolve(basedPath)
       })
     })
+  }
+
+  fileExists(path){
+    var realPath = Path.join(this.basePath, Path.dirname(path), sanitize(Path.basename(path)))
+
+    return fs.existsSync(realPath)
+  }
+
+  filePath(path){
+    return Path.join(this.basePath, Path.dirname(path), sanitize(Path.basename(path)))
+  }
+
+  async handleFileChange(current, previous){
+    if(this.writing){ return }
+
+    logger('config changed, reloading')
+
+    await this.load()
   }
 }
 

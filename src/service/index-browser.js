@@ -51,3 +51,11 @@ exports.endpoint_paths = {
   identity: Path.join(__dirname, './endpoints/service-identity.js'),
   version: Path.join(__dirname, './endpoints/service-version.js')
 }
+
+exports.task = {
+  cleanup_ephemeral_sessions: require('./tasks/cleanup-ephemeral-sessions.js')
+}
+
+exports.task_paths = {
+  cleanup_ephemeral_sessions: Path.join(__dirname, './tasks/cleanup-ephemeral-sessions.js')
+}

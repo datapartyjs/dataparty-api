@@ -17,7 +17,7 @@ module.exports = class IService {
    * @param {*} build 
    */
   constructor({
-    name, version, githash='', branch=''
+    name, version, githash='', branch='', owner=null
   }, build){
 
     this.constructors = {
@@ -48,11 +48,13 @@ module.exports = class IService {
       },
       tasks: {},
       topics: {},
-      auth: null
+      auth: null,
+      files: [],
+      files_root: null
     }
 
     this.compiled = {
-      package: { name, version, githash, branch },
+      package: {owner, name, version, githash, branch },
       schemas: {
         IndexSettings: {},
         JSONSchema: [],
@@ -70,7 +72,9 @@ module.exports = class IService {
       },
       tasks: {},
       topics: {},
-      auth: {}
+      auth: {},
+      files: {},
+      //signatures: {}
     }
 
     this.compileSettings = {

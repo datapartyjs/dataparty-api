@@ -7,6 +7,9 @@ const dataparty_crypto = require('@dataparty/crypto')
 //const WebsocketComms = require('./old-websocket-comms')
 const AuthError = require('../errors/auth-error')
 
+const Https = require('https')
+
+
 
 const DEFAULT_REST_TIMEOUT = 30000
 
@@ -16,7 +19,7 @@ const DEFAULT_REST_TIMEOUT = 30000
  * @extends EventEmitter
  */
 class RestComms extends EventEmitter {
-  constructor({ remoteIdentity, config, party }) {
+  constructor({ remoteIdentity, config, party, axiosOptions={}, allowSelfSigned=false }) {
     super()
     this.uri = undefined
     this.wsUri = undefined
@@ -27,6 +30,16 @@ class RestComms extends EventEmitter {
     this.remoteIdentity = remoteIdentity
     this.websocketComm = undefined
     this.party = party
+
+    this.axiosOptions = axiosOptions
+
+    if(allowSelfSigned && Https && Https.Agent){
+      let agent = new Https.Agent({
+        rejectUnauthorized: false
+      })
+
+      this.axiosOptions.httpsAgent = agent
+    }
 
     this.authed = undefined
 
@@ -136,13 +149,25 @@ class RestComms extends EventEmitter {
 
     let reply
     try {
-      reply = await RestComms.HttpPost(fullPath, content)
+      reply = await RestComms.HttpPost(fullPath, content, this.axiosOptions)
       //reply = JSON.parse(str)
 
       // debug('raw reply ->', reply)
     } catch (error) {
       debug('rest', fullPath, ' call fail ->', error.message)
-      throw new Error('RestCommsError')
+
+      console.log(Object.keys(error), Object.keys(error.response))
+
+      const simpleError = {
+        name: error.name,
+        code: error.code,
+        //message: error.message,
+        statusCode: error.response.statusCode,
+        statusMessage: error.response.statusMessage,
+        data: error.response.data
+      }
+
+      throw simpleError
     }
 
     const msg = await this.party.decrypt(
@@ -204,10 +229,10 @@ class RestComms extends EventEmitter {
       if (!this.uri) {
         await this.loadCloud()
       }
-      const serverIdentity = await RestComms.HttpGet(this.uri + `${this.uriPrefix}identity`)
+      const serverIdentity = await RestComms.HttpGet(this.uri + `${this.uriPrefix}identity`, this.axiosOptions)
       debug('server identity - ', serverIdentity)
 
-      this.remoteIdentity = new dataparty_crypto.Identity(serverIdentity)
+      this.remoteIdentity = dataparty_crypto.Identity.fromJSON(serverIdentity)
     }
 
     return this.remoteIdentity
@@ -356,27 +381,30 @@ class RestComms extends EventEmitter {
     })
   }*/
 
-  static async HttpRequest(verb, url, data) {
+  static async HttpRequest(verb, url, data, options) {
 
     debug(`${verb} - ${url}`)
+
+    console.log('axiosOptions', options)
 
     const response = await axios({
       method: verb,
       url,
       data,
       headers: {'Content-Type': 'application/json'},
-      timeout: DEFAULT_REST_TIMEOUT
+      timeout: DEFAULT_REST_TIMEOUT,
+      ...options
     })
 
     return response.data
   }
 
-  static async HttpGet(url) {
-    return RestComms.HttpRequest('GET', url)
+  static async HttpGet(url, options) {
+    return RestComms.HttpRequest('GET', url, undefined, options)
   }
 
-  static async HttpPost(url, body) {
-    return RestComms.HttpRequest('POST', url, body)
+  static async HttpPost(url, body, options) {
+    return RestComms.HttpRequest('POST', url, body, options)
   }
 }
 

@@ -5,6 +5,7 @@ const Debug = require('debug')
 const debug = Debug('dataparty.service.runner-node')
 const EndpointContext = require('./endpoint-context')
 const DeltaTime = require('../utils/delta-time')
+const HttpMocks = require('node-mocks-http')
 
 const Router = require('origin-router').Router
 const Runner = require('@dataparty/tasker').Runner
@@ -45,6 +46,13 @@ class ServiceRunnerNode {
     this.started = false
 
     this.taskCounter = 0
+
+    this.stats = {
+      bytes_in: 0,
+      bytes_out: 0,
+      requests: 0,
+      errors: 0
+    }
   }
 
   async start(){
@@ -95,6 +103,10 @@ class ServiceRunnerNode {
     }
   }
 
+  async stop(){
+    await this.taskRunner.stop()
+    this.started = false
+  }
 
   async loadAuth(){
     if(this.auth){ return }
@@ -110,13 +122,13 @@ class ServiceRunnerNode {
 
     let AuthClass = null
 
-    if(!this.useNative){
+    if(!this.useNative && Hoek.reach(this.service, `compiled.auth`)){
       var self={}
       const build = Hoek.reach(this.service, `compiled.auth`)
       eval(build.code/*, build.map*/)
       AuthClass = self.Lib
     }
-    else{
+    else if(this.service.constructors.auth){
       AuthClass = this.service.constructors.auth
     }
 
@@ -434,6 +446,7 @@ class ServiceRunnerNode {
 
     debug('req', req.method, req.hostname,'-', req.url, req.ips, req.body)
 
+    if(req.method == 'PATCH'){ return next() }
 
     let route = await this.router.route(req, res)
 
@@ -444,6 +457,38 @@ class ServiceRunnerNode {
       //res.status(404).end()
       return next()
     }
+  }
+
+  async internalRequest(endpoint, data){
+    let bodyValue = data
+
+    const req = HttpMocks.createRequest({
+      method: 'GET',
+      url: '/'+endpoint,
+      body: bodyValue
+    })
+
+    const res = HttpMocks.createResponse()
+
+    debug('\tthe request', req)
+
+    debug('req ip type', typeof req.ip)
+
+    const route = this.router.get(endpoint)
+
+    debug('route',route)
+
+    req.runner = this
+    req.source = 'INTERNAL'
+
+    debug('call route', await route._events.route({
+      method: req.method,
+      pathname: req.url,
+      request: req,
+      response: res
+    }))
+
+    return {result: res._getData() }
   }
 
   async getTopic(path){
@@ -516,6 +561,7 @@ class ServiceRunnerNode {
         req: event.request, res: event.response,
         endpoint,
         party: this.party,
+        runner: this,
         input: event.request.body, 
         debug: Debug,
         sendFullErrors: this.sendFullErrors
@@ -527,6 +573,9 @@ class ServiceRunnerNode {
       let phase = 'pre-middleware'
       
       try{
+
+        this.stats.requests++
+        this.stats.bytes_in += context.stats.bytes_in
 
         await this.runMiddleware(middlewareCfg, context, 'pre')
     
@@ -547,9 +596,15 @@ class ServiceRunnerNode {
         debug('result', context.output)
 
         context.res.send(context.output)
+        context.stats.end = Date.now()
+
+        
+        this.stats.bytes_out += context.stats.bytes_out
 
       }
       catch(err){
+
+        this.stats.errors++
 
         if(this.sendFullErrors){
           debug('caught error', err)

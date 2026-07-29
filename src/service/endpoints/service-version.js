@@ -27,7 +27,8 @@ module.exports = class ServiceVersion extends IEndpoint {
           name: Joi.string(),
           branch: Joi.string(),
           version: Joi.string(),
-          githash: Joi.string()
+          githash: Joi.string(),
+          owner: Joi.string(),
         })
       }
     }

@@ -7,10 +7,16 @@ const gitRepoInfo = require('git-repo-info')
 const BouncerDb = require('@dataparty/bouncer-db')
 const mongoose = BouncerDb.mongoose()
 const debug = require('debug')('dataparty.service.ServiceBuilder')
+const zlib = require('zlib')
 
-//const IService = require('../iservice')
+const safeStringify = require('fast-safe-stringify')
 
+const dataparty_crypto = require('@dataparty/crypto')
 
+const { globSync } = require('glob')
+const { isArray } = require('lodash')
+
+const tar = require('tar')
 
 module.exports = class ServiceBuilder {
   constructor(service){
@@ -27,7 +33,7 @@ module.exports = class ServiceBuilder {
    * @param {boolean} writeFile   When true, files will be written. Defaults to `true`
    * @returns 
    */
-  async compile(outputPath, writeFile=true){
+  async compile(outputPath, writeFile=true, owner){
 
     if(!outputPath){
       throw new Error('no output path')
@@ -40,7 +46,7 @@ module.exports = class ServiceBuilder {
 
     debug('compiling sources',this.service.sources)
 
-    await Promise.all([
+    let results = await Promise.all([
       this.compileMiddleware('pre'),
       this.compileMiddleware('post'),
       this.compileList('documents'),
@@ -48,25 +54,57 @@ module.exports = class ServiceBuilder {
       this.compileList('tasks'),
       this.compileList('topics'),
       this.compileFile('auth'),
-      this.compileSchemas()
+      this.compileSchemas(),
+      this.compressFiles(outputPath, writeFile)
     ])
+
+
 
     this.service.compiled.middleware_order = this.service.middleware_order
 
     this.service.compiled.compileSettings = this.service.compileSettings
 
+    if(owner){
+      this.service.compiled.package.owner = owner.key.hash
+      const ownerSig = await owner.sign(this.service.compiled, true)
+
+      console.log('sign keys', Object.keys(this.service.compiled))
+      console.log(this.service.compiled.signature)
+
+      this.service.compiled.signatures = {
+       [owner.key.hash]: dataparty_crypto.Routines.Utils.base64.encode(ownerSig.sig)
+      }
+    }
+    
+    let files = []
+
     if(writeFile){
-      const buildOutput = outputPath+'/'+ this.service.compiled.package.name.replace('/', '-') +'.dataparty-service.json'
+      const buildOutput = outputPath+'/'+ this.service.compiled.package.name.replace('/', '-') +'.service.venue.json'
       fs.writeFileSync(buildOutput, JSON.stringify(this.service.compiled, null,2))
 
-      const schemaOutput = outputPath+'/'+ this.service.compiled.package.name.replace('/', '-') +'.dataparty-schema.json'
+      const schemaOutput = outputPath+'/'+ this.service.compiled.package.name.replace('/', '-') +'.schema.venue.json'
       fs.writeFileSync(schemaOutput, JSON.stringify({
         package: this.service.compiled.package,
         ...this.service.compiled.schemas
       }, null, 2))
+
+      // Gzip compression (most common for HTTP)
+      const compressed = zlib.gzipSync(JSON.stringify(this.service.compiled, null,2));
+
+      // Brotli compression (better ratio, Node.js 10.5.0+)
+      const compressedBrotli = zlib.brotliCompressSync(JSON.stringify(this.service.compiled, null,2));
+
+      console.log('Original:', JSON.stringify(this.service.compiled, null,2).length, 'bytes');
+      console.log('Gzip:', compressed.length, 'bytes')
+      console.log('Brotli:', compressedBrotli.length, 'bytes')
+
+      let tarFile = results[ results.length - 1 ]
+      files.push(buildOutput)
+      files.push(schemaOutput)
+      if(tarFile){files.push(tarFile)}
     }
 
-    return this.service.compiled
+    return {build: this.service.compiled, files}
 
   }
 
@@ -142,24 +180,33 @@ module.exports = class ServiceBuilder {
       this.service.compiled.schemas.Permissions[model.Type] = await model.permissions()
       this.service.compiled.schemas.JSONSchema.push(jsonSchema)
   
+      const safePaths = JSON.parse(safeStringify(schema.paths))
+
+      //debug(schema.paths)
       debug('\t','type',model.Type)
   
       let indexed = JSONPath({
         path: '$..options.index',
-        json: schema.paths,
+        json: safePaths,
         resultType: 'pointer'
-      }).map(p=>{return p.split('/')[1]})
+      }).map(p=>{
+        
+        debug('\t\t','indexed p',p)
+        return p.replace('/options/index', '').replace('/','')
+      })
+        //return p.split('.')[1]})
   
       debug('\t\tindexed', indexed)
   
       let unique = JSONPath({
         path: '$..options.unique',
-        json: schema.paths,
+        json: safePaths,
         resultType: 'pointer'
       }).map(p=>{
-        debug(typeof p)
+        debug(typeof p, 'unique', p)
         if(typeof p == 'string'){
-          return p.split('/')[1]
+          let filteredP =  p.replace('/options/unique', '').replace('/','')
+          return  filteredP
         }
         
         return p
@@ -314,5 +361,71 @@ module.exports = class ServiceBuilder {
 
     this.service.sources.auth = auth_path
     this.service.constructors.auth = TopicClass
+  }
+
+  addFiles(root, pattern, options){
+
+    let result = globSync(pattern, {
+      dotRelative: true,
+      cwd:root,
+      ...options
+    })
+
+    if(!this.service.files){
+      this.service.sources.files = result
+    } else {
+      this.service.sources.files = this.service.sources.files.concat(result)
+    }
+    
+    this.service.sources.files_root = root
+
+    debug('addFiles',result)
+
+  }
+
+  async compressFiles(outputPath, writeFile){
+
+    if(!this.service.sources.files){ return }
+
+    let fileMap={}
+
+    let files = this.service.sources.files.map(file=>{
+      //
+      const content = fs.readFileSync(file)
+      const hash = dataparty_crypto.Routines.Utils.base64.encode(
+        dataparty_crypto.Routines.Utils.hash(content)
+      )
+
+      fileMap[file] = { hash, size: content.length }
+
+      return hash
+    })
+
+    if(!files || files.length < 1){ return }
+
+    const tarFileName = this.service.compiled.package.name.replace('/', '-')+'.files.venue.tgz'
+    const tarPath = Path.join(outputPath, tarFileName)
+
+    await tar.create({
+      cwd: this.service.sources.files_root,
+      gzip: true,
+      file: tarPath
+    }, this.service.sources.files)
+
+    const staticTar = fs.readFileSync(tarPath)
+
+    let tarHash = dataparty_crypto.Routines.Utils.hash( staticTar )
+    let tarHash64 = dataparty_crypto.Routines.Utils.base64.encode(tarHash)
+
+    this.service.compiled.files = {
+      [tarFileName]: {
+        tar: tarFileName,
+        hash:tarHash64,
+        size: staticTar.length,
+        files: fileMap
+      }
+    }
+
+    return tarPath
   }
 }

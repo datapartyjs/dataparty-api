@@ -1,19 +1,19 @@
 const Joi = require('joi')
 const Hoek = require('@hapi/hoek')
 const {Message, Routines} = require('@dataparty/crypto')
-const debug = require('debug')('dataparty.endpoint.create-service')
+const debug = require('debug')('dataparty.endpoint.file-create')
 
 const IEndpoint = require('../../service/iendpoint')
 
-module.exports = class CreateSrvEndpoint extends IEndpoint {
+module.exports = class FileCreateEndpoint extends IEndpoint {
 
   static get Name(){
-    return 'create-service'
+    return 'file-create'
   }
 
 
   static get Description(){
-    return 'Create venue service'
+    return 'Create venue package file'
   }
 
   static get MiddlewareConfig(){
@@ -21,13 +21,13 @@ module.exports = class CreateSrvEndpoint extends IEndpoint {
       pre: {
         decrypt: true,
         validate: Joi.object().keys({
-          settings: Joi.object().keys({
+          /*settings: Joi.object().keys({
             enabled: Joi.boolean().default(true).required(),
-            domain: Joi.string().required(),
-            prefix: Joi.string().default('').required(),
+            //domain: Joi.string().required(),
+            staticPrefix: Joi.string().default('/'),
             sendFullErrors: Joi.boolean().default(false).required(),
             useNative: Joi.boolean().default(false).required()
-          }).required(),
+          }).required(),*/
           service: Joi.object().keys({
             package: Joi.object().keys({
               name: Joi.string().required(),

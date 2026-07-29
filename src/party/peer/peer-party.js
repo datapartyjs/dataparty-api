@@ -62,6 +62,12 @@ class PeerParty extends IParty {
     await this.comms.start()
   }
 
+  async stop(){
+    if(this.comms){
+      await this.comms.stop()
+    }
+  }
+
 
   async handleCall(ask){
     debug('handleCall')

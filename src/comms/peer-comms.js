@@ -54,6 +54,9 @@ class PeerComms extends ISocketComms {
 
     this.uuid = uuidv4()
     this.socket = socket || null
+    this.stopped = false
+    this.started = false
+    //this.auto_reconnect = !socket && !host
 
     this.host = host   //! Is comms host\
     this.oncall = null
@@ -89,7 +92,7 @@ class PeerComms extends ISocketComms {
 
       let response = null
       let request = await this.decrypt( {data: message}, this.remoteIdentity )
-      debug('handleHostCall', truncateString(request, 1024))
+      debug('handleClientCall', truncateString(JSON.stringify(request, null, 2), 1024))
 
       let inputValidated
 
@@ -203,11 +206,16 @@ class PeerComms extends ISocketComms {
 
   async start(){
     debug('start')
+
+    if(this.started){ return }
+
+    this.started = true
+
     if(this.socketInit){
       await this.socketInit()
     }
     
-    this.socket.on('close', this.stop.bind(this))
+    this.socket.on('close', this.socketStop.bind(this))
 
     if(this.host){
       debug('host mode comms')
@@ -226,7 +234,14 @@ class PeerComms extends ISocketComms {
     }
   }
 
+  socketStop(){
+    debug('socket stop')
+    this.close()
+  }
+
   async stop(){
+    this.stopped = true
+    this.started = false
     debug('stop')
     this.close()
   }
@@ -385,13 +400,13 @@ class PeerComms extends ISocketComms {
 
     if(this.party.hostRunner){
       const actor = await this.party.hostRunner.auth.lookupIdentity(offer.sender)
-      const verified = await Routines.verifyDataPQ(actor, signature, offerBSON)
+      const verified = await Routines.verifyDataPQ(offer.sender, signature, offerBSON)
       
       if(!verified){
         throw new Error('DENY(hostRunner) - auth op signature is not valid')
       }
 
-      if(this.discoverRemoteIdentity){ this.remoteIdentity = actor }
+      if(this.discoverRemoteIdentity){ this.remoteIdentity = offer.sender }
       
       const authorized = await this.party.hostRunner.auth.isSocketConnectionAllowed(actor)
       if(!authorized){
@@ -406,6 +421,7 @@ class PeerComms extends ISocketComms {
         await this.stop()
 
         debug('DENY - client not allowed - ', this.remoteIdentity)
+        throw new Error('DENY - client not allowed')
       }
     } else {
       const actor = offer.sender
@@ -420,7 +436,7 @@ class PeerComms extends ISocketComms {
       }
     }
     
-    debug('clienr auth op offer -', offer)
+    debug('client auth op offer -', offer)
     debug('ALLOW - allowing client - ', this.remoteIdentity)
 
     this.aesStream = await AESStream.recoverStream(
@@ -445,11 +461,15 @@ class PeerComms extends ISocketComms {
   async handleCallOp(op){
     debug('peer-call', op.input.endpoint)
 
+    const actor = await this.party.hostRunner.auth.lookupIdentity(this.remoteIdentity)
+
     if(this.party.hostRunner){
 
       debug('calling runner')
 
-      if(op.input.endpoint == 'api-v2-peer-bouncer' && await this.party.hostRunner.auth.isAdmin(this.remoteIdentity)){
+      
+
+      if(op.input.endpoint == 'api-v2-peer-bouncer' && await this.party.hostRunner.auth.isAdmin(actor)){
         debug('ask->', truncateString(op.input.data, 1024))
         op.result = {result: await this.party.handleCall(op.input.data) }
 
@@ -457,10 +477,18 @@ class PeerComms extends ISocketComms {
         return
       }
 
+      debug('input type', typeof op.input.data, Object.keys(op.input.data))
+      debug('op.msg type', typeof op.msg, Object.keys(op.msg), Buffer.isBuffer(op.msg))
+
+      let bodyValue = Buffer.isBuffer(op.msg) ?
+        op.input.data :
+        //Routines.BSON.parseObject(new Routines.BSON.BaseParser( op.msg )) :
+        JSON.parse(op.msg.toString())
+
       const req = HttpMocks.createRequest({
         method: 'GET',
         url: '/'+op.input.endpoint,
-        body: (op.input.data) ? JSON.parse(op.msg.toString()) : undefined
+        body: bodyValue
       })
 
       const res = HttpMocks.createResponse()
@@ -472,6 +500,9 @@ class PeerComms extends ISocketComms {
       const route = this.party.hostRunner.router.get(op.input.endpoint)
 
       debug('route',route)
+
+      req.peer = this
+      req.source = 'PeerComms'
 
       debug('call route', await route._events.route({
         method: req.method,
@@ -487,7 +518,7 @@ class PeerComms extends ISocketComms {
       op.setState(HostOp.STATES.Finished_Success)
       return
 
-    } else if(op.input.endpoint == 'api-v2-peer-bouncer' && await this.party.hostRunner.auth.isAdmin(this.remoteIdentity)){
+    } else if(op.input.endpoint == 'api-v2-peer-bouncer' && await this.party.hostRunner.auth.isAdmin(actor)){
       
       debug('ask->',op.input.data)
       op.result = {result: await this.party.handleCall(op.input.data) }

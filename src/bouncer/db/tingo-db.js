@@ -164,9 +164,12 @@ module.exports = class TingoDb extends IDb {
     debug('find collection=', collectionName, ' query=', JSON.stringify(query,null,2))
     let collection = await this.getCollection(collectionName)
     let cursor = await promisfy(collection.find.bind(collection))(
-      query,
-      mongoQuery.hasSort() ? mongoQuery.getSort() : undefined
+      query
     )
+
+    if(mongoQuery.hasSort()){
+      cursor = cursor.sort(mongoQuery.getSort())
+    }
 
     if(mongoQuery.hasLimit()){
       cursor = cursor.limit(mongoQuery.getLimit())

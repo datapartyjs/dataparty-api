@@ -31,8 +31,19 @@ module.exports = class Decrypt extends IMiddleware {
 
     if (!Config){ return }
 
+
+
     if(!context.input || !context.input.enc){
-      throw new Error('insecure message')
+
+      if(!context.req.source ||
+        ( context.req.source != 'PeerComms' &&
+          context.req.source != 'INTERNAL' )
+      ){
+        throw new Error('insecure message -' + context.req.source)
+      }
+
+      context.setInput( context.input )
+      return
     }
 
     context.debug('input', context.input, typeof context.input)

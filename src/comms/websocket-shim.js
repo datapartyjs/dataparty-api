@@ -19,7 +19,7 @@ class WebsocketShim extends EventEmitter {
       }
       
       this.conn.onclose = (event) => {
-        debug('onclose', event)
+        debug('onclose', event, event.code, event.reason)
         this.emit('close', event)
       }
       
@@ -39,6 +39,7 @@ class WebsocketShim extends EventEmitter {
     }
   
     destroy(){
+      if(this.conn && this.conn.terminate)
       this.conn.terminate()
     }
   

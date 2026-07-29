@@ -1,7 +1,8 @@
 const Path = require('path')
 const CORS = require('cors')
 const {URL} = require('url')
-//const mdns = require('mdns')
+const {Bonjour} = require('bonjour-service')
+
 const http = require('http')
 const https = require('https')
 const morgan = require('morgan')
@@ -58,12 +59,14 @@ class ServiceHost {
     i2pSamHost = '127.0.0.1',
     i2pSamPort = 7656,
     i2pKey = null,
-    i2pForwardHost = 'localhost',
+    i2pForwardHost = '127.0.0.1',
     i2pForwardPort = null,
+    i2pOptions = null,
     wsEnabled = true,
     wsPort = null,
     wsUpgradePath = '/ws',
     mdnsEnabled = false,
+    mdnsName = null,
     runner,
     staticPath='',
     staticPrefix='/',
@@ -113,8 +116,8 @@ class ServiceHost {
     if(debug.enabled){ this.apiApp.use(morgan('combined')) }
 
     this.apiApp.use(bodyParser.urlencoded({ extended: true }))
-    this.apiApp.use(bodyParser.json())
-    this.apiApp.use(bodyParser.raw())
+    this.apiApp.use(bodyParser.json({limit:'10MB'}))
+    this.apiApp.use(bodyParser.raw({limit:'10MB'}))
 
     this.apiApp.set('trust proxy', trust_proxy)
 
@@ -141,16 +144,26 @@ class ServiceHost {
           host: i2pSamHost,
           portTCP: i2pSamPort,
           publicKey: reach(i2pKey, 'publicKey'),
-          privateKey: reach(i2pKey, 'privateKey')
+          privateKey: reach(i2pKey, 'privateKey'),
+          versionMin: '3.1',
+          versionMax: '3.3'
         },
         forward: {
+          silent: true,
           host: i2pForwardHost ? i2pForwardHost : this.apiServerUri.hostname,
           port: i2pForwardPort ? i2pForwardPort : parseInt( this.apiServerUri.port )
+        },
+        session: {
+          options: i2pOptions
         }
       }
     }
 
     this.mdnsEnabled = mdnsEnabled
+    this.mdnsName = mdnsName
+
+    this.mdnsInstance = null
+    this.mdnsService =  null
 
     this.started = false
   }
@@ -246,29 +259,32 @@ class ServiceHost {
 
     if(this.i2pEnabled && this.i2p == null){
       debug('starting i2p forward', this.i2pSettings)
-      const SAM = require('@diva.exchange/i2p-sam')
 
-      this.i2p = await SAM.createForward(this.i2pSettings)
-      this.i2pUri = this.i2p.getB32Address()
-      this.i2pSettings.privateKey = null  // clear no longer needed
+      async function setup_i2p(){
+        const SAM = require('@diva.exchange/i2p-sam')
+
+        this.i2p = await SAM.createForward(this.i2pSettings)
+        this.i2pUri = this.i2p.getB32Address()
+        this.i2pSettings.sam.privateKey = null  // clear no longer needed
+
+        this.i2p.on('error', this.reportI2pError.bind(this))
 
 
+        this.i2p.on('close', ()=>{
+          debug('i2p closed')
+        })
 
-      this.i2p.on('error', this.reportI2pError.bind(this))
+        this.i2p.on('data', (data)=>{
+          debug('i2p data')
+          debug(data.toString())
+        })
 
+        debug('i2p started')
+        debug('\t', 'address', this.i2pUri)
+        debug('\t', 'key', this.i2p.getPublicKey())
+      }
 
-      this.i2p.on('close', ()=>{
-        debug('i2p closed')
-      })
-
-      this.i2p.on('data', (data)=>{
-        debug('i2p data')
-        debug(data.toString())
-      })
-
-      debug('i2p started')
-      debug('\t', 'address', this.i2pUri)
-      debug('\t', 'key', this.i2p.getPublicKey())
+      setup_i2p.bind(this)()
     }
 
     if(this.mdnsEnabled && this.apiServer && this.apiServerUri.protocol != 'file:'){
@@ -289,25 +305,30 @@ class ServiceHost {
           break
       }
 
+      this.mdnsInstance = new Bonjour()
 
-      const idHash = objectHasher.hash(
-        partyIdentity.toJSON()
-      )
+      let mdnsSubtypes = []
 
-      
-      const txt_record = {
-        partyhash: idHash,
-        pkgname: servicePkg.name
+      if(servicePkg!=null){
+        mdnsSubtypes.push( servicePkg.name )
       }
-      
-      console.log('mdns', servicePkg.name, idHash)
-      this.mdnsAd = mdns.createAdvertisement(mdns.tcp('party'), parseInt(listenPort), {txtRecord: txt_record})
+
+      const partialHash  = Buffer.from(partyIdentity.key.hash, 'base64').toString('base64url').slice(0,6)
+
+      this.mdnsService = this.mdnsInstance.publish({
+        name: (this.mdnsName!=null && this.mdnsName.length>0)   ? this.mdnsName : 'venue-'+partialHash,
+        type: 'party',
+        subtypes: mdnsSubtypes,
+        port: parseInt( this.apiServerUri.port ),
+        txt: { hash: partyIdentity.key.hash }
+      })
+
     }
 
     this.apiApp.use((err, req, res, _next) => {
       console.log('Error handler', err)
       if (err instanceof IpDeniedError) {
-        //res.status(401)
+        res.status(401)
       } else {
         res.status(err.status || 500)
       }
@@ -332,9 +353,32 @@ class ServiceHost {
     clearTimeout(this.errorHandlerTimer)
     this.errorHandlerTimer = null
 
+    if(this.i2pEnabled && this.i2p != null){
+      debug('stopping i2p')
+      this.i2p.close()
+      this.i2p = null
+    }
+
+    if(this.mdnsEnabled && this.mdnsInstance != null){
+      debug('stopping mdns')
+      await new Promise((resolve,reject)=>{this.mdnsInstance.unpublishAll(resolve)})
+
+      this.mdnsInstance.destroy()
+      this.mdnsInstance = null
+    }
+
+    if(this.wsEnabled && this.wsServer != null){
+      debug('stopping websocket')
+      this.wsServer.stop()
+      this.wsServer = null
+    }
+
     await new Promise((resolve,reject)=>{
+      debug('stopping http')
       this.apiServer.close(resolve)
     })
+
+    this.apiServer = null
 
     debug('stopped server')
   }

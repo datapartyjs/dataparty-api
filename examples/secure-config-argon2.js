@@ -18,7 +18,6 @@ const HELP_INFO = `
 `
 
 async function main(){
-    const memoryConfig = new Dataparty.Config.MemoryConfig({foo: 'bar'})
 
 
     const jsonConfig = new Dataparty.Config.JsonFileConfig({

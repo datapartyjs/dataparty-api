@@ -21,6 +21,13 @@ class ServiceHostWebsocket{
     this.ws = null
   }
 
+  stop(){
+    this.ws.close()
+    this.ws.clients.forEach( (conn)=>{
+      conn.terminate()
+    })
+  }
+
   start(server){
 
     debug('start')
