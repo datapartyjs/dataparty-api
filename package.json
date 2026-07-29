@@ -53,7 +53,7 @@
   },
   "scripts": {
     "test": "npx lab",
-    "build": "npx parcel build --no-scope-hoist",
+    "build": "npx parcel build --no-scope-hoist; npm run build-venue",
     "prepare": "npm run build",
     "watch": "parcel watch",
     "server": "cd public; http-server -S -C cert.pem -o",
@@ -61,7 +61,7 @@
     "build-test": "node ./examples/party/example-build.js",
     "watch-test": "DEBUG=* nodemon --ignore service test/test-service-compile.js",
     "build-docs": "./scripts/build-docs.sh",
-    "build-venue": "node ./src/venue/build.js",
+    "build-venue": "mkdir -p ./src/venue/dataparty; cd src/venue; node ./build.js",
     "generate-docs": "npx jsdoc --configure jsdoc.json --verbose",
     "mkssl": "openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem"
   },

@@ -147,6 +147,7 @@ async function main(){
     version: Pkg.version
   })
 
+  /*
   const path = Path.join(process.env.HOME, '.venue-admin')
 
   let config = new Dataparty.Config.JsonFileConfig({
@@ -161,19 +162,19 @@ async function main(){
 
   await party.start()
 
-  console.log( 'identity - ', party.identity.key.hash )
+  console.log( 'identity - ', party.identity.key.hash )*/
   
   const builder = new Dataparty.ServiceBuilder(service)
-  const build = await builder.compile(Path.join(__dirname,'./dataparty'), true, party.privateIdentity)
+  const build = await builder.compile(Path.join(__dirname,'./dataparty'), true, /*party.privateIdentity*/)
 
   debug('compiled')
 
   const staticTar = fs.readFileSync('./dataparty/@dataparty-venue.files.venue.tgz')
 
-  debug('is staticTar a buffer? ', staticTar instanceof Buffer); // true
-  await pushService( party.privateIdentity, build, staticTar )
+  //debug('is staticTar a buffer? ', staticTar instanceof Buffer); // true
+  //await pushService( party.privateIdentity, build, staticTar )
 
-  
+  process.exit(0)
 }
 
 main().catch(err=>{
