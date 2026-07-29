@@ -194,29 +194,9 @@ class VenueProjectBuild extends CmdTree.Command {
     if(!value || true){
       // generate SSL secrets
       debug('creating ssl cert')
-      // generate EC certificate with P-521 curve and SHA-512
-      /*const pems = await selfsigned.generate([
-          { name: 'commonName', value: 'localhost' }
-        ], 
-        {
-          days: 365,
-          keySize: 2048,
-          algorithm: 'sha256'
-        }
-      )*/
-      //const pems = require('openssl-self-signed-certificate')
 
-      ///let sslGenCmd = 'openssl req -x509 -newkey rsa:2048 -keyout dist/'+projectName+'-key.pem -out dist/'+projectName+'-cert.pem -days 365 -nodes -addext "subjectAltName=DNS:localhost,DNS:10.88.200.159,IP:127.0.0.1"    '
-
-      //let sslGenCmd = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout dist/'+projectName+'-key.pem -out dist/'+projectName+'-cert.pem'
-      ///sslGenCmd += ' -subj "/C=AU/ST=NSW/L=Sydney/O=DataParty/OU=root/emailAddress=self@localhost"'
-
-      //console.log(sslGenCmd)
-
-      //const output = execSync(sslGenCmd, { encoding: 'utf8' })
       execSync('openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout dist/'+projectName+'-key.pem -out dist/'+projectName+'-cert.pem  -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=example.com"')
 
-      //console.log(output)
 
       const sslKey = fs.readFileSync('dist/'+projectName+'-key.pem', 'utf8')
       const sslCert = fs.readFileSync('dist/'+projectName+'-cert.pem', 'utf8')
@@ -224,9 +204,7 @@ class VenueProjectBuild extends CmdTree.Command {
 
       value = await this.saveSecret(kvKey, owner, owner, {
         key: sslKey,
-        cert: sslCert,
-        //fingerprint: pems.fingerprint,
-        //public: pems.public
+        cert: sslCert
 
       })
     } else {
@@ -388,9 +366,9 @@ class VenueProjectBuild extends CmdTree.Command {
     }
 
     if(reach(projectJson, 'hosting.i2p', false)){
-      let { generateSSLKey, ...i2pConfig } = reach(projectJson, 'hosting.i2p')
+      let { generateKey, ...i2pConfig } = reach(projectJson, 'hosting.i2p')
 
-      if(generateSSLKey && !i2pConfig.secureKey){
+      if(generateKey && !i2pConfig.secureKey){
         i2pConfig.secureKey = await this.encryptToBase64(
           key,
           remote.identity,

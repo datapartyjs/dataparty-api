@@ -58,7 +58,7 @@ class VenueProject extends ISchema {
             address: String,
             publicKey: String,
             secureKey: String, // { publicKey, privateKey }
-            //generateKey: Boolean
+            generateKey: Boolean
           },
 
           p2p: [{
