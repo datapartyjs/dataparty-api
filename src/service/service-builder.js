@@ -13,16 +13,10 @@ const safeStringify = require('fast-safe-stringify')
 
 const dataparty_crypto = require('@dataparty/crypto')
 
-const {
-  globSync
-} = require('glob')
+const { globSync } = require('glob')
 const { isArray } = require('lodash')
 
 const tar = require('tar')
-
-//const IService = require('../iservice')
-
-
 
 module.exports = class ServiceBuilder {
   constructor(service){

@@ -123,6 +123,29 @@ function getPartyByType(type){
   return null
 }
 
+async function addAdmin(admin, config){
+  let admins = (await config.read('admins')) || []
+
+  
+  let newAdmins = []
+
+
+  if(admins.indexOf(admin) == -1){
+    newAdmins.push(admin)
+
+    admins = admins.concat(newAdmins)
+
+    await config.write('admins', admins)
+    await config.save()
+
+    console.log('admin added -', newAdmins)
+  }
+  else{ return }
+    
+
+
+}
+
 async function constructParty(type, projectPartyDesc, config, model){
   debug('constructParty', type)
   const PARTY_CLASS = getPartyByType(type)
@@ -402,6 +425,11 @@ class VenuedHost extends CmdTree.Command {
       console.log('\t', i2pAddress)
     }
 
+    const ownerHash = reach(ServiceSchema,'package.owner',null)
+    if(ownerHash){
+      await addAdmin(ownerHash, this.party.config)
+    }
+
     /**
      * config section
      * 
@@ -520,7 +548,7 @@ class VenuedHost extends CmdTree.Command {
       throw 'project hash mix up'
     }
 
-    console.log('workspace', workspace)
+    console.log('\t','workspace', workspace)
 
     //process.exit()
 
@@ -529,7 +557,7 @@ class VenuedHost extends CmdTree.Command {
     const projectSSL = await this.decryptSecret(reach(project, 'data.project.hosting.http.secureSSL'))
     const projecti2pKey = await this.decryptSecret(reach(project, 'data.project.hosting.i2p.secureKey'))
 
-    console.log(projectSSL)
+    //console.log(projectSSL)
 
     let projectRunner = null
     let routeRunner = null
@@ -559,7 +587,7 @@ class VenuedHost extends CmdTree.Command {
 
       const payload = await this.decryptSecret( projectPartyDesc.key.securePrivate )
 
-      debug('payload', payload)
+      //debug('payload', payload)
 
       const projectPartyIdentity = dataparty_crypto.Identity.fromJSON( payload )
 
@@ -579,13 +607,17 @@ class VenuedHost extends CmdTree.Command {
     for(let route of project.data.project.routes){
 
       if(!route.package){continue}
-      console.log('route', route.package.name)
-      let pkgDoc = (await this.party.find()
+      console.log('\troute', route.prefix, )
+      let pkgDoc = this.party.find()
         .type('venue_pkg')
         .or()
         .where('package.name').equals(route.package.name)
-        .where('package.githash').equals(route.package.githash)
-        .sort('-created')
+
+        if(route.package.githash){
+          pkgDoc = pkgDoc.where('package.githash').equals(route.package.githash)
+        }
+
+        pkgDoc = (await pkgDoc.sort('-created')
         .limit(1)
         .exec())[0]
       
@@ -595,7 +627,7 @@ class VenuedHost extends CmdTree.Command {
 
       const {compressedBuild, ...printablePkg} = pkgDoc.data
 
-      console.log('found package', printablePkg)
+      console.log('\t\t', 'found package', route.package.name)
 
       const serviceFile = JSON.parse(
         zlib.brotliDecompressSync(
@@ -608,7 +640,7 @@ class VenuedHost extends CmdTree.Command {
         ...serviceFile.schemas
       }
 
-      console.log('decompressed', serviceFile.package)
+      //console.log('decompressed', serviceFile.package)
 
       let serviceParty = null;
 
@@ -662,7 +694,6 @@ class VenuedHost extends CmdTree.Command {
       
       await routeRunner.start()
 
-      console.log('workspace', workspace)
 
       if(route.staticPath){
         const projectStaticPath = Path.join(workspace, route.staticPath)
