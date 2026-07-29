@@ -9,7 +9,7 @@ const OS = require('os')
 const Path = require('path')
 const Hoek = require('@hapi/hoek')
 
-
+const { loadEnvFile } = require('node:process')
 const Dataparty = require('../../../')
 
 
@@ -115,6 +115,9 @@ async function main(){
   secureConfig.on('setup-required', onSetupRequired)
 
   console.log('starting')
+
+  
+  await process.loadEnvFile('./.env');
 
   await config.start()
   await secureConfig.start()

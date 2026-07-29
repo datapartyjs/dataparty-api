@@ -45,7 +45,15 @@ class VenueIdentityList extends CmdTree.Command {
       throw new CmdTree.Error.HelpRequest('help request')
     }
 
-    const names = Object.keys(await this.context.secureConfig.read('identity'))
+    debug('context -', this.context)
+
+    const identityList = await this.context.secureConfig.read('identity')
+
+    let names = {}
+
+    if(identityList != null){
+      names = Object.keys(identityList)
+    }
 
     return {names}
   }
