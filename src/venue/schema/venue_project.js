@@ -47,6 +47,7 @@ class VenueProject extends ISchema {
             listenUri: String,
             cors: Object,
             mdnsEnabled: Boolean,
+            mdnsName: String,
             trust_proxy: Boolean,
             wsEnabled: Boolean,
             secureSSL: String, //! {ssl_key: String, ssl_cert: String}

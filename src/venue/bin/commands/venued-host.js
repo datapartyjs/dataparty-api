@@ -99,6 +99,11 @@ const DEFINITION = {
   'trust-proxy': {
     type: 'boolean',
     default: false
+  },
+  'mdns': {
+    type: 'boolean',
+    description: 'enabled mDNS advertising',
+    default: false
   }
 }
 
@@ -380,7 +385,8 @@ class VenuedHost extends CmdTree.Command {
       i2pForwardPort: '3000',
       i2pOptions: 'i2cp.leaseSetEncType=6,4',
       //i2pOptions: 'i2cp.leaseSetEncType=4',
-      i2pKey: await this.config.read('i2p.sam')
+      i2pKey: await this.config.read('i2p.sam'),
+      mdnsEnabled: parsed.mdns || (this.mode == 'iot')
     })
 
     await this.party.start()

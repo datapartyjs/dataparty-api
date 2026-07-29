@@ -72,6 +72,11 @@ const DEFINITION = {
   'i2p-port': {
     default: 7656
   },
+  mdns: {
+    description: 'Enable mdns annoucement when in iot mode',
+    type: 'boolean',
+    default: false
+  }
 }
 
 

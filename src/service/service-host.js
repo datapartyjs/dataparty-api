@@ -1,7 +1,8 @@
 const Path = require('path')
 const CORS = require('cors')
 const {URL} = require('url')
-//const mdns = require('mdns')
+const {Bonjour} = require('bonjour-service')
+
 const http = require('http')
 const https = require('https')
 const morgan = require('morgan')
@@ -65,6 +66,7 @@ class ServiceHost {
     wsPort = null,
     wsUpgradePath = '/ws',
     mdnsEnabled = false,
+    mdnsName = null,
     runner,
     staticPath='',
     staticPrefix='/',
@@ -158,6 +160,10 @@ class ServiceHost {
     }
 
     this.mdnsEnabled = mdnsEnabled
+    this.mdnsName = mdnsName
+
+    this.mdnsInstance = null
+    this.mdnsService =  null
 
     this.started = false
   }
@@ -299,19 +305,24 @@ class ServiceHost {
           break
       }
 
+      this.mdnsInstance = new Bonjour()
 
-      const idHash = objectHasher.hash(
-        partyIdentity.toJSON()
-      )
+      let mdnsSubtypes = []
 
-      
-      const txt_record = {
-        partyhash: idHash,
-        pkgname: servicePkg.name
+      if(servicePkg!=null){
+        mdnsSubtypes.push( servicePkg.name )
       }
-      
-      console.log('mdns', servicePkg.name, idHash)
-      this.mdnsAd = mdns.createAdvertisement(mdns.tcp('party'), parseInt(listenPort), {txtRecord: txt_record})
+
+      const partialHash  = Buffer.from(partyIdentity.key.hash, 'base64').toString('base64url').slice(0,6)
+
+      this.mdnsService = this.mdnsInstance.publish({
+        name: (this.mdnsName!=null && this.mdnsName.length>0)   ? this.mdnsName : 'venue-'+partialHash,
+        type: 'party',
+        subtypes: mdnsSubtypes,
+        port: parseInt( this.apiServerUri.port ),
+        txt: { hash: partyIdentity.key.hash }
+      })
+
     }
 
     this.apiApp.use((err, req, res, _next) => {
@@ -343,16 +354,27 @@ class ServiceHost {
     this.errorHandlerTimer = null
 
     if(this.i2pEnabled && this.i2p != null){
+      debug('stopping i2p')
       this.i2p.close()
       this.i2p = null
     }
 
+    if(this.mdnsEnabled && this.mdnsInstance != null){
+      debug('stopping mdns')
+      await new Promise((resolve,reject)=>{this.mdnsInstance.unpublishAll(resolve)})
+
+      this.mdnsInstance.destroy()
+      this.mdnsInstance = null
+    }
+
     if(this.wsEnabled && this.wsServer != null){
+      debug('stopping websocket')
       this.wsServer.stop()
       this.wsServer = null
     }
 
     await new Promise((resolve,reject)=>{
+      debug('stopping http')
       this.apiServer.close(resolve)
     })
 

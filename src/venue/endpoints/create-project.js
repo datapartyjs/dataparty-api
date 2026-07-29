@@ -58,6 +58,7 @@ module.exports = class CreateProjectEndpoint extends IEndpoint {
                 listenUri: Joi.string(),
                 cors: Joi.object(),
                 mdnsEnabled: Joi.boolean(),
+                mdnsName: Joi.string(),
                 trust_proxy: Joi.boolean(),
                 wsEnabled: Joi.boolean(),
                 secureSSL: Joi.string(),
