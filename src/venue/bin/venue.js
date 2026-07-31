@@ -6,6 +6,7 @@ const CommandTree = require('command-tree').CommandTree
 const prompt = require('prompt')
 const argon2 = require('argon2')
 const OS = require('os')
+const fs = require('fs')
 const Path = require('path')
 const Hoek = require('@hapi/hoek')
 
@@ -116,8 +117,10 @@ async function main(){
 
   console.log('starting')
 
+  if( fs.existsSync('./.env') ){
+    await process.loadEnvFile('./.env')
+  }
   
-  await process.loadEnvFile('./.env');
 
   await config.start()
   await secureConfig.start()
