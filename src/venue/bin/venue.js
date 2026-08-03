@@ -16,6 +16,8 @@ const Dataparty = require('../../../')
 
 const commandTree = new CommandTree({ usage: 'venue <global-options> [command] <command-options>\nVersion: ' + Pkg.version })
 
+commandTree.addCommand(require('./commands/venue-config-show'))
+
 commandTree.addCommand(require('./commands/venue-identity-gen'))
 commandTree.addCommand(require('./commands/venue-identity-list'))
 commandTree.addCommand(require('./commands/venue-identity-show'))
@@ -28,6 +30,8 @@ commandTree.addCommand(require('./commands/venue-remote-repl'))
 
 commandTree.addCommand(require('./commands/pkg-build'))
 commandTree.addCommand(require('./commands/project-build'))
+
+commandTree.addCommand(require('./commands/billable-service-create'))
 
 const HOMEDIR = OS.homedir()
 const DEFAULT_FOLDER = '.venue'

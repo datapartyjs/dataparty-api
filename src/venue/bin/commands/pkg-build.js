@@ -124,6 +124,16 @@ class VenuePackageBuild extends CmdTree.Command {
 
     const remoteName = parsed.remote || process.env.VENUE_REMOTE
 
+    const pkgConfigPath = 'packages.'+build.build.package.name
+
+    const pkgInfo = {
+      package: build.build.package,
+      files: build.files,
+      remote: remoteName,
+      deploy: parsed.deploy && remoteName
+    }
+
+    await this.context.secureConfig.write(pkgConfigPath, pkgInfo)
 
     if(parsed.deploy && remoteName){
       console.log('uploading...')
@@ -134,7 +144,7 @@ class VenuePackageBuild extends CmdTree.Command {
         throw 'invalid remote ['+remoteName+']'
       }
 
-      let staticTar = undefined
+      let staticTar = null
 
       if(build.files.length == 3){
         staticTar = fs.readFileSync(build.files[ build.files.length - 1 ])
@@ -159,7 +169,7 @@ class VenuePackageBuild extends CmdTree.Command {
     await client.start()
 
 
-    let uploadResult = await client.restParty.comms.call('create-package', {build, staticTar}, {
+    let uploadResult = await client.socketParty.comms.call('create-package', {build, staticTar}, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
       useSessions: true
