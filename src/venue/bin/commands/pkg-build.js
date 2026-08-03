@@ -144,7 +144,7 @@ class VenuePackageBuild extends CmdTree.Command {
         throw 'invalid remote ['+remoteName+']'
       }
 
-      let staticTar = null
+      let staticTar = undefined
 
       if(build.files.length == 3){
         staticTar = fs.readFileSync(build.files[ build.files.length - 1 ])
