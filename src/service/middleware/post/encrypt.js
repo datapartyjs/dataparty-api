@@ -31,11 +31,12 @@ module.exports = class Encrypt extends IMiddleware {
 
     if (!Config){ return }
 
-    if(!ctx.req.source &&
+    if(/*!ctx.req.source &&*/
       ( ctx.req.source == 'PeerComms' ||
         ctx.req.source == 'INTERNAL' )
     ){
       ctx.setOutput(ctx.output)
+      ctx.debug('setting tunnelled output', ctx.output)
       return
     }  
 

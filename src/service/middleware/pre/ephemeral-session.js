@@ -3,6 +3,9 @@ const Hoek = require('@hapi/hoek')
 const {Identity} = require('@dataparty/crypto')
 const debug = require('debug')('dataparty.middleware.pre.ephemeral-session')
 
+const reach = require('../../../utils/reach')
+
+
 const IMiddleware = require('../../imiddleware')
 
 module.exports = class Decrypt extends IMiddleware {
@@ -31,6 +34,19 @@ module.exports = class Decrypt extends IMiddleware {
 
     if (!Config){ return }
 
+    //! Is this a tunnelled connection? Get session info from existing comms connection
+    if(
+      !ctx.input_session_id &&
+      (ctx.req.peer && ctx.req.source == 'PeerComms')
+    ){
+
+      ctx.debug('using existing peer session')
+      const sessionId = ctx.req.peer.sessionIdentity.key.hash
+
+      ctx.input_session_id = sessionId
+
+    }
+
     if(!ctx.input_session_id){
       throw new Error('no session id')
     }
@@ -54,9 +70,11 @@ module.exports = class Decrypt extends IMiddleware {
     const actorKey = sessionKeyDoc.data.annoucement.actorKey
 
     // ensure sender is connected using session key mentioned in db
-    if(sessionKey.hash == ctx.input_session_id &&
-       sessionKey.public.sign == ctx.senderKey.public.sign &&
-       sessionKey.public.box == ctx.senderKey.public.box
+    if(
+       (ctx.req.peer && ctx.req.source == 'PeerComms') ||
+       (sessionKey.hash == ctx.input_session_id &&
+       sessionKey.public.sign == reach(ctx, 'senderKey.public.sign') &&
+       sessionKey.public.box == reach(ctx, 'senderKey.public.box'))
     ){
 
       const now = Date.now()

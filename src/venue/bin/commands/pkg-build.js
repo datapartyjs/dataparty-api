@@ -168,8 +168,11 @@ class VenuePackageBuild extends CmdTree.Command {
 
     await client.start()
 
+    client.restParty.comms.axiosOptions.maxContentLength = Infinity
+    client.restParty.comms.axiosOptions.maxBodyLength = Infinity
 
-    let uploadResult = await client.restParty.comms.call('create-package', {build, staticTar}, {
+
+    let uploadResult = await client.socketParty.comms.call('create-package', {build, staticTar}, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
       useSessions: true

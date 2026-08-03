@@ -11,7 +11,7 @@ const IEndpoint = require('../../service/iendpoint')
 const typedArraySchema = (value, helpers) => {
   // 1. Ensure the value is an instance of a TypedArray (e.g., Uint8Array)
 
-  if(!value){
+  if(!value || value == null || value == undefined){
     return null
   }
 
@@ -135,7 +135,7 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
             compileSettings: Joi.object().keys(null)
           }).required(),
           //staticTar: Joi.binary()
-          staticTar: Joi.any().custom(typedArraySchema)
+          staticTar: Joi.any().custom(typedArraySchema).optional()
         })
       },
       post: {

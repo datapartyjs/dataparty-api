@@ -116,8 +116,8 @@ class ServiceHost {
     if(debug.enabled){ this.apiApp.use(morgan('combined')) }
 
     this.apiApp.use(bodyParser.urlencoded({ extended: true }))
-    this.apiApp.use(bodyParser.json({limit:'100MB'}))
-    this.apiApp.use(bodyParser.raw({limit:'100MB'}))
+    this.apiApp.use(bodyParser.json({limit:'10MB'}))
+    this.apiApp.use(bodyParser.raw({limit:'10MB'}))
 
     this.apiApp.set('trust proxy', trust_proxy)
 
