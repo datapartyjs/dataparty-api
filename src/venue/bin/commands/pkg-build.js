@@ -169,7 +169,7 @@ class VenuePackageBuild extends CmdTree.Command {
     await client.start()
 
 
-    let uploadResult = await client.socketParty.comms.call('create-package', {build, staticTar}, {
+    let uploadResult = await client.restParty.comms.call('create-package', {build, staticTar}, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
       useSessions: true
