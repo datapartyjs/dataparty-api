@@ -182,7 +182,7 @@ class PeerComms extends ISocketComms {
   }
 
   async handleMessage(message){
-    debug('handleMessage', truncateString(message.toString(), 1024) )
+    debug('handleMessage' /*truncateString(message.toString(), 1024)*/ )
 
     this.onmessage({data: message})
   }

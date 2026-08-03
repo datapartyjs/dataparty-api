@@ -10,6 +10,11 @@ const IEndpoint = require('../../service/iendpoint')
 
 const typedArraySchema = (value, helpers) => {
   // 1. Ensure the value is an instance of a TypedArray (e.g., Uint8Array)
+
+  if(!value){
+    return null
+  }
+
   if (!(value instanceof Uint8Array)) {
     return helpers.message({ custom: '"value" must be a Uint8Array' });
   }
