@@ -34,6 +34,10 @@ const DEFINITION = {
     description: 'Name of project',
     require: true
   },
+  deploy: {
+    type:'boolean',
+    description: 'deploy the billing definition to the remote'
+  },
   stripe: {
     type: 'boolean',
     description: 'Enable stripe payment processing'
@@ -97,6 +101,7 @@ class VenueBillableServiceCreate extends CmdTree.Command {
 
     key.id = keyName
     const remoteName = parsed.remote || process.env.VENUE_REMOTE
+    const remote = await this.context.secureConfig.read('remote.'+remoteName)
 
     const configPath = 'secrets.'+key.key.hash+'.'+key.key.hash+'.'+ parsed.project +'.payment_methods'
 
@@ -174,7 +179,46 @@ class VenueBillableServiceCreate extends CmdTree.Command {
 
     console.log('billablleService', billableService)
 
+    if(parsed.deploy){
+      console.log('deploying to [',remoteName,'] ... ')
+
+      //! announce the party's key
+      let client = new Dataparty.EphemeralClient({
+        identity: partyIdentity,
+        urlOrParty: remote.url,
+        wsUrlOrParty: remote.ws,
+        allowSelfSigned: remote.allowSelfSigned
+      })
+
+      await client.start()
+      await client.stop()
+
+      await this.pushBillableService(owner, remote, billableService)
+
+    }
+
     return {...paymentMethods}
+  }
+
+  async pushBillableService(devId, remote, billableService){
+    
+    let client = new Dataparty.EphemeralClient({
+      identity: devId,
+      urlOrParty: remote.url,
+      wsUrlOrParty: remote.ws,
+      allowSelfSigned: remote.allowSelfSigned
+    })
+
+    await client.start()
+
+
+    let uploadResult = await client.restParty.comms.call('billable/create', {service: billableService}, {
+      expectClearTextReply: false,
+      sendClearTextRequest: false,
+      useSessions: true
+    })
+
+    console.log('result', uploadResult)
   }
 }
 
