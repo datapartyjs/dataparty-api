@@ -115,8 +115,10 @@ class VenueBillableServiceCreate extends CmdTree.Command {
 
     //let paymentMethods = await 
 
+    console.log('loaded payment methods ->', paymentMethods)
+
     if(parsed.stripe){
-      debug('stripe mode')
+      console.log('stripe mode')
 
       const stripeSecret = parsed['stripe-secret'] || process.env.VENUE_STRIPE_SECRET
       const stripePublishable = parsed['stripe-publishable'] || process.env.VENUE_STRIPE_PUBLISHABLE
@@ -138,8 +140,39 @@ class VenueBillableServiceCreate extends CmdTree.Command {
       }
 
       await this.context.secureConfig.saveSecret(configPath, owner, owner, paymentMethods)
+
+      console.log('saved stripe details ->', paymentMethods)
     }
 
+    const remoteIdentityPath = `remote.${remoteName}.identity`
+    const remoteIdentity = dataparty_crypto.Identity.fromJSON(await this.context.secureConfig.read(remoteIdentityPath))
+
+    console.log('remote identity - ', remoteIdentity.key.hash)
+
+    const partyIdentityPath = `secrets.${owner.key.hash}.${owner.key.hash}.${parsed.project}.party.main.identity`
+    const partyIdentity = dataparty_crypto.Identity.fromBSON(await this.context.secureConfig.readSecret(partyIdentityPath, owner, owner))
+
+    console.log('party identity - ', partyIdentity.key.hash)
+
+    const billableService = {
+      owner: owner.key.hash,
+      identity: partyIdentity.key.hash,//
+      payment_methods: await this.context.secureConfig.encryptToBase64(owner, remoteIdentity, paymentMethods),
+      products: []
+    }
+
+
+    const ownerSig = await owner.sign( billableService, true )
+    const partySig = await partyIdentity.sign( billableService, true )
+
+    billableService.signatures = {
+      [owner.key.hash]: dataparty_crypto.Routines.Utils.base64.encode(ownerSig.sig),
+      [partyIdentity.key.hash]: dataparty_crypto.Routines.Utils.base64.encode(partySig.sig)
+    }
+
+
+
+    console.log('billablleService', billableService)
 
     return {...paymentMethods}
   }

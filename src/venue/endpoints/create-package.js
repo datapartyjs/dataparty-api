@@ -258,7 +258,7 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
         venue: ctx.party.identity.key.hash,
         hash: buildHash,
         workspace: workspacePath,
-        tarpath: Path.join(workspacePath, tarFileName),
+        tarpath: ctx.input.staticTar ? Path.join(workspacePath, tarFileName) : '',
         settings: ctx.input.settings,
         package: pkgWithoutOwner,
         compressedBuild: Routines.Utils.base64.encode(compressedBrotliBuild)

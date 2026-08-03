@@ -429,7 +429,7 @@ class VenueProjectBuild extends CmdTree.Command {
     let prjFiles = []
     prjFiles.push(buildOutput)
 
-    if(project.files){
+    if(project.files && project.files.length>0){
       this.addProjectFiles(
         Path.dirname(projectJsonPath),
         projectJson.files,

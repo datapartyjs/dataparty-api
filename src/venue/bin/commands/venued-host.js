@@ -583,6 +583,8 @@ class VenuedHost extends CmdTree.Command {
         if(projectPartyDesc.defaultConfig) { await partyConfig.writeAll(projectPartyDesc.defaultConfig) }
       }
 
+      await addAdmin(project.data.project.owner, partyConfig)
+
       await partyConfig.touchDir( 'db' )
 
       const payload = await this.decryptSecret( projectPartyDesc.key.securePrivate )
@@ -699,6 +701,7 @@ class VenuedHost extends CmdTree.Command {
         const projectStaticPath = Path.join(workspace, route.staticPath)
 
         let handler =  (req,res)=>{
+          console.log('static handler - ', projectStaticPath)
           
           let staticHandler = express.static(projectStaticPath, { index: ['index.html']})
 

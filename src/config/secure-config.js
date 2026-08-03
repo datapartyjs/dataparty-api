@@ -594,6 +594,16 @@ class SecureConfig extends IConfig {
 
     return secretB64
   }
+
+  async readSecret(path, from, to){
+    debug('readSecret - ', path)
+    const value = await this.read(path)
+    if(value){
+        return await this.decryptFromBase64(from, to, value)
+    }
+
+    return
+  }
 }
 
 module.exports = SecureConfig
