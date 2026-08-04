@@ -13,6 +13,8 @@ const { execSync } = require('child_process')
 const Dataparty = require('../../../../')
 const dataparty_crypto = require('@dataparty/crypto')
 
+const reach = require('../../../utils/reach')
+
 const Stripe = require('stripe')
 
 const DEFINITION = {
@@ -53,6 +55,25 @@ const DEFINITION = {
   'stripe-sig-secret': {
     type: 'string',
     description: 'Stripe webhook signing secret (see: https://dashboard.stripe.com/workbench/webhooks)'
+  },
+  'stripe-product': {
+    type: 'string',
+    description: 'stripe product id to offer for sale'
+  },
+  'stripe-price': {
+    type: 'string',
+    description: 'stripe price id to offer for sale',
+    multiple: true
+  },
+  'stripe-ui-mode': {
+    type: 'string',
+    default: 'embedded_page',
+    valid: ['embedded_page', 'hosted_page', 'elements'],
+    description: 'Stripg ui mode (see: https://docs.stripe.com/api/checkout/sessions/create#create_checkout_session-ui_mode)'
+  },
+  'stripe-return-url': {
+    type: 'string',
+    description: 'Stripe return url (see: https://docs.stripe.com/api/checkout/sessions/create#create_checkout_session-return_url)'
   }
 }
 
@@ -162,10 +183,64 @@ class VenueBillableServiceCreate extends CmdTree.Command {
     const billableService = {
       owner: owner.key.hash,
       identity: partyIdentity.key.hash,//
+      stripe_ui_mode: parsed['stripe-ui-mode'] || 'embedded_page',
+      stripe_return_url: parsed['stripe-return-url'],
       payment_methods: await this.context.secureConfig.encryptToBase64(owner, remoteIdentity, paymentMethods),
       products: []
     }
 
+    const stripe = require('stripe')(paymentMethods.stripe.secret)
+    if(parsed['stripe-product']){
+
+      const productInfo = await stripe.products.list({
+        limit: 30,
+        active: true,
+        ids: [parsed['stripe-product']]
+      })
+
+      const productToAdd = {
+        name: productInfo.data[0].name,
+        description: productInfo.data[0].description,
+        photos_uri: productInfo.data[0].photos,
+        stripe_product_id: productInfo.data[0].id,
+
+        prices: []
+      }
+
+      console.log('add stripe product', parsed['stripe-product'])
+
+      const priceList = await stripe.prices.list({
+        limit: 30,
+        active: true,
+        product: parsed['stripe-product']
+      });
+
+
+
+      for(let stripePrice of priceList.data){
+
+        if(parsed['stripe-price'].indexOf(stripePrice.id) == -1){
+          continue
+        }
+
+
+        console.log('\tadd stripe price', stripePrice.id)
+
+        const itemPrice = {
+          one_time_purchase: stripePrice.type == 'one_time',
+          period_unit: reach(stripePrice, 'recurring.interval'),
+          stripe_price_id: stripePrice.id
+        }
+
+        productToAdd.prices.push( itemPrice )
+
+      }
+
+      billableService.products.push( productToAdd )
+
+    }
+
+    
 
     const ownerSig = await owner.sign( billableService, true )
     const partySig = await partyIdentity.sign( billableService, true )
@@ -176,8 +251,8 @@ class VenueBillableServiceCreate extends CmdTree.Command {
     }
 
 
-
-    console.log('billablleService', billableService)
+    console.log('billableService', billableService)
+    console.log('products', JSON.stringify(billableService.products,null,2))
 
     if(parsed.deploy){
       console.log('deploying to [',remoteName,'] ... ')
@@ -197,7 +272,30 @@ class VenueBillableServiceCreate extends CmdTree.Command {
 
     }
 
-    return {...paymentMethods}
+    /*
+    const products = await stripe.products.list({
+      limit: 30,
+      active: true
+    });
+
+    const prices = await stripe.prices.list({
+      limit: 30,
+      active: true
+    });
+
+    console.log(products.data.map(prod=>{
+      return {
+        name: prod.name,
+        id: prod.id,
+        images: prod.images,
+        desc: prod.description,
+        default_price: prod.default_price
+      }
+    }))
+
+    console.log(JSON.stringify(prices,null,2))*/
+
+    return {}
   }
 
   async pushBillableService(devId, remote, billableService){
@@ -219,6 +317,15 @@ class VenueBillableServiceCreate extends CmdTree.Command {
     })
 
     console.log('result', uploadResult)
+
+
+    let priceInfo = await client.restParty.comms.call('billing/product/info', {service: billableService.identity}, {
+      expectClearTextReply: false,
+      sendClearTextRequest: false,
+      useSessions: true
+    })
+
+    console.log('priceInfo', priceInfo)
   }
 }
 
