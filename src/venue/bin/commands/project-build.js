@@ -516,7 +516,7 @@ class VenueProjectBuild extends CmdTree.Command {
       await client.start()
   
   
-      let uploadResult = await client.restParty.comms.call('create-project', {project:build, staticTar}, {
+      let uploadResult = await client.socketParty.comms.call('create-project', {project:build, staticTar}, {
         expectClearTextReply: false,
         sendClearTextRequest: false,
         useSessions: true
