@@ -27,7 +27,8 @@ module.exports = class ServiceIdentity extends IEndpoint {
           id: Joi.string(),
           key: {
             type: Joi.alternatives().try(
-              Joi.string().valid('nacl,nacl,ml_kem1024,ml_dsa65,slh_dsa_sha2_128f')
+              Joi.string().valid('nacl,nacl,ml_kem1024,ml_dsa65,slh_dsa_sha2_128f'),
+              Joi.string()
             ),
             hash: Joi.string(),
             public: Joi.object().keys({
