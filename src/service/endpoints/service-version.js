@@ -24,7 +24,7 @@ module.exports = class ServiceVersion extends IEndpoint {
       },
       post:{
         validate: Joi.object().keys({
-          name: Joi.string(),
+          name: Joi.string().optional().allow(null),
           branch: Joi.string(),
           version: Joi.string(),
           githash: Joi.string(),

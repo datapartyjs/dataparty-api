@@ -133,6 +133,8 @@ class JsonFileConfig extends IConfig {
     logger('config changed, reloading')
 
     await this.load()
+
+    this.emit('changed')
   }
 }
 

@@ -218,6 +218,7 @@ class VenuedHost extends CmdTree.Command {
     debug('constructor')
 
     this.active_projects = {}
+    this.active_projects_by_name = {} //! Name to hash
 
     this.party = null
     this.config = null
@@ -454,7 +455,31 @@ class VenuedHost extends CmdTree.Command {
 
     this.context.exiting = false
 
+    this.config.on('changed', this.handleConfigChange.bind(this))
+
     return
+  }
+
+  async handleConfigChange(){
+    /**
+     * 1. Check for projects whose hashes don't match the currently loaded project
+     * 2. In the newer project change the "previousHash" to point to the one we're about to unload. IF not already set
+     * 3. Load the new project version and make sure to copy the config & db as directed.
+     */
+
+    const projects = await this.config.read('projects')
+    if(projects){
+      for(let name in projects){
+
+        const hash = projects[name]
+        console.log('\treloading project', name, hash)
+        
+        //await this.loadProject(hash, name)
+
+
+      }
+    }
+
   }
 
   async unloadProject(hash){
@@ -518,8 +543,12 @@ class VenuedHost extends CmdTree.Command {
       }
     }
 
+    const project = this.active_projects.project
+    this.active_projects_by_name[project.data.project.name] = null
     this.active_projects[hash] = null
+
     delete this.active_projects[hash]
+    delete this.active_projects_by_name[project.data.project.name]
   }
 
   async loadProject(hash, name){
@@ -561,6 +590,8 @@ class VenuedHost extends CmdTree.Command {
 
     let projectRunner = null
     let routeRunner = null
+
+    this.active_projects_by_name[project.data.project.name] = hash
     this.active_projects[hash] = {
       project,
       party: {},
