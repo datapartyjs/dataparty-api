@@ -734,7 +734,7 @@ class VenuedHost extends CmdTree.Command {
         let handler =  (req,res)=>{
           console.log('static handler - ', projectStaticPath)
           
-          let staticHandler = express.static(projectStaticPath, { index: ['index.html']})
+          let staticHandler = express.static(projectStaticPath, { index: ['index.html'], maxAge: '1d'})
 
           let results = staticHandler(req.request,req.response, req.request.next)
 
