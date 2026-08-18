@@ -1,6 +1,6 @@
 const CmdTree = require('command-tree')
 const Hoek = require('@hapi/hoek')
-const debug = require('debug')('venue.identity-list')
+const debug = require('debug')('venue.config-show')
 const Path = require('path')
 const OS = require('os')
 const fs = require('fs')
@@ -22,20 +22,20 @@ const DEFINITION = {
 }
 
 
-class VenueIdentityList extends CmdTree.Command {
+class VenueConfigShow extends CmdTree.Command {
   constructor(context){
-    super({...VenueIdentityList.Definition, context})
+    super({...VenueConfigShow.Definition, context})
     debug('constructor')
   }
   
   static get Command(){
-    return 'identity list'
+    return 'config show'
   }
   
   static get Definition(){
     return {
-      usage: `venue identity list [name]`,
-      description: 'List identity nicknames',
+      usage: `venue config show]`,
+      description: 'Show config',
       definition: DEFINITION
     }
   }
@@ -47,18 +47,17 @@ class VenueIdentityList extends CmdTree.Command {
 
     debug('context -', this.context)
 
-    const identityList = await this.context.secureConfig.read('identity')
+    const configContent = await this.context.secureConfig.readAll()
 
-    let names = {}
+    console.log(JSON.stringify(configContent,null,2))
 
-    if(identityList != null){
-      names = Object.keys(identityList)
-    }
+    //await this.context.secureConfig.writeAll(configContent)
 
-    return {names}
+
+    return {...configContent}
   }
 }
 
-module.exports = VenueIdentityList
+module.exports = VenueConfigShow
 
 

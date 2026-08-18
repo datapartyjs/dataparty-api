@@ -559,6 +559,51 @@ class SecureConfig extends IConfig {
 
         this.emit('save')
     }
+
+
+  async encryptToBase64(from, to, value){
+    const msg = new dataparty_crypto.Message({msg: value})
+    await msg.encrypt(from, to.key)
+
+    const bsonMsg = msg.toBSON()
+    const base64Msg = dataparty_crypto.Routines.Utils.base64.encode( bsonMsg )
+
+    return base64Msg
+  }
+
+  async decryptFromBase64(privateIdentity, from, secureContentBase64OrBSON){
+    const securePrivateBSON = (typeof secureContentBase64OrBSON) == 'string' ? dataparty_crypto.Routines.Utils.base64.decode( secureContentBase64OrBSON ) : secureContentBase64OrBSON
+    const securePrivateMsg = new dataparty_crypto.Message({})
+    
+    securePrivateMsg.fromBSON( securePrivateBSON )
+
+    const securePrivateContent = await securePrivateMsg.decrypt( privateIdentity )
+
+
+    if(securePrivateMsg.from.hash != from.key.hash){
+      throw new Error('not expected sender')
+    }
+
+    return securePrivateContent
+  }
+
+  async saveSecret(path, from, to, value){
+    debug('saveSecret - ', path)
+    const secretB64 = await this.encryptToBase64(from, to, value)
+    await this.write( path, secretB64 )
+
+    return secretB64
+  }
+
+  async readSecret(path, from, to){
+    debug('readSecret - ', path)
+    const value = await this.read(path)
+    if(value){
+        return await this.decryptFromBase64(from, to, value)
+    }
+
+    return
+  }
 }
 
 module.exports = SecureConfig

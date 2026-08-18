@@ -218,6 +218,9 @@ class VenuedHost extends CmdTree.Command {
     debug('constructor')
 
     this.active_projects = {}
+    this.active_projects_by_name = {} //! Name to hash
+
+    this.handlingChange = false
 
     this.party = null
     this.config = null
@@ -454,7 +457,68 @@ class VenuedHost extends CmdTree.Command {
 
     this.context.exiting = false
 
+    this.config.on('changed', this.handleConfigChange.bind(this))
+
     return
+  }
+
+  async handleConfigChange(){
+    /**
+     * 1. Check for projects whose hashes don't match the currently loaded project
+     * 2. In the newer project change the "previousHash" to point to the one we're about to unload. IF not already set
+     * 3. Load the new project version and make sure to copy the config & db as directed.
+     */
+
+    if(this.handlingChange){
+      return
+    }
+
+    this.handlingChange = true
+
+    const projects = await this.config.read('projects')
+    if(projects){
+      for(let name in projects){
+
+        const hash = projects[name]
+        const runningHash = this.active_projects_by_name[name]
+        
+        if(hash != runningHash){
+          console.log('\treloading project', name, runningHash, hash)
+
+          const safeNextProjectHash = hash.replace(/\//g, "-").replace(/=/g, "_")
+          const safeRunningProjectHash = runningHash.replace(/\//g, "-").replace(/=/g, "_")
+
+          const nextProject = (await this.party.find()
+              .type('venue_project')
+              .where('project.name').equals(name)
+              .where('hash').equals(safeNextProjectHash).exec())[0]
+
+          const runningProject = (await this.party.find()
+              .type('venue_project')
+              .where('project.name').equals(name)
+              .where('hash').equals(safeRunningProjectHash).exec())[0]
+
+          runningProject.data.nextHash = hash
+          nextProject.data.previousHash = runningHash
+
+          await Promise.all([
+            nextProject.save(),
+            runningProject.save()
+          ])
+
+          await this.unloadProject(runningHash)
+          await this.loadProject(hash, name, runningProject)
+        }
+        else {
+          console.log('\tskipping project', name, hash)
+        }
+
+
+      }
+    }
+
+    this.handlingChange = false
+
   }
 
   async unloadProject(hash){
@@ -518,16 +582,22 @@ class VenuedHost extends CmdTree.Command {
       }
     }
 
+    const project = this.active_projects[hash].project
+    this.active_projects_by_name[project.data.project.name] = null
     this.active_projects[hash] = null
+
     delete this.active_projects[hash]
+    delete this.active_projects_by_name[project.data.project.name]
   }
 
-  async loadProject(hash, name){
+  async loadProject(hash, name, previousProjectDoc=null){
     // if first run
     //   if previosHash exists && data.copyPrevious==true copy previous party config's & db's
     //   setup project
     //   if previous.isRunning then previous.unload()
     // launch
+
+    debug('loadProject',name,hash)
 
     const safeProjectHash = hash.replace(/\//g, "-").replace(/=/g, "_")
 
@@ -542,6 +612,13 @@ class VenuedHost extends CmdTree.Command {
       return
     }
     const workspace = project.data.workspace
+
+    if(reach(project, 'data.previousHash') && !previousProjectDoc){
+      previousProjectDoc = (await this.party.find()
+        .type('venue_project')
+        .where('project.name').equals(name)
+        .where('hash').equals(project.data.previousHash.replace(/\//g, "-").replace(/=/g, "_")).exec())[0]
+    }
 
     if(project.data.hash != safeProjectHash){
       console.log(`wrong hash got [ ${project.data.hash} ] when expecting [ ${safeProjectHash} ]`)
@@ -561,6 +638,8 @@ class VenuedHost extends CmdTree.Command {
 
     let projectRunner = null
     let routeRunner = null
+
+    this.active_projects_by_name[project.data.project.name] = hash
     this.active_projects[hash] = {
       project,
       party: {},
@@ -577,11 +656,28 @@ class VenuedHost extends CmdTree.Command {
 
       let configFirstRun = !fs.existsSync( partyWorkspace+'/config.json' )
 
+      
+      if(configFirstRun && previousProjectDoc!=null && reach(project, 'data.project.data.copyPrevious') && reach(project, 'data.previousHash')){
+
+        const previousWorkspace = Path.join(previousProjectDoc.data.workspace, 'party', projectPartyDesc.name)
+        if(fs.existsSync( previousWorkspace )){
+          debug('coping party directory from previous version')
+
+          fs.cpSync(previousWorkspace, partyWorkspace, {recursive: true})
+        }
+      }
+
+      configFirstRun = !fs.existsSync( partyWorkspace+'/config.json' )
+
+      
+
       await partyConfig.start()
 
       if(configFirstRun){
         if(projectPartyDesc.defaultConfig) { await partyConfig.writeAll(projectPartyDesc.defaultConfig) }
       }
+
+      await addAdmin(project.data.project.owner, partyConfig)
 
       await partyConfig.touchDir( 'db' )
 
@@ -699,8 +795,9 @@ class VenuedHost extends CmdTree.Command {
         const projectStaticPath = Path.join(workspace, route.staticPath)
 
         let handler =  (req,res)=>{
+          console.log('static handler - ', projectStaticPath)
           
-          let staticHandler = express.static(projectStaticPath, { index: ['index.html']})
+          let staticHandler = express.static(projectStaticPath, { index: ['index.html'], maxAge: '1d'})
 
           let results = staticHandler(req.request,req.response, req.request.next)
 

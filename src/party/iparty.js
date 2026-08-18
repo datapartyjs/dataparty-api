@@ -71,7 +71,9 @@ class IParty {
   }
 
   async stop(){
-    this.comms.close()
+    if(this.comms && this.comms.close){
+      this.comms.close()
+    }
   }
 
   /**

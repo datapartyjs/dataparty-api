@@ -182,7 +182,7 @@ class PeerComms extends ISocketComms {
   }
 
   async handleMessage(message){
-    debug('handleMessage', truncateString(message.toString(), 1024) )
+    debug('handleMessage' /*truncateString(message.toString(), 1024)*/ )
 
     this.onmessage({data: message})
   }
@@ -462,6 +462,7 @@ class PeerComms extends ISocketComms {
     debug('peer-call', op.input.endpoint)
 
     const actor = await this.party.hostRunner.auth.lookupIdentity(this.remoteIdentity)
+    //this.remoteActor = actor
 
     if(this.party.hostRunner){
 
@@ -501,7 +502,11 @@ class PeerComms extends ISocketComms {
 
       debug('route',route)
 
-      req.peer = this
+      req.peer = {
+        actorIdentity: actor,
+        sessionIdentity: this.remoteIdentity,
+        comms: this
+      }
       req.source = 'PeerComms'
 
       debug('call route', await route._events.route({

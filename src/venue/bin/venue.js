@@ -6,14 +6,17 @@ const CommandTree = require('command-tree').CommandTree
 const prompt = require('prompt')
 const argon2 = require('argon2')
 const OS = require('os')
+const fs = require('fs')
 const Path = require('path')
 const Hoek = require('@hapi/hoek')
 
-
+const { loadEnvFile } = require('node:process')
 const Dataparty = require('../../../')
 
 
 const commandTree = new CommandTree({ usage: 'venue <global-options> [command] <command-options>\nVersion: ' + Pkg.version })
+
+commandTree.addCommand(require('./commands/venue-config-show'))
 
 commandTree.addCommand(require('./commands/venue-identity-gen'))
 commandTree.addCommand(require('./commands/venue-identity-list'))
@@ -27,6 +30,8 @@ commandTree.addCommand(require('./commands/venue-remote-repl'))
 
 commandTree.addCommand(require('./commands/pkg-build'))
 commandTree.addCommand(require('./commands/project-build'))
+
+commandTree.addCommand(require('./commands/billable-service-create'))
 
 const HOMEDIR = OS.homedir()
 const DEFAULT_FOLDER = '.venue'
@@ -115,6 +120,11 @@ async function main(){
   secureConfig.on('setup-required', onSetupRequired)
 
   console.log('starting')
+
+  if( fs.existsSync('./.env') ){
+    await process.loadEnvFile('./.env')
+  }
+  
 
   await config.start()
   await secureConfig.start()

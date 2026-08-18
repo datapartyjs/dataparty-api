@@ -34,7 +34,7 @@ const DEFINITION = {
   identity: {
     type: 'string',
     description: 'developer release identity',
-    require: true
+    //require: true
   },
   name: {
     description: 'package name'
@@ -80,10 +80,11 @@ class VenuePackageBuild extends CmdTree.Command {
     }
 
     if (parsed._.length != 3){
+      console.log('must supply service code')
       throw new CmdTree.Error.UsageError('You must supply service code')
     }
 
-    const keyName = parsed.identity
+    const keyName = parsed.identity || process.env.VENUE_IDENTITY
 
     const phrase = await this.context.secureConfig.read('identity.'+keyName+'.phrase')
 
@@ -121,14 +122,26 @@ class VenuePackageBuild extends CmdTree.Command {
     const builder = new Dataparty.ServiceBuilder(service)
     const build = await builder.compile(parsed.output, true, key)
 
+    const remoteName = parsed.remote || process.env.VENUE_REMOTE
 
-    if(parsed.deploy && parsed.remote){
+    const pkgConfigPath = 'packages.'+build.build.package.name
+
+    const pkgInfo = {
+      package: build.build.package,
+      files: build.files,
+      remote: remoteName,
+      deploy: parsed.deploy && remoteName
+    }
+
+    await this.context.secureConfig.write(pkgConfigPath, pkgInfo)
+
+    if(parsed.deploy && remoteName){
       console.log('uploading...')
       
-      const remote = await this.context.secureConfig.read('remote.'+parsed.remote)
+      const remote = await this.context.secureConfig.read('remote.'+remoteName)
 
       if(!remote){
-        throw 'invalid remote ['+parsed.remote+']'
+        throw 'invalid remote ['+remoteName+']'
       }
 
       let staticTar = undefined
@@ -155,8 +168,11 @@ class VenuePackageBuild extends CmdTree.Command {
 
     await client.start()
 
+    client.restParty.comms.axiosOptions.maxContentLength = Infinity
+    client.restParty.comms.axiosOptions.maxBodyLength = Infinity
 
-    let uploadResult = await client.restParty.comms.call('create-package', {build, staticTar}, {
+
+    let uploadResult = await client.socketParty.comms.call('create-package', {build, staticTar}, {
       expectClearTextReply: false,
       sendClearTextRequest: false,
       useSessions: true

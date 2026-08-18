@@ -45,7 +45,7 @@ const DEFINITION = {
   identity: {
     type: 'string',
     description: 'developer release identity',
-    require: true
+    require: false
   },
   name: {
     description: 'project name'
@@ -185,13 +185,13 @@ class VenueProjectBuild extends CmdTree.Command {
   }
 
   async getOrGenerateSSLKey(owner, venue, projectName){
-    const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.ssl'
+    const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.hosting.ssl'
     
 
     let value = await this.context.secureConfig.read(kvKey)
 
 
-    if(!value || true){
+    if(!value){
       // generate SSL secrets
       debug('creating ssl cert')
 
@@ -216,11 +216,11 @@ class VenueProjectBuild extends CmdTree.Command {
   }
 
   async getOrGenerateIdentity(owner, venue, projectName, partyName){
-    const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.' + partyName + '.identity'
+    const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.party.' + partyName + '.identity'
 
     let value = await this.context.secureConfig.read(kvKey)
 
-    if(true){
+    if(!value){
       // generate secret
       const identity = await dataparty_crypto.Identity.fromRandomSeed({id: projectName +'.'+partyName })
 
@@ -231,7 +231,7 @@ class VenueProjectBuild extends CmdTree.Command {
   }
 
   async getOrStoreMongoUri(owner, venue, projectName, partyName, uri){
-    const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.' + partyName + '.mongo'
+    const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.party.' + partyName + '.mongo'
 
     let value = await this.context.secureConfig.read(kvKey)
 
@@ -243,7 +243,7 @@ class VenueProjectBuild extends CmdTree.Command {
   }
 
   async getOrGenerateI2PKey(owner, venue, projectName){
-    const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.i2p'
+    const kvKey = 'secrets.' + owner.key.hash + '.' + venue.key.hash + '.' + projectName + '.hosting.i2p'
 
     let value = await this.context.secureConfig.read(kvKey)
 
@@ -288,7 +288,7 @@ class VenueProjectBuild extends CmdTree.Command {
       throw new CmdTree.Error.UsageError('You must supply project json/js')
     }
 
-    const keyName = parsed.identity
+    const keyName = parsed.identity || process.env.VENUE_IDENTITY
 
     const phrase = await this.context.secureConfig.read('identity.'+keyName+'.phrase')
 
@@ -297,12 +297,13 @@ class VenueProjectBuild extends CmdTree.Command {
     }
 
     const {password} = parsed.nopassword ? {password:null} : await prompt.get({
-            properties: {
-                password: {
-                    message: 'Enter password for identity['+keyName+']',
-                    hidden: true
-            }
-        }})
+      properties: {
+        password: {
+          message: 'Enter password for identity['+keyName+']',
+          hidden: true
+        }
+      }
+    })
 
     let key = await dataparty_crypto.Identity.fromMnemonic(phrase, password, argon2)
 
@@ -317,12 +318,14 @@ class VenueProjectBuild extends CmdTree.Command {
     let projectJson = require( projectJsonPath )
 
     
-    const remoteName = parsed.remote || projectJson.venue
+    const remoteName = parsed.remote || projectJson.venue || process.env.VENUE_REMOTE
     const remote = await this.context.secureConfig.read('remote.'+remoteName)
 
     if(!remote){
       throw new CmdTree.Error.UsageError('Invalid remote ['+remoteName+']')
     }
+
+    let signingKeys = []
 
     const project = {
       owner: key.key.hash,
@@ -354,7 +357,7 @@ class VenueProjectBuild extends CmdTree.Command {
     if(reach(projectJson, 'hosting.http', false)){
       let { generateSSLKey, ...httpConfig } = reach(projectJson, 'hosting.http')
 
-      if((generateSSLKey && !httpConfig.secureSSL) || true){
+      if((generateSSLKey && !httpConfig.secureSSL)){
         httpConfig.secureSSL = await this.encryptToBase64(
           key,
           remote.identity,
@@ -380,7 +383,7 @@ class VenueProjectBuild extends CmdTree.Command {
     }
 
     reach(projectJson, 'party', []).forEach( async partyDesc=>{
-      let needsKey = reach(partyDesc, 'key.generateKey', false) || reach(partyDesc, 'key', null) == null || true
+      let needsKey = reach(partyDesc, 'key.generateKey', false) || reach(partyDesc, 'key', null) == null
       let needsSecureMongo = reach(partyDesc, 'mongo.uri', null) != null
 
       let obj = {...partyDesc}
@@ -389,6 +392,8 @@ class VenueProjectBuild extends CmdTree.Command {
         debug('creating party key [', partyDesc.name, ']')
 
         const partyPrivateId = await this.getOrGenerateIdentity( key, key, projectJson.name, partyDesc.name )
+
+        signingKeys.push(partyPrivateId)
         
         obj.key = {
           hash: partyPrivateId.key.hash,
@@ -424,7 +429,7 @@ class VenueProjectBuild extends CmdTree.Command {
     let prjFiles = []
     prjFiles.push(buildOutput)
 
-    if(project.files){
+    if(project.files && project.files.length>0){
       this.addProjectFiles(
         Path.dirname(projectJsonPath),
         projectJson.files,
@@ -445,6 +450,12 @@ class VenueProjectBuild extends CmdTree.Command {
     project.signatures = {
       [key.key.hash]: dataparty_crypto.Routines.Utils.base64.encode(ownerSig.sig)
     }
+
+    for(let signingKey of signingKeys){
+      console.log(signingKey.key.hash)
+      const sig = await signingKey.sign(project, true)
+      project.signatures[ signingKey.key.hash ] = dataparty_crypto.Routines.Utils.base64.encode(sig.sig)
+    }
     
     fs.writeFileSync(buildOutput, JSON.stringify(project, null,2))
 
@@ -454,7 +465,20 @@ class VenueProjectBuild extends CmdTree.Command {
       staticTar = fs.readFileSync(prjFiles[ prjFiles.length - 1 ])
     }
 
-    await this.pushProject(key, remote, project, staticTar)
+    const prjConfigPath = 'projects.'+project.name
+
+    const prjInfo = {
+      project,
+      files: prjFiles,
+      remote: remoteName,
+      deploy: parsed.deploy && remoteName
+    }
+
+    await this.context.secureConfig.write(prjConfigPath, prjInfo)
+
+    if(parsed.deploy){
+      await this.pushProject(key, remote, project, staticTar)
+    }
 
     return {files: prjFiles, project}
   }
@@ -492,7 +516,7 @@ class VenueProjectBuild extends CmdTree.Command {
       await client.start()
   
   
-      let uploadResult = await client.restParty.comms.call('create-project', {project:build, staticTar}, {
+      let uploadResult = await client.socketParty.comms.call('create-project', {project:build, staticTar}, {
         expectClearTextReply: false,
         sendClearTextRequest: false,
         useSessions: true

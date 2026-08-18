@@ -130,6 +130,10 @@ class EphemeralClient extends EventEmitter {
     
   }
 
+  async stop(){
+    await this.wsParty.stop()
+  }
+
   get socketPeerParty(){
     return this.wsParty
   }

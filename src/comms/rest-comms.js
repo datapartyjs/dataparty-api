@@ -385,7 +385,7 @@ class RestComms extends EventEmitter {
 
     debug(`${verb} - ${url}`)
 
-    console.log('axiosOptions', options)
+    //console.log('axiosOptions', options)
 
     const response = await axios({
       method: verb,

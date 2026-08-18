@@ -10,6 +10,11 @@ const IEndpoint = require('../../service/iendpoint')
 
 const typedArraySchema = (value, helpers) => {
   // 1. Ensure the value is an instance of a TypedArray (e.g., Uint8Array)
+
+  if(!value || value == null || value == undefined){
+    return null
+  }
+
   if (!(value instanceof Uint8Array)) {
     return helpers.message({ custom: '"value" must be a Uint8Array' });
   }
@@ -130,7 +135,7 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
             compileSettings: Joi.object().keys(null)
           }).required(),
           //staticTar: Joi.binary()
-          staticTar: Joi.any().custom(typedArraySchema)
+          staticTar: Joi.any().custom(typedArraySchema).optional()
         })
       },
       post: {
@@ -253,7 +258,7 @@ module.exports = class CreatePkgEndpoint extends IEndpoint {
         venue: ctx.party.identity.key.hash,
         hash: buildHash,
         workspace: workspacePath,
-        tarpath: Path.join(workspacePath, tarFileName),
+        tarpath: ctx.input.staticTar ? Path.join(workspacePath, tarFileName) : '',
         settings: ctx.input.settings,
         package: pkgWithoutOwner,
         compressedBuild: Routines.Utils.base64.encode(compressedBrotliBuild)
