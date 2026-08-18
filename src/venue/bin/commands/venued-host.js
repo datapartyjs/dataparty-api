@@ -220,6 +220,8 @@ class VenuedHost extends CmdTree.Command {
     this.active_projects = {}
     this.active_projects_by_name = {} //! Name to hash
 
+    this.handlingChange = false
+
     this.party = null
     this.config = null
     this.runner = null
@@ -467,6 +469,12 @@ class VenuedHost extends CmdTree.Command {
      * 3. Load the new project version and make sure to copy the config & db as directed.
      */
 
+    if(this.handlingChange){
+      return
+    }
+
+    this.handlingChange = true
+
     const projects = await this.config.read('projects')
     if(projects){
       for(let name in projects){
@@ -477,18 +485,39 @@ class VenuedHost extends CmdTree.Command {
         if(hash != runningHash){
           console.log('\treloading project', name, runningHash, hash)
 
-          //await this.unloadProject(runningHash)
-          //await this.loadProject(hash, name)
+          const safeNextProjectHash = hash.replace(/\//g, "-").replace(/=/g, "_")
+          const safeRunningProjectHash = runningHash.replace(/\//g, "-").replace(/=/g, "_")
+
+          const nextProject = (await this.party.find()
+              .type('venue_project')
+              .where('project.name').equals(name)
+              .where('hash').equals(safeNextProjectHash).exec())[0]
+
+          const runningProject = (await this.party.find()
+              .type('venue_project')
+              .where('project.name').equals(name)
+              .where('hash').equals(safeRunningProjectHash).exec())[0]
+
+          runningProject.data.nextHash = hash
+          nextProject.data.previousHash = runningHash
+
+          await Promise.all([
+            nextProject.save(),
+            runningProject.save()
+          ])
+
+          await this.unloadProject(runningHash)
+          await this.loadProject(hash, name, runningProject)
         }
         else {
           console.log('\tskipping project', name, hash)
         }
-        
-        //await this.loadProject(hash, name)
 
 
       }
     }
+
+    this.handlingChange = false
 
   }
 
@@ -561,12 +590,14 @@ class VenuedHost extends CmdTree.Command {
     delete this.active_projects_by_name[project.data.project.name]
   }
 
-  async loadProject(hash, name){
+  async loadProject(hash, name, previousProjectDoc=null){
     // if first run
     //   if previosHash exists && data.copyPrevious==true copy previous party config's & db's
     //   setup project
     //   if previous.isRunning then previous.unload()
     // launch
+
+    debug('loadProject',name,hash)
 
     const safeProjectHash = hash.replace(/\//g, "-").replace(/=/g, "_")
 
@@ -615,6 +646,17 @@ class VenuedHost extends CmdTree.Command {
     for(let projectPartyDesc of project.data.project.party){
       const partyWorkspace = Path.join(workspace, 'party', projectPartyDesc.name)
       const partyConfig = new Dataparty.Config.JsonFileConfig({basePath: partyWorkspace})
+
+      
+      if(previousProjectDoc!=null && reach(project, 'data.project.data.copyPrevious') && reach(project, 'data.previousHash')){
+
+        const previousWorkspace = Path.join(previousProjectDoc.data.workspace, 'party', projectPartyDesc.name)
+        if(fs.existsSync( previousWorkspace )){
+          debug('coping party directory from previous version')
+
+          fs.cpSync(previousWorkspace, partyWorkspace, {recursive: true})
+        }
+      }
 
       let configFirstRun = !fs.existsSync( partyWorkspace+'/config.json' )
 
