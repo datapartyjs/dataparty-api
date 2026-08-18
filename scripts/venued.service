@@ -1,0 +1,17 @@
+[Unit]
+Description=venued
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10
+User=venue
+#Group=your-group
+WorkingDirectory=/opt/venue
+ExecStart=/opt/venue/launch.sh
+#Environment=NODE_ENV=production
+#Environment=PORT=3000
+
+[Install]
+WantedBy=multi-user.target
