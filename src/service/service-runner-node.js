@@ -91,7 +91,7 @@ class ServiceRunnerNode {
     //await Promise.all(endpointsLoading)
     debug('endpoints ready:')
     for(let name in this.endpoint){
-      debug('\t', Path.join('/venue/api', this.prefix, name))
+      debug('\t', Path.join(this.prefix, name))
     }
 
     debug('starting topics')
