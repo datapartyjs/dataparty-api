@@ -613,6 +613,13 @@ class VenuedHost extends CmdTree.Command {
     }
     const workspace = project.data.workspace
 
+    if(reach(project, 'data.previousHash') && !previousProjectDoc){
+      previousProjectDoc = (await this.party.find()
+        .type('venue_project')
+        .where('project.name').equals(name)
+        .where('hash').equals(project.data.previousHash.replace(/\//g, "-").replace(/=/g, "_")).exec())[0]
+    }
+
     if(project.data.hash != safeProjectHash){
       console.log(`wrong hash got [ ${project.data.hash} ] when expecting [ ${safeProjectHash} ]`)
       throw 'project hash mix up'
@@ -647,8 +654,10 @@ class VenuedHost extends CmdTree.Command {
       const partyWorkspace = Path.join(workspace, 'party', projectPartyDesc.name)
       const partyConfig = new Dataparty.Config.JsonFileConfig({basePath: partyWorkspace})
 
+      let configFirstRun = !fs.existsSync( partyWorkspace+'/config.json' )
+
       
-      if(previousProjectDoc!=null && reach(project, 'data.project.data.copyPrevious') && reach(project, 'data.previousHash')){
+      if(configFirstRun && previousProjectDoc!=null && reach(project, 'data.project.data.copyPrevious') && reach(project, 'data.previousHash')){
 
         const previousWorkspace = Path.join(previousProjectDoc.data.workspace, 'party', projectPartyDesc.name)
         if(fs.existsSync( previousWorkspace )){
@@ -658,7 +667,9 @@ class VenuedHost extends CmdTree.Command {
         }
       }
 
-      let configFirstRun = !fs.existsSync( partyWorkspace+'/config.json' )
+      configFirstRun = !fs.existsSync( partyWorkspace+'/config.json' )
+
+      
 
       await partyConfig.start()
 
