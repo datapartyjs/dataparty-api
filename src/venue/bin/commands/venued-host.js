@@ -472,7 +472,17 @@ class VenuedHost extends CmdTree.Command {
       for(let name in projects){
 
         const hash = projects[name]
-        console.log('\treloading project', name, hash)
+        const runningHash = this.active_projects_by_name[name]
+        
+        if(hash != runningHash){
+          console.log('\treloading project', name, runningHash, hash)
+
+          //await this.unloadProject(runningHash)
+          //await this.loadProject(hash, name)
+        }
+        else {
+          console.log('\tskipping project', name, hash)
+        }
         
         //await this.loadProject(hash, name)
 

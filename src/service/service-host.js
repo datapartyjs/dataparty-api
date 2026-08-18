@@ -194,7 +194,7 @@ class ServiceHost {
         //let staticFullPath = Path.join(this.staticPrefix, this.staticPath)
 
         debug('staticPath - ', this.staticPath)
-        this.apiApp.use(this.staticPrefix, express.static(this.staticPath ))
+        this.apiApp.use(this.staticPrefix, express.static(this.staticPath, { index: ['index.html'], maxAge: '1d'} ))
       }
     }
 
