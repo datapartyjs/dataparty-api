@@ -582,7 +582,7 @@ class VenuedHost extends CmdTree.Command {
       }
     }
 
-    const project = this.active_projects.project
+    const project = this.active_projects[hash].project
     this.active_projects_by_name[project.data.project.name] = null
     this.active_projects[hash] = null
 
