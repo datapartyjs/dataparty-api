@@ -36,7 +36,7 @@ class BillingClient extends EventEmitter {
     return result.products
   }
 
-  async createPaymentSession(service, productIndex, priceIndex, payment_type='stripe'){
+  async createPaymentSession(service, productIndex=0, priceIndex=0, payment_type='stripe'){
     const reqData = {
       service,
       productIndex,
