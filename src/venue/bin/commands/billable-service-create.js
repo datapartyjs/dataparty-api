@@ -228,7 +228,7 @@ class VenueBillableServiceCreate extends CmdTree.Command {
 
         const itemPrice = {
           one_time_purchase: stripePrice.type == 'one_time',
-          period_unit: reach(stripePrice, 'recurring.interval'),
+          period_unit: reach(stripePrice, 'recurring.interval', ''),
           stripe_price_id: stripePrice.id
         }
 
