@@ -1,20 +1,28 @@
 const EventEmitter = require('eventemitter3')
 
 const debug = require('debug')('dataparty.billing-client')
-
+const EphemeralClient = require('./ephemeral-client')
 
 class BillingClient extends EventEmitter {
-
 
   /**
    * Constructor
    * @param EphemeralClient client 
    */
-  constructor(client){
+  constructor(identity, domain='buy.dataparty.xyz', clientOptions={}){
 
     super()
     
-    this.client = client
+    this.client = new EphemeralClient({
+      identity,
+      urlOrParty: 'https://'+domain,
+      wsUrlOrParty: 'wss://'+domain+'/ws',
+      ...clientOptions
+    })
+  }
+
+  async start(){
+    await this.client.start()
   }
 
 
