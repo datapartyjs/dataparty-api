@@ -98,8 +98,8 @@ class ISocketComms extends EventEmitter {
     async decrypt(reply, sender){
       if(this.aesStream){
         debug('decrypting quantum aes')
-        console.log(reply, typeof reply)
-        console.log(typeof reply.data)
+        //console.log(reply, typeof reply)
+        //console.log(typeof reply.data)
 
         let buf = reply.data
 

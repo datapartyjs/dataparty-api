@@ -2,7 +2,7 @@ const EphemeralClient = require("./ephemeral-client")
 
 
 class PeerClient extends EphemeralClient {
-  constructor({model=null, /*hostParty=null, */ contacts, identity, remoteIdentityHash, matchMaker, service, role='client', rtcSettings}){
+  constructor({model=null, hostParty=null, contacts, identity, remoteIdentityHash, matchMaker, service, role='client', rtcSettings}){
 
     super({identity, contacts, role})
 

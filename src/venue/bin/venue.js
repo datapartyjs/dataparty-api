@@ -32,6 +32,7 @@ commandTree.addCommand(require('./commands/pkg-build'))
 commandTree.addCommand(require('./commands/project-build'))
 
 commandTree.addCommand(require('./commands/billable-service-create'))
+commandTree.addCommand(require('./commands/billable-stripe-dump'))
 
 const HOMEDIR = OS.homedir()
 const DEFAULT_FOLDER = '.venue'
