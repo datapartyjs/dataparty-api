@@ -35,24 +35,7 @@ const DEFINITION = {
     type: 'string',
     description: 'Name of project',
     require: true
-  },
-  stripe: {
-    type: 'boolean',
-    description: 'Enable stripe payment processing'
-  },
-  'stripe-secret': {
-    type: 'string',
-    description: 'Stripe secret key (see: https://dashboard.stripe.com/apikeys)'
-  },
-  'stripe-publishable': {
-    type: 'string',
-    description: 'Stripe publishable key (see: https://dashboard.stripe.com/apikeys)'
-  },
-  'stripe-sig-secret': {
-    type: 'string',
-    description: 'Stripe webhook signing secret (see: https://dashboard.stripe.com/workbench/webhooks)'
-  },
-
+  }
 }
 
 
@@ -63,13 +46,13 @@ class VenueBillableStripeDump extends CmdTree.Command {
   }
   
   static get Command(){
-    return 'billable stripe dump'
+    return 'stripe dump'
   }
   
   static get Definition(){
     return {
-      usage: `venue billable stripe dump`,
-      description: 'Create a billable service',
+      usage: `venue stripe dump`,
+      description: 'Dump stripe product info from live service',
       definition: DEFINITION
     }
   }
@@ -119,32 +102,6 @@ class VenueBillableStripeDump extends CmdTree.Command {
 
     console.log('loaded payment methods ->', paymentMethods)
 
-    if(parsed.stripe){
-      console.log('stripe mode')
-
-      const stripeSecret = parsed['stripe-secret'] || process.env.VENUE_STRIPE_SECRET
-      const stripePublishable = parsed['stripe-publishable'] || process.env.VENUE_STRIPE_PUBLISHABLE
-      const stripeSigningSecret = parsed['stripe-sig-secret'] || process.env.VENUE_STRIPE_SIGNING_SECRET
-
-
-      if(!paymentMethods.stripe){
-        paymentMethods.stripe = {
-          secret: stripeSecret,
-          publishable: stripePublishable,
-          sig_secret: stripeSigningSecret
-        }
-      } else {
-        paymentMethods.stripe = {
-          secret: stripeSecret || paymentMethods.stripe.secret,
-          publishable: stripePublishable || paymentMethods.stripe.publishable,
-          sig_secret: stripeSigningSecret || paymentMethods.stripe.sig_secret
-        }
-      }
-
-      await this.context.secureConfig.saveSecret(configPath, owner, owner, paymentMethods)
-
-      console.log('saved stripe details ->', paymentMethods)
-    }
 
 
     const stripe = require('stripe')(paymentMethods.stripe.secret)
