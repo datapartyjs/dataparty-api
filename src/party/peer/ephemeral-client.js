@@ -27,7 +27,7 @@ function getReconnectInterval(count, backoff=9000){
 }
 
 class EphemeralClient extends EventEmitter {
-  constructor({identity, role='guest', autoreconnect=true, contacts, urlOrParty = 'https://api.dataparty.xyz/api', wsUrlOrParty = 'wss://api.dataparty.xyz/ws', allowSelfSigned = false}){
+  constructor({identity, role='guest', autoreconnect=true, contacts, urlOrParty = 'https://mm.dataparty.xyz', wsUrlOrParty = 'wss://mm.dataparty.xyz/ws', allowSelfSigned = false} = {}){
 
     super()
     

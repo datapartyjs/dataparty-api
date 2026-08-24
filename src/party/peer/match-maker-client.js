@@ -270,7 +270,7 @@ class MatchMakerClient extends EventEmitter {
       useSessions: true
     })
 
-    console.log('setInviteState result', inviteStateResult)
+    debug('setInviteState result', inviteStateResult)
 
     if(!inviteStateResult.done){
       return null
