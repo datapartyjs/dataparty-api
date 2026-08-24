@@ -148,7 +148,7 @@ module.exports = class KeyAnnounceEndpoint extends IEndpoint {
         // create session document
 
         const now = Date.now()
-        const tomorrow = now + 24*60*60*1000
+        const tomorrow = now + 24*60*60*1000 + 5*60*1000
 
         const fiveMinAgo = now - (5*1000*60)
         const fiveMinFromNow = now + (5*1000*60)
