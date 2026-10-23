@@ -12,3 +12,5 @@ exports.CloudDocument = require('./cloud/cloud-document')
 exports.EphemeralClient = require('./peer/ephemeral-client')
 exports.MatchMakerClient = require('./peer/match-maker-client')
 exports.PeerClient = require('./peer/peer-client')
+exports.BillingClient = require('./peer/billing-client')
+

@@ -226,10 +226,14 @@ class VenueBillableServiceCreate extends CmdTree.Command {
 
         console.log('\tadd stripe price', stripePrice.id)
 
-        const itemPrice = {
+        let itemPrice = {
           one_time_purchase: stripePrice.type == 'one_time',
           period_unit: reach(stripePrice, 'recurring.interval'),
           stripe_price_id: stripePrice.id
+        }
+
+        if(!reach(stripePrice, 'recurring.interval')){
+          delete itemPrice.period_unit
         }
 
         productToAdd.prices.push( itemPrice )
