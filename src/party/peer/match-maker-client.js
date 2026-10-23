@@ -54,6 +54,10 @@ class MatchMakerClient extends EventEmitter {
     this.emit('disconnected')
   }
 
+  async stop(){
+    await this.client.stop()
+  }
+
   async start(){
 
     if(this.started){ return }
