@@ -627,14 +627,12 @@ class VenuedHost extends CmdTree.Command {
 
     console.log('\t','workspace', workspace)
 
-    //process.exit()
 
     let projectRouter = new Router()
 
     const projectSSL = await this.decryptSecret(reach(project, 'data.project.hosting.http.secureSSL'))
     const projecti2pKey = await this.decryptSecret(reach(project, 'data.project.hosting.i2p.secureKey'))
 
-    //console.log(projectSSL)
 
     let projectRunner = null
     let routeRunner = null

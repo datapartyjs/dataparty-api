@@ -23,7 +23,7 @@ class ServiceHostPeer {
   async onInvite(invite){
 
 
-    // Filter out none host mode requests
+    // Filter out non-host mode requests
     if(invite.role !== 'host'){
       debug('FAIL - unexpected role[', invite.role, '] we expecte to be host')
       await invite.reject()
