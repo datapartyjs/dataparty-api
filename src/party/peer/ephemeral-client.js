@@ -67,6 +67,14 @@ class EphemeralClient extends EventEmitter {
     return this.wsParty
   }
 
+  get stopped(){
+    if(this.wsParty && this.wsParty.comms){
+      return this.wsParty.comms.stopped
+    }
+
+    return true
+  }
+
 
   async start(){
     if(this.sessionKey){ return }
@@ -168,12 +176,10 @@ class EphemeralClient extends EventEmitter {
 
     this.emit('disconnected', {time: Date.now()})
 
-    let stopped = this.wsParty.comms.stopped
-
-    if(stopped){ return }
+    if(this.stopped){ return }
 
     const sleepTime = getReconnectInterval(this.reconnect_tries, this.backoff)
-    debug('ws closed with stopped=',stopped, '   waiting ', sleepTime/1000,'sec')
+    debug('ws closed with stopped=',this.stopped, '   waiting ', sleepTime/1000,'sec')
     
     if(!this.reconnectTimer){
 
@@ -187,11 +193,10 @@ class EphemeralClient extends EventEmitter {
   }
 
   async doReconnect(){
-    let stopped = this.wsParty.comms.stopped
 
     this.reconnectTimer = null
 
-    if(stopped || !this.wsParty || !this.autoreconnect){ debug('skip reconnect'); return }
+    if(this.stopped || !this.wsParty || !this.autoreconnect){ debug('skip reconnect'); return }
 
     debug('doing ws reconnect...')
 

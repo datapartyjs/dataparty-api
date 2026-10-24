@@ -627,14 +627,12 @@ class VenuedHost extends CmdTree.Command {
 
     console.log('\t','workspace', workspace)
 
-    //process.exit()
 
     let projectRouter = new Router()
 
     const projectSSL = await this.decryptSecret(reach(project, 'data.project.hosting.http.secureSSL'))
     const projecti2pKey = await this.decryptSecret(reach(project, 'data.project.hosting.i2p.secureKey'))
 
-    //console.log(projectSSL)
 
     let projectRunner = null
     let routeRunner = null
@@ -782,11 +780,6 @@ class VenuedHost extends CmdTree.Command {
         useNative: route.settings.useNative,
         prefix: route.prefix
       })
-
-      if(route.party == 'SYSTEM'){
-        //routeRunner.router = runner.router
-      }
-
       
       await routeRunner.start()
 
@@ -855,6 +848,38 @@ class VenuedHost extends CmdTree.Command {
       await this.active_projects[hash].host.start()
     }
 
+    // wire up match-maker if p2p hosting asked for
+    // project.data.project.hosting.p2p[idx].identityParty
+
+    if( project.data.project.hosting.p2p &&
+        Array.isArray(project.data.project.hosting.p2p.length)
+     ){
+      
+      for(const p2pConfig of project.data.project.hosting.p2p) {
+
+        let p2pParty = this.active_projects[hash].party[ p2pConfig.identityParty ]
+
+        if(!p2pParty){ continue; }
+
+        if(!this.active_projects[hash].mmClient){
+          this.active_projects[hash].mmClient = new Dataparty.MatchMakerClient(
+            new Dataparty.EphemeralClient({ identity: p2pParty.privateIdentity })
+          )
+        }
+
+        let p2pHost = new Dataparty.ServiceHostPeer({
+          runner: projectRunner,
+          matchMaker: this.active_projects[hash].mmClient
+        })
+
+        this.active_projects[hash].p2pHost = p2pHost
+
+        await this.active_projects[hash].p2pHost.start()
+
+
+      }
+
+     }
 
   }
 
